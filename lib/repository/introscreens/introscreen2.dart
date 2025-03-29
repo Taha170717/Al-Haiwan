@@ -26,7 +26,7 @@ class _Introscreen2State extends State<Introscreen2> {
           ),
           // Image**
           Positioned(
-            top: 50,
+            top: 90,
             left: 20,
             right: 20,
             child: Image.asset(

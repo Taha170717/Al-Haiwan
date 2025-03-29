@@ -33,7 +33,7 @@ class _SignupState extends State<Signup> {
      ),
      backgroundColor: Colors.white,
      body: SingleChildScrollView(
-       child: Container(
+       child: SafeArea(
 
          child: Padding(
            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
@@ -52,7 +52,7 @@ class _SignupState extends State<Signup> {
                    // Label styling
 
                    prefixIcon: Icon(
-                       Icons.account_circle, color: Color(0XFFA1A8B0)),
+                       Icons.account_circle, color: Color(0xFF199A8E),),
                    // Email icon
                    hintText: 'Enter Username',
                    hintStyle: TextStyle(color: Color(0XFFA1A8B0)),
@@ -96,7 +96,7 @@ class _SignupState extends State<Signup> {
                    // Label styling
 
                    prefixIcon: Icon(
-                       Icons.email_outlined, color: Color(0XFFA1A8B0)),
+                       Icons.email_outlined, color: Color(0xFF199A8E),),
                    // Email icon
                    hintText: 'Enter your email',
                    hintStyle: TextStyle(color: Color(0XFFA1A8B0)),
@@ -140,7 +140,7 @@ class _SignupState extends State<Signup> {
                    // Label styling
 
                    prefixIcon: Icon(
-                       Icons.email_outlined, color: Color(0XFFA1A8B0)),
+                       Icons.phone, color: Color(0xFF199A8E),),
                    // Email icon
                    hintText: 'Enter your Phone No',
                    hintStyle: TextStyle(color: Color(0XFFA1A8B0)),
@@ -185,7 +185,7 @@ class _SignupState extends State<Signup> {
                    // Label styling
 
                    prefixIcon: Icon(
-                       Icons.email_outlined, color: Color(0XFFA1A8B0)),
+                       Icons.lock, color: Color(0xFF199A8E),),
                    suffixIcon: Icon(
                        Icons.visibility_off, color: Color(0XFFA1A8B0)),
                    // Email icon
@@ -299,7 +299,7 @@ class _SignupState extends State<Signup> {
                  height: 50,
                  child: ElevatedButton(
                    onPressed: () {
-
+                     dialoguesignupscreen(context);
                    },
                    style: ElevatedButton.styleFrom(
                      backgroundColor: Color(0XFF199A8E),
@@ -325,6 +325,7 @@ class _SignupState extends State<Signup> {
                    GestureDetector(
                      onTap: () {
                        Navigator.push(context, MaterialPageRoute(builder: (context)=> Loginpage()),);
+
                      },
                      child: Text(
                        "Sign In",
@@ -341,5 +342,61 @@ class _SignupState extends State<Signup> {
      ),
 
    );
+  }
+
+  void dialoguesignupscreen(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                      color: Color(0XFFF5F8FF) // Background color for the circle
+                  ),
+                  padding: EdgeInsets.all(12), // Adjust padding for proper spacing
+                  child: Icon(Icons.check, size: 60, color: Color(0xFF199A8E)), // Green tick
+                ),
+                SizedBox(height: 16),
+                Text(
+                  "Success!",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Your account has been successfully registered",
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => Loginpage()), // Replace with your Home Screen
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0XFF199A8E),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    minimumSize: Size(double.infinity, 50),
+                  ),
+                  child: Text("Login", style: TextStyle(fontSize: 16, color: Colors.white)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

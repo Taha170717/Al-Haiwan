@@ -26,7 +26,7 @@ class _Introscreen1State extends State<Introscreen1> {
           /// Full-Screen Doctor Image
           Positioned(
 
-            top: 50,
+            top: 90,
             left: 20,
             right: 20,
             child: Image.asset(

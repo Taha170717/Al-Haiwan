@@ -39,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               SizedBox(height: 10),
               Text(
-                'Al-Haiwan',
+                'Alhewan',
                 style: TextStyle(
                   fontSize: 35,
                   color: Color(0XFF199A8E),
