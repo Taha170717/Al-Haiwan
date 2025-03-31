@@ -94,7 +94,7 @@ class _VerificationState extends State<Verification> {
                   Text("Didn’t receive the code? ",style: TextStyle(color: Colors.grey)),
                   GestureDetector(
                     onTap: (){},
-                    child: Text("Resend",style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
+                    child: Text("Resend Code",style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
                   )
                 ],
               )
