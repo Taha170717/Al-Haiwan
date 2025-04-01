@@ -1,4 +1,4 @@
-import 'package:al_haiwan/repository/introscreens/introscreen1.dart';
+import 'package:al_haiwan/repository/screens/introscreens/introscreen1.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:animated_text_kit/animated_text_kit.dart';
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       'Expert Care for Every Paw and Claw.',
                       textStyle: TextStyle(
                         fontSize: 18,
-                        color: Color(0xFF357964),
+                        color: Color(0XFF199A8E),
                         fontFamily: 'semibolditalic',
                       ),textAlign: TextAlign.center,
                       speed: Duration(milliseconds: 80),
@@ -64,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
               Lottie.asset(
-                'assets/animations/loading.json',
+                'assets/animations/loadings.json',
                 width: 220,
                 height: 180,
 

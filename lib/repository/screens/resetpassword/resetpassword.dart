@@ -1,4 +1,4 @@
-import 'package:al_haiwan/repository/resetpassword/verfication.dart';
+import 'package:al_haiwan/repository/screens/resetpassword/verfication.dart';
 import 'package:flutter/material.dart';
 
 import '../login/loginpage.dart';

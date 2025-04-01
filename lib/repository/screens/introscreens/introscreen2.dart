@@ -1,11 +1,22 @@
-import 'package:al_haiwan/repository/introscreens/loginsignupintro.dart';
+import 'package:al_haiwan/repository/screens/introscreens/introsreen3.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class Introscreen3 extends StatelessWidget{
+import 'loginsignupintro.dart';
+
+class Introscreen2 extends StatefulWidget{
+  const Introscreen2({super.key});
+
+  @override
+  State<Introscreen2> createState() => _Introscreen2State();
+}
+
+class _Introscreen2State extends State<Introscreen2> {
+
+
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    double screenWidth = MediaQuery.of(context).size.height;
     double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Stack(
@@ -13,36 +24,26 @@ class Introscreen3 extends StatelessWidget{
           Container(
             color: Colors.white,
           ),
-          ///Full-Screen Doctor Image
+          // Image**
           Positioned(
-            top: 60,
-
+            top: 90,
+            left: 20,
+            right: 20,
             child: Image.asset(
-              'assets/images/d1.png', // Replace with your image
-              height: screenHeight *0.4,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned(
-            top: 250,
-            right: 40,
-
-            child: Image.asset(
-              'assets/images/d5.png', // Replace with your image
-
-              height: screenHeight *0.4,
-
+              'assets/images/d4.png', // Replace with your image
+              // width: screenWidth * 0.8,
+              // height: screenHeight * 0.5,
               fit: BoxFit.cover,
             ),
           ),
 
-          /// Skip Button
+          //Skip Button
           Positioned(
             top: 40, // Adjust as needed
             right: 20, // Adjust as needed
             child: GestureDetector(
               onTap: () {
-                // Add navigation or action
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Loginsignupintro()),);
               },
               child: Text(
                 'Skip',
@@ -82,9 +83,9 @@ class Introscreen3 extends StatelessWidget{
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ///  Title & Description
+                  /// Title Description
                   Text(
-                    'Compassionate care for your furry friends, anytime, anywhere',
+                    'Find a lot of specialist doctors in one place',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -93,22 +94,14 @@ class Introscreen3 extends StatelessWidget{
                   ),
                   SizedBox(height: 15),
 
-                  /// Page Indicator & Arrow Button
+                  ///  Page Indicator & Arrow Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
 
-                          Container(
-                            height: 6,
-                            width: 6,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: 5),
+
                           Container(
                             height: 6,
                             width: 6,
@@ -126,18 +119,30 @@ class Introscreen3 extends StatelessWidget{
                               borderRadius: BorderRadius.circular(3),
                             ),
                           ),
+                          SizedBox(width: 5),
+                          Container(
+                            height: 6,
+                            width: 6,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                         ],
                       ),
 
-                      ///  Next Button
+                      /// Next Button
                       FloatingActionButton(
                         onPressed: () {
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Loginsignupintro()),);
+                         Navigator.pushReplacement(context, MaterialPageRoute(builder:
+
+                         (context)=> Introscreen3()),);
                         },
-                        shape: CircleBorder(),
                         backgroundColor: Color(0xFF357964),
+                        shape: CircleBorder(), // Ensures a perfect circular shape
                         child: Icon(Icons.arrow_forward, color: Colors.white),
                       ),
+
                     ],
                   ),
                 ],
@@ -149,5 +154,4 @@ class Introscreen3 extends StatelessWidget{
 
     );
   }
-
 }

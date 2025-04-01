@@ -1,4 +1,4 @@
-import 'package:al_haiwan/repository/splash/splashscreen.dart';
+import 'package:al_haiwan/repository/screens/splash/splashscreen.dart';
 import 'package:flutter/material.dart';
 
 void main (){

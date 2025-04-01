@@ -1,5 +1,6 @@
-import 'package:al_haiwan/repository/resetpassword/resetpassword.dart';
-import 'package:al_haiwan/repository/signup/signup.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreen.dart';
+import 'package:al_haiwan/repository/screens/resetpassword/resetpassword.dart';
+import 'package:al_haiwan/repository/screens/signup/signup.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -283,7 +284,7 @@ class _LoginpageState extends State<Loginpage> {
                 SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> BottomNavScreen()));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0XFF199A8E),
