@@ -8,7 +8,7 @@ class Categoryscreen extends StatelessWidget{
     return Scaffold(
       body: Container(
         child: Center(
-          child: Text("Category"),
+          child: Text("Category Screen"),
         ),
       )
     );

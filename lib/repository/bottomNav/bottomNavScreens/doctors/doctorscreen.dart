@@ -8,7 +8,7 @@ class Doctorscreen extends StatelessWidget{
     return Scaffold(
       body: Container(
         child: Center(
-          child: Text("Doctor"),
+          child: Text("Doctor Screen "),
         ),
       )
     );
