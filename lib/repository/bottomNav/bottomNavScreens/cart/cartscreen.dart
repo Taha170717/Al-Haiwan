@@ -8,7 +8,7 @@ class Cartscreen extends StatelessWidget{
     return Scaffold(
       body: Container(
         child: Center(
-          child: Text("Cart Screen"),
+          child: Text("Cart"),
         ),
       )
     );
