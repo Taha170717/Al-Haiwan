@@ -1,5 +1,5 @@
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/profile/profile_viewmodal.dart';
-import 'package:al_haiwan/repository/screens/login/loginpage.dart';
+import 'package:Alhewan/repository/bottomNav/bottomNavScreens/profile/profile_viewmodal.dart';
+import 'package:Alhewan/repository/screens/login/loginpage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

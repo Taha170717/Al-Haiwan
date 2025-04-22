@@ -1,5 +1,5 @@
-import 'package:al_haiwan/repository/screens/login/loginpage.dart';
-import 'package:al_haiwan/repository/screens/signup/signup.dart';
+import 'package:Alhewan/repository/screens/login/loginpage.dart';
+import 'package:Alhewan/repository/screens/signup/signup.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -22,7 +22,7 @@ class Loginsignupintro extends StatelessWidget{
                SizedBox(height: 50,),
                Image.asset('assets/images/logo.png',width: 200,height: 200,),
                Text(
-                 'Al-Haiwan',
+                 'Alhewan',
                  style: TextStyle(
                    fontSize: 35,
                    color: Color(0XFF199A8E),

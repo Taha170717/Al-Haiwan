@@ -1,8 +1,10 @@
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreen.dart';
-import 'package:al_haiwan/repository/screens/resetpassword/resetpassword.dart';
-import 'package:al_haiwan/repository/screens/signup/signup.dart';
+import 'package:Alhewan/repository/bottomNav/bottomNavScreen.dart';
+import 'package:Alhewan/repository/screens/resetpassword/resetpassword.dart';
+import 'package:Alhewan/repository/screens/signup/signup.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 
 class Loginpage extends StatefulWidget{
   @override
@@ -284,7 +286,8 @@ class _LoginpageState extends State<Loginpage> {
                 SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> BottomNavScreen()));
+                    Get.offAll(() => BottomNavScreen());
+
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0XFF199A8E),

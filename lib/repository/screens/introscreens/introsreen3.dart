@@ -1,4 +1,4 @@
-import 'package:al_haiwan/repository/screens/introscreens/loginsignupintro.dart';
+import 'package:Alhewan/repository/screens/introscreens/loginsignupintro.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
