@@ -2,14 +2,22 @@ import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/cart/cartscreen.
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/categories/categoryscreen.dart';
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/profile/profile.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+
+import 'bottomNavScreens/profile/profile_viewmodal.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({super.key});
 
   @override
   State<BottomNavScreen> createState() => _BottomNavScreenState();
+
+
 }
+
 
 class _BottomNavScreenState extends State<BottomNavScreen> {
   int currentIndex = 0;
@@ -18,6 +26,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     Doctorscreen(),
     Categoryscreen(),
     Cartscreen(),
+    Profilescreen()
   ];
 
   @override
@@ -45,15 +54,22 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
             icon: _buildNavIcon('assets/images/cart.png', 3),
             label: 'Cart',
           ),
+          BottomNavigationBarItem(
+            icon: _buildNavIcon('assets/images/Profile.png', 4),
+            label: 'Profile',
+          ),
         ],
         type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex,
         selectedItemColor: Color(0XFF199A8E),
         unselectedItemColor: Colors.grey,
+        selectedLabelStyle: TextStyle(fontSize: 10),
+        // 👈 Smaller label text
+        unselectedLabelStyle: TextStyle(fontSize: 10),
+        // 👈 Smaller label text
         onTap: (index) {
           setState(() {
             currentIndex = index;
-
           });
         },
       ),
@@ -61,12 +77,22 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   }
 
   Widget _buildNavIcon(String assetPath, int index) {
-    return ColorFiltered(
-      colorFilter: ColorFilter.mode(
-        currentIndex == index ? Color(0XFF199A8E) : Colors.grey,
-        BlendMode.srcIn,
+    final isSelected = currentIndex == index;
+
+    return Container(
+      padding: const EdgeInsets.all(6), // Add some space around the icon
+      decoration: BoxDecoration(
+        color: isSelected ? Color(0x1A199A8E) : Colors.transparent,
+        // Light background when selected
+        shape: BoxShape.circle,
       ),
-      child: Image.asset(assetPath, width: 24, height: 24),
+      child: ColorFiltered(
+        colorFilter: ColorFilter.mode(
+          isSelected ? Color(0XFF199A8E) : Colors.grey,
+          BlendMode.srcIn,
+        ),
+        child: Image.asset(assetPath, width: 24, height: 24),
+      ),
     );
   }
 }
