@@ -1,8 +1,8 @@
-import 'package:Alhewan/repository/bottomNav/bottomNavScreens/cart/cartscreen.dart';
-import 'package:Alhewan/repository/bottomNav/bottomNavScreens/categories/categoryscreen.dart';
-import 'package:Alhewan/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
-import 'package:Alhewan/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
-import 'package:Alhewan/repository/bottomNav/bottomNavScreens/profile/profile.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/cart/cartscreen.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/categories/categoryscreen.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/profile/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -32,6 +32,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: IndexedStack(
         index: currentIndex,
         children: pages,

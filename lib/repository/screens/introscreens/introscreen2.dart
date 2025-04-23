@@ -1,4 +1,4 @@
-import 'package:Alhewan/repository/screens/introscreens/introsreen3.dart';
+import 'package:al_haiwan/repository/screens/introscreens/introsreen3.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 

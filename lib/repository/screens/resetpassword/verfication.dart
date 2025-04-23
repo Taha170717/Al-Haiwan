@@ -1,4 +1,4 @@
-import 'package:Alhewan/repository/screens/resetpassword/createnewpass.dart';
+import 'package:al_haiwan/repository/screens/resetpassword/createnewpass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';

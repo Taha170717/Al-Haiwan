@@ -1,4 +1,4 @@
-import 'package:Alhewan/repository/screens/introscreens/introscreen1.dart';
+import 'package:al_haiwan/repository/screens/introscreens/introscreen1.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:animated_text_kit/animated_text_kit.dart';

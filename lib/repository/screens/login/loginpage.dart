@@ -1,6 +1,6 @@
-import 'package:Alhewan/repository/bottomNav/bottomNavScreen.dart';
-import 'package:Alhewan/repository/screens/resetpassword/resetpassword.dart';
-import 'package:Alhewan/repository/screens/signup/signup.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreen.dart';
+import 'package:al_haiwan/repository/screens/resetpassword/resetpassword.dart';
+import 'package:al_haiwan/repository/screens/signup/signup.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

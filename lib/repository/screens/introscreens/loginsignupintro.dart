@@ -1,5 +1,5 @@
-import 'package:Alhewan/repository/screens/login/loginpage.dart';
-import 'package:Alhewan/repository/screens/signup/signup.dart';
+import 'package:al_haiwan/repository/screens/login/loginpage.dart';
+import 'package:al_haiwan/repository/screens/signup/signup.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 

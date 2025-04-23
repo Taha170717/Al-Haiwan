@@ -1,4 +1,4 @@
-import 'package:Alhewan/repository/screens/splash/splashscreen.dart';
+import 'package:al_haiwan/repository/screens/splash/splashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart'; // Make sure this is imported
 
