@@ -26,7 +26,6 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     Doctorscreen(),
     Categoryscreen(),
     Cartscreen(),
-    Profilescreen()
   ];
 
   @override
@@ -55,10 +54,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
             icon: _buildNavIcon('assets/images/cart.png', 3),
             label: 'Cart',
           ),
-          BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/images/Profile.png', 4),
-            label: 'Profile',
-          ),
+
         ],
         type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex,
