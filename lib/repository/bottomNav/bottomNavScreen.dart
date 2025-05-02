@@ -4,10 +4,6 @@ import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/doctors/doctorsc
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/profile/profile.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-
-import 'bottomNavScreens/profile/profile_viewmodal.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({super.key});
