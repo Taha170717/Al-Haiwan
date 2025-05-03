@@ -8,60 +8,72 @@ class Profilescreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final double screenWidth = screenSize.width;
+    final double screenHeight = screenSize.height;
+
     return Scaffold(
       backgroundColor: const Color(0xFF199A8E),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height,
           child: Column(
             children: [
-              const SizedBox(height: 80),
-              const CircleAvatar(
-                radius: 40,
-                backgroundImage: AssetImage('assets/images/user.png'),
+              SizedBox(height: screenHeight * 0.1),
+              CircleAvatar(
+                radius: screenWidth * 0.12,
+                backgroundImage: const AssetImage('assets/images/user.png'),
               ),
               const SizedBox(height: 10),
               Obx(() => Text(
-                controller.name.value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              )),
-              const SizedBox(height: 20),
+                    controller.name.value,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenWidth * 0.045,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )),
+              SizedBox(height: screenHeight * 0.03),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: const [
-                    _StatWidget(label: 'Heart rate', value: '215bpm', icon: Icons.favorite),
-                    _StatWidget(label: 'Calories', value: '756cal', icon: Icons.local_fire_department),
-                    _StatWidget(label: 'Weight', value: '103lbs', icon: Icons.fitness_center),
+                    _StatWidget(
+                        label: 'Heart rate',
+                        value: '215bpm',
+                        icon: Icons.favorite),
+                    _StatWidget(
+                        label: 'Calories',
+                        value: '756cal',
+                        icon: Icons.local_fire_department),
+                    _StatWidget(
+                        label: 'Weight',
+                        value: '103lbs',
+                        icon: Icons.fitness_center),
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: screenHeight * 0.03),
+              const Spacer(), // Pushes the white container to the bottom
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 20),
+                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.03),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildOption(context, Icons.bookmark_border, 'My Saved', onTap: () {
-                      // TODO: Add navigation
-                    }),
-                    _buildOption(context, Icons.calendar_today, 'Appointment', onTap: () {
-                      // TODO: Add navigation
-                    }),
-                    _buildOption(context, Icons.credit_card, 'Payment Method', onTap: () {
-                      // TODO: Add navigation
-                    }),
-                    _buildOption(context, Icons.help_outline, 'FAQs', onTap: () {
-                      // TODO: Add navigation
-                    }),
+                    _buildOption(context, Icons.bookmark_border, 'My Saved',
+                        onTap: () {}),
+                    _buildOption(context, Icons.calendar_today, 'Appointment',
+                        onTap: () {}),
+                    _buildOption(context, Icons.credit_card, 'Payment Method',
+                        onTap: () {}),
+                    _buildOption(context, Icons.help_outline, 'FAQs',
+                        onTap: () {}),
                     _buildOption(
                       context,
                       Icons.logout,
@@ -81,13 +93,13 @@ class Profilescreen extends StatelessWidget {
   }
 
   Widget _buildOption(
-      BuildContext context,
-      IconData icon,
-      String title, {
-        Color iconColor = const Color(0xFF199A8E),
-        Color textColor = Colors.black,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context,
+    IconData icon,
+    String title, {
+    Color iconColor = const Color(0xFF199A8E),
+    Color textColor = Colors.black,
+    required VoidCallback onTap,
+  }) {
     return ListTile(
       onTap: onTap,
       leading: Container(
@@ -104,13 +116,16 @@ class Profilescreen extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -122,7 +137,8 @@ class Profilescreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: Color(0xFFEFF9F8),
                   ),
-                  child: const Icon(Icons.logout, color: Color(0xFF199A8E), size: 32),
+                  child: const Icon(Icons.logout,
+                      color: Color(0xFF199A8E), size: 32),
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -143,7 +159,7 @@ class Profilescreen extends StatelessWidget {
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (_) => Loginpage()),
-                            (route) => false,
+                        (route) => false,
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -153,7 +169,8 @@ class Profilescreen extends StatelessWidget {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text("Log Out", style: TextStyle(fontSize: 16, color: Colors.white)),
+                    child: const Text("Log Out",
+                        style: TextStyle(fontSize: 16, color: Colors.white)),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -190,12 +207,18 @@ class _StatWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Column(
       children: [
-        Icon(icon, color: Colors.white, size: 24),
+        Icon(icon, color: Colors.white, size: screenWidth * 0.06),
         const SizedBox(height: 5),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 16)),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text(value,
+            style:
+                TextStyle(color: Colors.white, fontSize: screenWidth * 0.04)),
+        Text(label,
+            style:
+                TextStyle(color: Colors.white70, fontSize: screenWidth * 0.03)),
       ],
     );
   }
