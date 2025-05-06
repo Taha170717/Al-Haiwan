@@ -1,36 +1,34 @@
-import 'package:al_haiwan/repository/screens/introscreens/introscreen1.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'dart:async';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:lottie/lottie.dart';
+import 'package:al_haiwan/repository/screens/introscreens/introscreen1.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashController extends GetxController {
   @override
-  _SplashScreenState createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    Timer(Duration(seconds: 4), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => Introscreen1()), // Replace with your Home Screen
-      );
+  void onInit() {
+    super.onInit();
+    Timer(Duration(seconds: 3), () {
+      Get.off(() => Introscreen1());
     });
   }
+}
+
+class SplashScreen extends StatelessWidget {
+  final SplashController controller = Get.put(SplashController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          color: Colors.white
-        ),
+        color: Colors.white,
+        width: double.infinity,
+        height: double.infinity,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               AnimatedContainer(
                 duration: Duration(seconds: 2),
@@ -47,27 +45,31 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(15.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15),
                 child: AnimatedTextKit(
                   animatedTexts: [
-                    TypewriterAnimatedText(
+                    FadeAnimatedText(
                       'Expert Care for Every Paw and Claw.',
                       textStyle: TextStyle(
                         fontSize: 18,
                         color: Color(0XFF199A8E),
                         fontFamily: 'semibolditalic',
-                      ),textAlign: TextAlign.center,
-                      speed: Duration(milliseconds: 80),
+                      ),
+                      textAlign: TextAlign.center,
+                      duration: Duration(seconds: 3),
                     ),
                   ],
+                  isRepeatingAnimation: false,
                   totalRepeatCount: 1,
+                  pause: Duration.zero,
+                  displayFullTextOnTap: true,
                 ),
               ),
+              SizedBox(height: 10),
               Lottie.asset(
                 'assets/animations/loadings.json',
                 width: 250,
                 height: 180,
-
               ),
             ],
           ),
@@ -76,5 +78,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-
-

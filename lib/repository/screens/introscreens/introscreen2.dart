@@ -1,50 +1,43 @@
-import 'package:al_haiwan/repository/screens/introscreens/introsreen3.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
+import 'package:get/get.dart';
+import 'introsreen3.dart';
 import 'loginsignupintro.dart';
 
-class Introscreen2 extends StatefulWidget{
-  const Introscreen2({super.key});
-
-  @override
-  State<Introscreen2> createState() => _Introscreen2State();
+class Intro2Controller extends GetxController {
+  void skip() => Get.off(() => Loginsignupintro());
+  void next() => Get.off(() => Introscreen3());
 }
 
-class _Introscreen2State extends State<Introscreen2> {
-
+class Introscreen2 extends StatelessWidget {
+  final Intro2Controller controller = Get.put(Intro2Controller());
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            color: Colors.white,
-          ),
-          // Image**
+          Container(color: Colors.white),
+
+          /// Image
           Positioned(
             top: 90,
             left: 20,
             right: 20,
             child: Image.asset(
-              'assets/images/d4.png', // Replace with your image
-              // width: screenWidth * 0.8,
-              // height: screenHeight * 0.5,
+              'assets/images/d4.png',
               fit: BoxFit.cover,
             ),
           ),
 
-          //Skip Button
+          /// Skip Button
           Positioned(
-            top: 40, // Adjust as needed
-            right: 20, // Adjust as needed
+            top: 40,
+            right: 20,
             child: GestureDetector(
-              onTap: () {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Loginsignupintro()),);
-              },
+              onTap: controller.skip,
               child: Text(
                 'Skip',
                 style: TextStyle(
@@ -56,10 +49,7 @@ class _Introscreen2State extends State<Introscreen2> {
             ),
           ),
 
-
-
-
-          /// Bottom Rounded Container
+          /// Bottom Content
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -83,7 +73,6 @@ class _Introscreen2State extends State<Introscreen2> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// Title Description
                   Text(
                     'Find a lot of specialist doctors in one place',
                     style: TextStyle(
@@ -94,21 +83,15 @@ class _Introscreen2State extends State<Introscreen2> {
                   ),
                   SizedBox(height: 15),
 
-                  ///  Page Indicator & Arrow Button
+                  /// Page Indicator & Next
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-
-
-                          Container(
-                            height: 6,
-                            width: 6,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              shape: BoxShape.circle,
-                            ),
+                          CircleAvatar(
+                            radius: 3,
+                            backgroundColor: Colors.grey.shade300,
                           ),
                           SizedBox(width: 5),
                           Container(
@@ -120,29 +103,19 @@ class _Introscreen2State extends State<Introscreen2> {
                             ),
                           ),
                           SizedBox(width: 5),
-                          Container(
-                            height: 6,
-                            width: 6,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              shape: BoxShape.circle,
-                            ),
+                          CircleAvatar(
+                            radius: 3,
+                            backgroundColor: Colors.grey.shade300,
                           ),
                         ],
                       ),
 
-                      /// Next Button
                       FloatingActionButton(
-                        onPressed: () {
-                         Navigator.pushReplacement(context, MaterialPageRoute(builder:
-
-                         (context)=> Introscreen3()),);
-                        },
+                        onPressed: controller.next,
+                        shape: CircleBorder(),
                         backgroundColor: Color(0xFF357964),
-                        shape: CircleBorder(), // Ensures a perfect circular shape
                         child: Icon(Icons.arrow_forward, color: Colors.white),
                       ),
-
                     ],
                   ),
                 ],
@@ -151,7 +124,6 @@ class _Introscreen2State extends State<Introscreen2> {
           ),
         ],
       ),
-
     );
   }
 }

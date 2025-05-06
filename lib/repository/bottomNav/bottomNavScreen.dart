@@ -58,6 +58,7 @@ class BottomNavScreen extends StatelessWidget {
           ),
         ],
         type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
         currentIndex: controller.currentIndex.value,
         selectedItemColor: Color(0XFF199A8E),
         unselectedItemColor: Colors.grey,
