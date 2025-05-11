@@ -1,7 +1,9 @@
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/product/Product%20ViewModel.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/product/Product_detail.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/product/product%20Modal.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../../controllers/bottom_nav_controller.dart';
 import '../doctors/DoctorDetailView.dart';
 import '../doctors/doctor_list_viewmodel.dart';
@@ -10,6 +12,8 @@ class HomeScreen extends StatelessWidget {
   HomeScreen({Key? key}) : super(key: key);
 
   final DoctorListViewModel doctorController = Get.put(DoctorListViewModel());
+  final ProductListViewModel productController = Get.put(ProductListViewModel());
+
 
   @override
   Widget build(BuildContext context) {
@@ -25,18 +29,30 @@ class HomeScreen extends StatelessWidget {
             children: [
               // Search bar
               SizedBox(
-                height: 40, // Adjust height as needed
+                height: 40,
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Search doctor, drugs, articles...",
-                    prefixIcon: const Icon(Icons.search, size: 20), // Smaller iconjjkasjdkasdksaldas
+                    prefixIcon: const Icon(Icons.search, size: 20),
                     filled: true,
                     fillColor: Colors.white30,
-                    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16), // Reduce padding
-                    border: OutlineInputBorder(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+
+                    // Border when NOT focused
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(
-                        color: Color(0xFF199A8E)
+                      borderSide: const BorderSide(
+                        color: Color(0xFF199A8E),
+                        width: 1.5,
+                      ),
+                    ),
+
+                    // Border when focused (active)
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF199A8E), // Custom teal
+                        width: 1.0, // Slightly thinner border
                       ),
                     ),
                   ),
@@ -64,13 +80,16 @@ class HomeScreen extends StatelessWidget {
               // Top Doctor Section
               _buildSectionHeader("Top Doctor"),
               SizedBox(
-                height: 190,
+                height: 15,
+              ),
+              SizedBox(
+                height: 180,
                 child: Obx(() => ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: doctorController.doctors.length,
                   itemBuilder: (context, index) {
                     final doc = doctorController.doctors[index];
-                    return _buildDoctorCard(doc, screen);
+                    return _buildDoctorCard(doc);
                   },
                 )),
               ),
@@ -78,20 +97,22 @@ class HomeScreen extends StatelessWidget {
 
               // Products Section
               _buildSectionHeader("Pharmacy"),
-              GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+              Obx(() => GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 3 / 4,
+                ),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 3 / 4,
-                children: [
-                  _buildProductCard("Vitamin C", "₨ 350", 'assets/images/med1.png'),
-                  _buildProductCard("Pain Relief Gel", "₨ 250", 'assets/images/panadol.png'),
-                  _buildProductCard("Bandage Pack", "₨ 150", 'assets/images/obh.png'),
-                  _buildProductCard("Face Mask", "₨ 200", 'assets/images/med1.png'),
-                ],
-              ),
+                itemCount: productController.products.length,
+                itemBuilder: (context, index) {
+                  final product = productController.products[index];
+                  return _buildProductCard(product);
+                },
+              )),
+
             ],
           ),
         ),
@@ -167,7 +188,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-
   Widget _buildSectionHeader(String title) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -179,7 +199,7 @@ class HomeScreen extends StatelessWidget {
         GestureDetector(
           onTap: () {
             final controller = Get.find<BottomNavController>();
-            controller.changeIndex(1); // Assuming index 1 is Doctorscreen
+            controller.changeIndex(1); // Assuming Doctorscreen is at index 1
           },
           child: const Text(
             "See all",
@@ -190,84 +210,92 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-
-  Widget _buildDoctorCard(Doctor doc, Size screen) {
-    return Container(
-      width: screen.width * 0.38,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-            child: Image.asset(
-              doc.image,
-              width: double.infinity,
-              height: 100,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(6.0),
-            child: Column(
-              children: [
-                Text(doc.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                Text(doc.speciality, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.star, size: 12, color: Colors.orange),
-                    Text(doc.rating.toString(), style: const TextStyle(fontSize: 11)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.location_on, size: 12, color: Colors.grey),
-                    Text(doc.distance, style: const TextStyle(fontSize: 11)),
-                  ],
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProductCard(String title, String price, String imagePath) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.shade300, blurRadius: 4, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: ClipRRect(
+  Widget _buildDoctorCard(Doctor doc) {
+    return GestureDetector(
+      onTap: () {
+        Get.to(() => DoctorDetailView(doctor: doc)); // Pass the doctor object
+      },
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipRRect(
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-              child: Image.asset(imagePath, fit: BoxFit.contain, width: double.infinity),
+              child: Image.asset(
+                doc.image,
+                height: 90,
+                width: double.infinity,
+                fit: BoxFit.contain,
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(price, style: const TextStyle(color: Colors.green)),
-              ],
-            ),
-          )
-        ],
+            Padding(
+              padding: const EdgeInsets.all(6.0),
+              child: Column(
+                children: [
+                  Text(doc.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                  Text(doc.speciality, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.star, size: 12, color: Colors.orange),
+                      Text(doc.rating.toString(), style: const TextStyle(fontSize: 11)),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.location_on, size: 12, color: Colors.grey),
+                      Text(doc.distance, style: const TextStyle(fontSize: 11)),
+                    ],
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
+
+  Widget _buildProductCard(Product product) {
+    return GestureDetector(
+      onTap: () {
+        Get.to(() => ProductDetailView(product: product));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.shade300, blurRadius: 4, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 80,
+              padding: const EdgeInsets.all(4),
+              child: Image.asset(product.imagePath, fit: BoxFit.contain),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Column(
+                children: [
+                  Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(product.price, style: const TextStyle(color: Colors.green)),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
 }
