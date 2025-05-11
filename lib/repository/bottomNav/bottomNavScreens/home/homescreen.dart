@@ -29,7 +29,7 @@ class HomeScreen extends StatelessWidget {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Search doctor, drugs, articles...",
-                    prefixIcon: const Icon(Icons.search, size: 20), // Smaller icon
+                    prefixIcon: const Icon(Icons.search, size: 20), // Smaller iconjjkasjdkasdksaldas
                     filled: true,
                     fillColor: Colors.white30,
                     contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16), // Reduce padding
