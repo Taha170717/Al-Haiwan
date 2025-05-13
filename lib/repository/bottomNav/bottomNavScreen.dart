@@ -22,146 +22,226 @@ class BottomNavScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() => Scaffold(
-      backgroundColor: Colors.white,
-
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(
-          "Alhewan",
-          style: TextStyle(color: Color(0xFF199A8E),fontFamily:"bolditalic"), // Custom teal color
-        ),
-        iconTheme: IconThemeData(color: Color(0XFF199A8E)),
-      ),
-
-      body: IndexedStack(
-        index: controller.currentIndex.value,
-        children: pages,
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/images/home.png', 0),
-            label: 'Home',
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            title: Text(
+              "Alhewan",
+              style: TextStyle(
+                  color: Color(0xFF199A8E),
+                  fontFamily: "bolditalic"), // Custom teal color
+            ),
+            iconTheme: IconThemeData(color: Color(0XFF199A8E)),
           ),
-          BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/images/consult.png', 1),
-            label: 'Doctors',
+          body: IndexedStack(
+            index: controller.currentIndex.value,
+            children: pages,
           ),
-          BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/images/category.png', 2),
-            label: 'Categories',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/images/cart.png', 3),
-            label: 'Cart',
-          ),
-        ],
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        currentIndex: controller.currentIndex.value,
-        selectedItemColor: Color(0XFF199A8E),
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: TextStyle(fontSize: 10),
-        unselectedLabelStyle: TextStyle(fontSize: 10),
-        onTap: controller.changeIndex,
-      ),
-
-      drawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85, // 70% of screen width
-        child: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              UserAccountsDrawerHeader(
-                decoration: const BoxDecoration(
-                  color: Color(0XFF199A8E),
-                ),
-                currentAccountPicture: const CircleAvatar(
-                  backgroundImage: AssetImage("assets/images/user.png"),
-                ),
-                accountName: const Text("Muhammad Taha"),
-                accountEmail: const Text("tahazafar112@gmail.com"),
+          bottomNavigationBar: BottomNavigationBar(
+            items: [
+              BottomNavigationBarItem(
+                icon: _buildNavIcon('assets/icons/home.png', 0),
+                label: 'Home',
               ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text('Profile', style: TextStyle(color: Color(0XFF199A8E))),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0XFF199A8E)),
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => Profilescreen()));
-                },
+              BottomNavigationBarItem(
+                icon: _buildNavIcon('assets/icons/consult.png', 1),
+                label: 'Doctors',
               ),
-              ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Home', style: TextStyle(color: Color(0XFF199A8E))),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0XFF199A8E)),
-                onTap: () {
-                  controller.changeIndex(0);
-                  Get.back();
-                },
+              BottomNavigationBarItem(
+                icon: _buildNavIcon('assets/icons/category.png', 2),
+                label: 'Categories',
               ),
-              ListTile(
-                leading: const Icon(Icons.medical_services),
-                title: const Text('Doctors', style: TextStyle(color: Color(0XFF199A8E))),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0XFF199A8E)),
-                onTap: () {
-                  controller.changeIndex(1);
-                  Get.back();
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.calendar_today),
-                title: Text('Appointments', style: TextStyle(color: Color(0XFF199A8E))),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0XFF199A8E)),
-
-                onTap: () {
-                  // Navigate to appointment screen
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.receipt_long),
-                title: Text('My Orders', style: TextStyle(color: Color(0XFF199A8E))),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0XFF199A8E)),
-
-                onTap: () {
-                  // Navigate to orders screen
-                  Navigator.pop(context);
-                },
-              ),
-
-
-              ListTile(
-                leading: const Icon(Icons.category),
-                title: const Text('Categories', style: TextStyle(color: Color(0XFF199A8E))),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0XFF199A8E)),
-                onTap: () {
-                  controller.changeIndex(2);
-                  Get.back();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.shopping_cart),
-                title: const Text('Cart', style: TextStyle(color: Color(0XFF199A8E))),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0XFF199A8E)),
-                onTap: () {
-                  controller.changeIndex(3);
-                  Get.back();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Logout', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  _showLogoutDialog(context);
-                },
+              BottomNavigationBarItem(
+                icon: _buildNavIcon('assets/icons/cart.png', 3),
+                label: 'Cart',
               ),
             ],
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            currentIndex: controller.currentIndex.value,
+            selectedItemColor: Color(0XFF199A8E),
+            unselectedItemColor: Colors.grey,
+            selectedLabelStyle: TextStyle(fontSize: 10),
+            unselectedLabelStyle: TextStyle(fontSize: 10),
+            onTap: controller.changeIndex,
           ),
-        ),
-      ),
-
-    ));
+          drawer: SizedBox(
+            width:
+                MediaQuery.of(context).size.width * 0.85, // 70% of screen width
+            child: Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  UserAccountsDrawerHeader(
+                    decoration: const BoxDecoration(
+                      color: Color(0XFF199A8E),
+                    ),
+                    currentAccountPicture: const CircleAvatar(
+                      backgroundImage: AssetImage("assets/images/user.png"),
+                    ),
+                    accountName: const Text("Muhammad Taha"),
+                    accountEmail: const Text("tahazafar112@gmail.com"),
+                  ),
+                  ListTile(
+                    leading: SizedBox(
+                      height: 24, // Adjust size as needed
+                      width: 24,
+                      child: Image.asset("assets/icons/profile.png"),
+                    ),
+                    title: const Text('Profile',
+                        style: TextStyle(color: Color(0XFF199A8E))),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                        color: Color(0XFF199A8E)),
+                    onTap: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => Profilescreen()));
+                    },
+                  ),
+                  const Divider(
+                    color: Color(0xFF199A8E),
+                    thickness: 0.8,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  ListTile(
+                    leading: SizedBox(
+                      height: 24, // Adjust size as needed
+                      width: 24,
+                      child: Image.asset("assets/icons/home.png"),
+                    ),
+                    title: const Text('Home',
+                        style: TextStyle(color: Color(0XFF199A8E))),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                        color: Color(0XFF199A8E)),
+                    onTap: () {
+                      controller.changeIndex(0);
+                      Get.back();
+                    },
+                  ),
+                  const Divider(
+                    color: Color(0xFF199A8E),
+                    thickness: 0.8,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  ListTile(
+                    leading: SizedBox(
+                      height: 24, // Adjust size as needed
+                      width: 24,
+                      child: Image.asset("assets/icons/consult.png"),
+                    ),
+                    title: const Text('Doctors',
+                        style: TextStyle(color: Color(0XFF199A8E))),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                        color: Color(0XFF199A8E)),
+                    onTap: () {
+                      controller.changeIndex(1);
+                      Get.back();
+                    },
+                  ),
+                  const Divider(
+                    color: Color(0xFF199A8E),
+                    thickness: 0.8,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  ListTile(
+                    leading: SizedBox(
+                      height: 24, // Adjust size as needed
+                      width: 24,
+                      child: Image.asset("assets/icons/schedule.png"),
+                    ),
+                    title: Text('Appointments',
+                        style: TextStyle(color: Color(0XFF199A8E))),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                        color: Color(0XFF199A8E)),
+                    onTap: () {
+                      // Navigate to appointment screen
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const Divider(
+                    color: Color(0xFF199A8E),
+                    thickness: 0.8,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  ListTile(
+                    leading: SizedBox(
+                      height: 24, // Adjust size as needed
+                      width: 24,
+                      child: Image.asset("assets/icons/checkout.png"),
+                    ),
+                    title: Text('My Orders',
+                        style: TextStyle(color: Color(0XFF199A8E))),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                        color: Color(0XFF199A8E)),
+                    onTap: () {
+                      // Navigate to orders screen
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const Divider(
+                    color: Color(0xFF199A8E),
+                    thickness: 0.8,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  ListTile(
+                    leading: SizedBox(
+                      height: 24, // Adjust size as needed
+                      width: 24,
+                      child: Image.asset("assets/icons/category.png"),
+                    ),
+                    title: const Text('Categories',
+                        style: TextStyle(color: Color(0XFF199A8E))),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                        color: Color(0XFF199A8E)),
+                    onTap: () {
+                      controller.changeIndex(2);
+                      Get.back();
+                    },
+                  ),
+                  const Divider(
+                    color: Color(0xFF199A8E),
+                    thickness: 0.8,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  ListTile(
+                    leading: SizedBox(
+                      height: 24, // Adjust size as needed
+                      width: 24,
+                      child: Image.asset("assets/icons/cart.png"),
+                    ),
+                    title: const Text('Cart',
+                        style: TextStyle(color: Color(0XFF199A8E))),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                        color: Color(0XFF199A8E)),
+                    onTap: () {
+                      controller.changeIndex(3);
+                      Get.back();
+                    },
+                  ),
+                  const Divider(
+                    color: Color(0xFF199A8E),
+                    thickness: 0.8,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text('Logout',
+                        style: TextStyle(color: Colors.red)),
+                    onTap: () {
+                      _showLogoutDialog(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ));
   }
 
   /// Bottom nav icon widget
@@ -183,6 +263,7 @@ class BottomNavScreen extends StatelessWidget {
       ),
     );
   }
+
   void _showLogoutDialog(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
 
@@ -193,7 +274,7 @@ class BottomNavScreen extends StatelessWidget {
         return Dialog(
           backgroundColor: Colors.white,
           shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -227,7 +308,7 @@ class BottomNavScreen extends StatelessWidget {
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (_) => Loginpage()),
-                            (route) => false,
+                        (route) => false,
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -260,6 +341,3 @@ class BottomNavScreen extends StatelessWidget {
     );
   }
 }
-
-
-
