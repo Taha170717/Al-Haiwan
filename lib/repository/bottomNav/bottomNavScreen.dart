@@ -5,8 +5,10 @@ import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/cart/cartscreen.
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/categories/categoryscreen.dart';
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
+import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/myappointments/myAppointment.dart';
 
 import '../screens/login/loginpage.dart';
+import 'bottomNavScreens/myorders/myorders.dart';
 import 'bottomNavScreens/profile/profile.dart';
 
 class BottomNavScreen extends StatelessWidget {
@@ -65,183 +67,114 @@ class BottomNavScreen extends StatelessWidget {
             unselectedLabelStyle: TextStyle(fontSize: 10),
             onTap: controller.changeIndex,
           ),
-          drawer: SizedBox(
-            width:
-                MediaQuery.of(context).size.width * 0.85, // 70% of screen width
-            child: Drawer(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  UserAccountsDrawerHeader(
-                    decoration: const BoxDecoration(
-                      color: Color(0XFF199A8E),
-                    ),
-                    currentAccountPicture: const CircleAvatar(
-                      backgroundImage: AssetImage("assets/images/user.png"),
-                    ),
-                    accountName: const Text("Muhammad Taha"),
-                    accountEmail: const Text("tahazafar112@gmail.com"),
+      drawer: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.85,
+        child: Drawer(
+          backgroundColor: Colors.white,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              UserAccountsDrawerHeader(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  ListTile(
-                    leading: SizedBox(
-                      height: 24, // Adjust size as needed
-                      width: 24,
-                      child: Image.asset("assets/icons/profile.png"),
-                    ),
-                    title: const Text('Profile',
-                        style: TextStyle(color: Color(0XFF199A8E))),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Color(0XFF199A8E)),
-                    onTap: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => Profilescreen()));
-                    },
-                  ),
-                  const Divider(
-                    color: Color(0xFF199A8E),
-                    thickness: 0.8,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  ListTile(
-                    leading: SizedBox(
-                      height: 24, // Adjust size as needed
-                      width: 24,
-                      child: Image.asset("assets/icons/home.png"),
-                    ),
-                    title: const Text('Home',
-                        style: TextStyle(color: Color(0XFF199A8E))),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Color(0XFF199A8E)),
-                    onTap: () {
-                      controller.changeIndex(0);
-                      Get.back();
-                    },
-                  ),
-                  const Divider(
-                    color: Color(0xFF199A8E),
-                    thickness: 0.8,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  ListTile(
-                    leading: SizedBox(
-                      height: 24, // Adjust size as needed
-                      width: 24,
-                      child: Image.asset("assets/icons/consult.png"),
-                    ),
-                    title: const Text('Doctors',
-                        style: TextStyle(color: Color(0XFF199A8E))),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Color(0XFF199A8E)),
-                    onTap: () {
-                      controller.changeIndex(1);
-                      Get.back();
-                    },
-                  ),
-                  const Divider(
-                    color: Color(0xFF199A8E),
-                    thickness: 0.8,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  ListTile(
-                    leading: SizedBox(
-                      height: 24, // Adjust size as needed
-                      width: 24,
-                      child: Image.asset("assets/icons/schedule.png"),
-                    ),
-                    title: Text('Appointments',
-                        style: TextStyle(color: Color(0XFF199A8E))),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Color(0XFF199A8E)),
-                    onTap: () {
-                      // Navigate to appointment screen
-                      Navigator.pop(context);
-                    },
-                  ),
-                  const Divider(
-                    color: Color(0xFF199A8E),
-                    thickness: 0.8,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  ListTile(
-                    leading: SizedBox(
-                      height: 24, // Adjust size as needed
-                      width: 24,
-                      child: Image.asset("assets/icons/checkout.png"),
-                    ),
-                    title: Text('My Orders',
-                        style: TextStyle(color: Color(0XFF199A8E))),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Color(0XFF199A8E)),
-                    onTap: () {
-                      // Navigate to orders screen
-                      Navigator.pop(context);
-                    },
-                  ),
-                  const Divider(
-                    color: Color(0xFF199A8E),
-                    thickness: 0.8,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  ListTile(
-                    leading: SizedBox(
-                      height: 24, // Adjust size as needed
-                      width: 24,
-                      child: Image.asset("assets/icons/category.png"),
-                    ),
-                    title: const Text('Categories',
-                        style: TextStyle(color: Color(0XFF199A8E))),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Color(0XFF199A8E)),
-                    onTap: () {
-                      controller.changeIndex(2);
-                      Get.back();
-                    },
-                  ),
-                  const Divider(
-                    color: Color(0xFF199A8E),
-                    thickness: 0.8,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  ListTile(
-                    leading: SizedBox(
-                      height: 24, // Adjust size as needed
-                      width: 24,
-                      child: Image.asset("assets/icons/cart.png"),
-                    ),
-                    title: const Text('Cart',
-                        style: TextStyle(color: Color(0XFF199A8E))),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Color(0XFF199A8E)),
-                    onTap: () {
-                      controller.changeIndex(3);
-                      Get.back();
-                    },
-                  ),
-                  const Divider(
-                    color: Color(0xFF199A8E),
-                    thickness: 0.8,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text('Logout',
-                        style: TextStyle(color: Colors.red)),
-                    onTap: () {
-                      _showLogoutDialog(context);
-                    },
-                  ),
-                ],
+                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+                ),
+                currentAccountPicture: const CircleAvatar(
+                  radius: 35,
+                  backgroundImage: AssetImage("assets/images/user.png"),
+                ),
+                accountName: const Text(
+                  "Muhammad Taha",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                accountEmail: const Text("tahazafar112@gmail.com"),
               ),
-            ),
+
+              _buildDrawerTile(
+                icon: "assets/icons/profile.png",
+                label: "Profile",
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => Profilescreen()));
+                },
+              ),
+              _buildDivider(),
+
+              _buildDrawerTile(
+                icon: "assets/icons/home.png",
+                label: "Home",
+                onTap: () {
+                  controller.changeIndex(0);
+                  Get.back();
+                },
+              ),
+              _buildDivider(),
+
+              _buildDrawerTile(
+                icon: "assets/icons/consult.png",
+                label: "Doctors",
+                onTap: () {
+                  controller.changeIndex(1);
+                  Get.back();
+                },
+              ),
+              _buildDivider(),
+
+              _buildDrawerTile(
+                icon: "assets/icons/schedule.png",
+                label: "Appointments",
+                onTap: () {
+                  Get.to(() => MyAppointmentScreen());
+                },
+              ),
+              _buildDivider(),
+
+              _buildDrawerTile(
+                icon: "assets/icons/checkout.png",
+                label: "My Orders",
+                onTap: () {
+                  Get.to(() => MyOrdersPage());
+                },
+              ),
+              _buildDivider(),
+
+              _buildDrawerTile(
+                icon: "assets/icons/category.png",
+                label: "Categories",
+                onTap: () {
+                  controller.changeIndex(2);
+                  Get.back();
+                },
+              ),
+              _buildDivider(),
+
+              _buildDrawerTile(
+                icon: "assets/icons/cart.png",
+                label: "Cart",
+                onTap: () {
+                  controller.changeIndex(3);
+                  Get.back();
+                },
+              ),
+              _buildDivider(),
+
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  _showLogoutDialog(context);
+                },
+              ),
+            ],
           ),
-        ));
+        ),
+      ),
+
+    ),
+        );
   }
 
   /// Bottom nav icon widget
@@ -249,20 +182,25 @@ class BottomNavScreen extends StatelessWidget {
     final isSelected = controller.currentIndex.value == index;
 
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(4), // Reduced padding
       decoration: BoxDecoration(
-        color: isSelected ? Color(0x1A199A8E) : Colors.transparent,
+        color: isSelected ? const Color(0x1A199A8E) : Colors.transparent,
         shape: BoxShape.circle,
       ),
       child: ColorFiltered(
         colorFilter: ColorFilter.mode(
-          isSelected ? Color(0XFF199A8E) : Colors.grey,
+          isSelected ? const Color(0XFF199A8E) : Colors.grey,
           BlendMode.srcIn,
         ),
-        child: Image.asset(assetPath, width: 24, height: 24),
+        child: Image.asset(
+          assetPath,
+          width: 22,
+          height: 22,
+        ),
       ),
     );
   }
+
 
   void _showLogoutDialog(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
@@ -340,4 +278,24 @@ class BottomNavScreen extends StatelessWidget {
       },
     );
   }
+  Widget _buildDrawerTile({required String icon, required String label, required VoidCallback onTap}) {
+    return ListTile(
+      leading: Image.asset(icon, height: 24, width: 24, color: Color(0XFF199A8E)),
+      title: Text(label,
+          style: TextStyle(
+              color: Color(0XFF199A8E), fontSize: 15, fontWeight: FontWeight.w500)),
+      trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0XFF199A8E)),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(
+      color: Color(0xFF199A8E),
+      thickness: 0.6,
+      indent: 20,
+      endIndent: 20,
+    );
+  }
+
 }
