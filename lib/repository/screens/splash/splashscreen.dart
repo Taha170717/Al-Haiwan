@@ -3,15 +3,38 @@ import 'package:get/get.dart';
 import 'dart:async';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:lottie/lottie.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// Replace these with your actual screen imports
 import 'package:al_haiwan/repository/screens/introscreens/introscreen1.dart';
+
+import '../../bottomNav/bottomNavScreen.dart';
+import '../login/loginpage.dart';
 
 class SplashController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    Timer(Duration(seconds: 3), () {
-      Get.off(() => Introscreen1());
-    });
+    Timer(Duration(seconds: 3), checkAuthAndNavigate);
+  }
+
+  void checkAuthAndNavigate() {
+    final user = FirebaseAuth.instance.currentUser;
+    final storage = GetStorage();
+    bool hasSeenIntro = storage.read('seenIntro') ?? false;
+
+    if (user != null) {
+      // Already logged in
+      Get.offAll(() => BottomNavScreen());
+    } else {
+      if (hasSeenIntro) {
+        Get.offAll(() => Loginpage());
+      } else {
+        storage.write('seenIntro', true);
+        Get.offAll(() => Introscreen1());
+      }
+    }
   }
 }
 
@@ -33,7 +56,7 @@ class SplashScreen extends StatelessWidget {
               AnimatedContainer(
                 duration: Duration(seconds: 2),
                 curve: Curves.easeInOut,
-                child: Image.asset('assets/images/logo.png', width: 200, height: 200),
+                child: Image.asset('assets/images/logo3.png', width: 200, height: 200),
               ),
               SizedBox(height: 10),
               Text(

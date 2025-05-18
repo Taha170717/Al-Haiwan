@@ -1,4 +1,5 @@
 import 'package:al_haiwan/repository/controllers/bottom_nav_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/cart/cartscreen.dart';
@@ -203,7 +204,9 @@ class BottomNavScreen extends StatelessWidget {
 
 
   void _showLogoutDialog(BuildContext context) {
-    final Size screenSize = MediaQuery.of(context).size;
+    final Size screenSize = MediaQuery
+        .of(context)
+        .size;
 
     showDialog(
       context: context,
@@ -211,8 +214,8 @@ class BottomNavScreen extends StatelessWidget {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -241,12 +244,17 @@ class BottomNavScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.of(context).pop(); // Close dialog
+
+                      // 🚨 Sign the user out from Firebase
+                      await FirebaseAuth.instance.signOut();
+
+                      // ✅ Navigate to Login screen and clear history
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (_) => Loginpage()),
-                        (route) => false,
+                            (route) => false,
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -278,6 +286,7 @@ class BottomNavScreen extends StatelessWidget {
       },
     );
   }
+
   Widget _buildDrawerTile({required String icon, required String label, required VoidCallback onTap}) {
     return ListTile(
       leading: Image.asset(icon, height: 24, width: 24, color: Color(0XFF199A8E)),

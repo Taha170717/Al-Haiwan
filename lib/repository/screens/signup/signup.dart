@@ -28,7 +28,7 @@ class _SignupState extends State<Signup> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text('Sign Up', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18)),
+        title: Text('Sign Up', style: TextStyle(color: Color(0XFF199A8E), fontFamily: "bolditalic", fontSize: 22)),
         centerTitle: true,
       ),
       backgroundColor: Colors.white,
@@ -59,7 +59,6 @@ class _SignupState extends State<Signup> {
                       child: ElevatedButton(
                         onPressed: () {
                           if (_validateInputs()) {
-                            Get.dialog(Center(child: CircularProgressIndicator()), barrierDismissible: false);
                             authController.registerUser(
                               username: username.text.trim(),
                               email: email.text.trim(),

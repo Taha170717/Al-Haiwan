@@ -19,7 +19,7 @@ class Loginsignupintro extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(height: 50),
-                Image.asset('assets/images/logo.png', width: 200, height: 200),
+                Image.asset('assets/images/logo3.png', width: 200, height: 200),
                 Text(
                   'Alhewan',
                   style: TextStyle(

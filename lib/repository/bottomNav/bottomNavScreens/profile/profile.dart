@@ -1,5 +1,6 @@
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/profile/profile_viewmodal.dart';
 import 'package:al_haiwan/repository/screens/login/loginpage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -8,7 +9,9 @@ class Profilescreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Size screenSize = MediaQuery.of(context).size;
+    final Size screenSize = MediaQuery
+        .of(context)
+        .size;
     final double screenWidth = screenSize.width;
     final double screenHeight = screenSize.height;
 
@@ -16,7 +19,10 @@ class Profilescreen extends StatelessWidget {
       backgroundColor: const Color(0xFF199A8E),
       body: SafeArea(
         child: SizedBox(
-          height: MediaQuery.of(context).size.height,
+          height: MediaQuery
+              .of(context)
+              .size
+              .height,
           child: Column(
             children: [
               SizedBox(height: screenHeight * 0.1),
@@ -25,7 +31,8 @@ class Profilescreen extends StatelessWidget {
                 backgroundImage: const AssetImage('assets/images/user.png'),
               ),
               const SizedBox(height: 10),
-              Obx(() => Text(
+              Obx(() =>
+                  Text(
                     controller.name.value,
                     style: TextStyle(
                       color: Colors.white,
@@ -92,14 +99,13 @@ class Profilescreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOption(
-    BuildContext context,
-    IconData icon,
-    String title, {
-    Color iconColor = const Color(0xFF199A8E),
-    Color textColor = Colors.black,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildOption(BuildContext context,
+      IconData icon,
+      String title, {
+        Color iconColor = const Color(0xFF199A8E),
+        Color textColor = Colors.black,
+        required VoidCallback onTap,
+      }) {
     return ListTile(
       onTap: onTap,
       leading: Container(
@@ -116,7 +122,9 @@ class Profilescreen extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    final Size screenSize = MediaQuery.of(context).size;
+    final Size screenSize = MediaQuery
+        .of(context)
+        .size;
 
     showDialog(
       context: context,
@@ -124,8 +132,8 @@ class Profilescreen extends StatelessWidget {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -154,12 +162,17 @@ class Profilescreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.of(context).pop(); // Close dialog
+
+                      // 🚨 Sign the user out from Firebase
+                      await FirebaseAuth.instance.signOut();
+
+                      // ✅ Navigate to Login screen and clear history
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (_) => Loginpage()),
-                        (route) => false,
+                            (route) => false,
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -193,7 +206,7 @@ class Profilescreen extends StatelessWidget {
   }
 }
 
-class _StatWidget extends StatelessWidget {
+  class _StatWidget extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
