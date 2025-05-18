@@ -33,7 +33,7 @@ class SplashScreen extends StatelessWidget {
               AnimatedContainer(
                 duration: Duration(seconds: 2),
                 curve: Curves.easeInOut,
-                child: Image.asset('assets/images/logo.png', width: 200, height: 200),
+                child: Image.asset('assets/images/logo2.jpg', width: 200, height: 200),
               ),
               SizedBox(height: 10),
               Text(
