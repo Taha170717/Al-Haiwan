@@ -75,7 +75,7 @@ class _VerificationState extends State<Verification> {
                 height: 55,
                 child: ElevatedButton(
                   onPressed:  () {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> Creatnewpass()),);
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> CreateNewPass()),);
 
                   } ,
                   style: ElevatedButton.styleFrom(

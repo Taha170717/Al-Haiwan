@@ -1,220 +1,165 @@
-import 'package:al_haiwan/repository/screens/login/loginpage.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../controllers/auth_controller.dart';
 
-class Creatnewpass extends StatefulWidget {
+class CreateNewPass extends StatefulWidget {
+  const CreateNewPass({super.key});
+
   @override
-  State<Creatnewpass> createState() => _CreatnewpassState();
+  State<CreateNewPass> createState() => _CreateNewPassState();
 }
 
-class _CreatnewpassState extends State<Creatnewpass> {
+class _CreateNewPassState extends State<CreateNewPass> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmController = TextEditingController();
+  final authController = Get.find<AuthController>();
+
+  bool _isObscure = true;
+
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    TextEditingController password = TextEditingController();
-    TextEditingController confirmpassword = TextEditingController();
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-
+        elevation: 0,
+        title: Text(
+          "Create New Password",
+          style: TextStyle(
+              color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Get.back(),
+        ),
       ),
-      backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        child: SafeArea(
-            child: Padding(padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          child: Form(
+            key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 10),
                 Text(
-                  'Create New Password',
-                  textAlign: TextAlign.start,
+                  "Create Your New Password",
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Inter',
-                  ),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black),
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Create your new password to login into your Account',
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                      color: Color(0XFFA1A8B0),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400),
+                  "Your new password must be different from your previous password.",
+                  style: TextStyle(fontSize: 14, color: Color(0xffA1A8B0)),
                 ),
-                SizedBox(height: 30,),
-
-                TextField(controller: password,
-                  obscureText: true,
+                SizedBox(height: 30),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: _isObscure,
                   decoration: InputDecoration(
-                    labelText: "Password",
-                    // Floating label text
-                    labelStyle: TextStyle(color: Color(0XFFA1A8B0), fontSize: 16),
-                    floatingLabelBehavior: FloatingLabelBehavior.auto,
-                    // Label styling
-
-                    prefixIcon: Icon(
-                      Icons.lock, color: Color(0xFF199A8E),),
-                    suffixIcon: Icon(
-                        Icons.visibility_off, color: Color(0XFFA1A8B0)),
-                    // Email icon
-                    hintText: 'Enter your Password',
-                    hintStyle: TextStyle(color: Color(0XFFA1A8B0)),
-                    // Lighter hint text
-
-                    // Default Border - Gray when not focused
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(color: Colors.grey, width: 2),
-                    ),
-
-                    // Focused Border - Teal when clicked
+                    labelText: 'New Password',
+                    labelStyle: TextStyle(color: Color(0xffA1A8B0)),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(color: Color(0XFF199A8E), width: 2),
+                      borderSide: BorderSide(color: Color(0xff199A8E), width: 2),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-
-                    // Error Border - Red when validation fails
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(color: Colors.red, width: 2),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xffE9EDF1), width: 1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-
-                    // Focused Error Border - Red with Teal glow
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isObscure ? Icons.visibility_off : Icons.visibility,
+                        color: Color(0xffA1A8B0),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isObscure = !_isObscure;
+                        });
+                      },
                     ),
-
-                    errorStyle: TextStyle(
-                        color: Colors.red, fontSize: 14), // Error text styling
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter new password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
                 ),
-                SizedBox(height: screenHeight * 0.02),
-                TextField(controller: confirmpassword,
-                  obscureText: true,
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: confirmController,
+                  obscureText: _isObscure,
                   decoration: InputDecoration(
-                    labelText: "Confirm Password",
-                    // Floating label text
-                    labelStyle: TextStyle(color: Color(0XFFA1A8B0), fontSize: 16),
-                    floatingLabelBehavior: FloatingLabelBehavior.auto,
-                    // Label styling
-
-                    prefixIcon: Icon(
-                      Icons.lock, color: Color(0xFF199A8E),),
-                    suffixIcon: Icon(
-                        Icons.visibility_off, color: Color(0XFFA1A8B0)),
-                    // Email icon
-                    hintText: 'Please Confirm Password',
-                    hintStyle: TextStyle(color: Color(0XFFA1A8B0)),
-                    // Lighter hint text
-
-                    // Default Border - Gray when not focused
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(color: Colors.grey, width: 2),
-                    ),
-
-                    // Focused Border - Teal when clicked
+                    labelText: 'Confirm Password',
+                    labelStyle: TextStyle(color: Color(0xffA1A8B0)),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(color: Color(0XFF199A8E), width: 2),
+                      borderSide: BorderSide(color: Color(0xff199A8E), width: 2),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-
-                    // Error Border - Red when validation fails
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(color: Colors.red, width: 2),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xffE9EDF1), width: 1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-
-                    // Focused Error Border - Red with Teal glow
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isObscure ? Icons.visibility_off : Icons.visibility,
+                        color: Color(0xffA1A8B0),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isObscure = !_isObscure;
+                        });
+                      },
                     ),
-
-                    errorStyle: TextStyle(
-                        color: Colors.red, fontSize: 14), // Error text styling
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
                 ),
-                SizedBox(height: screenHeight * 0.02),
-
+                SizedBox(height: 40),
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed:  () {
-                      loginPageCreatepass(context);
-                    } ,
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        authController.resetPassword(passwordController.text.trim());
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF199A8E),
+                      backgroundColor: Color(0xff199A8E),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    child:
-                    Text('Create Password', style: TextStyle(color: Colors.white)),
+                    child: Text(
+                      "Reset Password",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            )
-        ),
-      ),
-    );
-  }
-  void loginPageCreatepass(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0XFFF5F8FF) // Background color for the circle
-                  ),
-                  padding: EdgeInsets.all(12), // Adjust padding for proper spacing
-                  child: Icon(Icons.check, size: 60, color: Color(0xFF199A8E)), // Green tick
-                ),
-                SizedBox(height: 16),
-                Text(
-                  "Success!",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  "You have successfully reset your password.",
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => Loginpage()), // Replace with your Home Screen
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0XFF199A8E),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    minimumSize: Size(double.infinity, 50),
-                  ),
-                  child: Text("Login", style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
               ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

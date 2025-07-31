@@ -1,6 +1,7 @@
 import 'package:al_haiwan/repository/bottomNav/bottomNavScreen.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
 import 'package:al_haiwan/repository/screens/login/loginpage.dart';
+import 'package:al_haiwan/repository/screens/resetpassword/createnewpass.dart';
+import 'package:al_haiwan/repository/screens/resetpassword/verfication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthController extends GetxController {
   var isLoading = false.obs;
+  String selectedResetInput = "";
+  bool isResetByEmail = true;
 
+  // Register User
   Future<void> registerUser({
     required String username,
     required String email,
@@ -35,39 +39,31 @@ class AuthController extends GetxController {
       });
 
       isLoading.value = false;
-
-      Future.delayed(Duration(milliseconds: 200), () {
-        showSuccessDialog();
-      });
+      showSuccessDialog();
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;
-      Get.snackbar("Error", e.message ?? "Unknown error");
+      Get.snackbar("Error", e.message ?? "Registration failed");
     }
   }
 
+  // Login User
   Future<void> loginUser({
     required String email,
     required String password,
   }) async {
     try {
       isLoading.value = true;
-
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
       isLoading.value = false;
-
-      Future.delayed(Duration(milliseconds: 200), () {
-        showLoginSuccessDialog();
-      });
+      showLoginSuccessDialog();
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;
-      Get.snackbar("Login Error", e.message ?? "Unknown error");
+      Get.snackbar("Login Error", e.message ?? "Login failed");
     }
   }
 
+  // Google Sign-In
   Future<void> signInWithGoogle() async {
     try {
       isLoading.value = true;
@@ -75,7 +71,7 @@ class AuthController extends GetxController {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
         isLoading.value = false;
-        return; // User cancelled sign-in
+        return;
       }
 
       final GoogleSignInAuthentication googleAuth =
@@ -96,41 +92,92 @@ class AuthController extends GetxController {
             .collection('users')
             .doc(userCredential.user!.uid)
             .set({
-          'username': userCredential.user!.displayName ?? '',
-          'email': userCredential.user!.email ?? '',
-          'phone': userCredential.user!.phoneNumber ?? '',
+          'username': userCredential.user?.displayName ?? '',
+          'email': userCredential.user?.email ?? '',
+          'phone': userCredential.user?.phoneNumber ?? '',
           'isDoctor': false,
           'createdAt': Timestamp.now(),
         });
       }
 
       isLoading.value = false;
-
-      Future.delayed(Duration(milliseconds: 200), () {
-        showLoginSuccessDialog();
-      });
+      showLoginSuccessDialog();
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;
-      Get.snackbar("Google Sign-In Error", e.message ?? "Unknown error");
+      Get.snackbar("Google Sign-In Error", e.message ?? "Something went wrong");
     }
   }
+
+  // ----------- PASSWORD RESET FLOW -----------
+
+  Future<void> sendResetCode({
+    required String input,
+    required bool isEmail,
+  }) async {
+    try {
+      isLoading.value = true;
+      selectedResetInput = input;
+      isResetByEmail = isEmail;
+
+      if (isEmail) {
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: input);
+        Get.snackbar("Code Sent", "Password reset email sent.");
+        Get.to(() => Verification());
+      } else {
+        // Dummy handling for phone (you need to implement Firebase Phone Auth)
+        Get.snackbar("Code Sent", "A code was sent to your phone number.");
+        Get.to(() => Verification());
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to send reset code");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void verifyResetCode(String code) {
+    // Dummy code check (6-digit verification)
+    if (code.length == 6) {
+      Get.to(() => CreateNewPass());
+    } else {
+      Get.snackbar("Invalid Code", "Please enter a valid 6-digit code.");
+    }
+  }
+
+  Future<void> resetPassword(String newPassword) async {
+    try {
+      isLoading.value = true;
+
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        // If user is not logged in, ask them to log in again or send email reset
+        Get.snackbar("Error", "You need to log in again to reset password.");
+      } else {
+        await user.updatePassword(newPassword);
+        showPasswordResetDialog();
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to reset password.");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ------------------ DIALOGS ------------------
 
   void showLoginSuccessDialog() {
     Get.dialog(
       Dialog(
-        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0XFFF5F8FF),
-                ),
-                padding: EdgeInsets.all(12),
+              CircleAvatar(
+                backgroundColor: Color(0XFFF5F8FF),
+                radius: 30,
                 child: Icon(Icons.check_circle_outline,
                     size: 60, color: Color(0xFF199A8E)),
               ),
@@ -143,15 +190,14 @@ class AuthController extends GetxController {
                   style: TextStyle(fontSize: 14, color: Colors.grey)),
               SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => Get.offAll(() => BottomNavScreen()), // Replace with your Home route
+                onPressed: () => Get.offAll(() => BottomNavScreen()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0XFF199A8E),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30)),
                   minimumSize: Size(double.infinity, 50),
                 ),
-                child:
-                Text("Continue", style: TextStyle(color: Colors.white)),
+                child: Text("Continue", style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -160,40 +206,78 @@ class AuthController extends GetxController {
     );
   }
 
-
-
   void showSuccessDialog() {
     Get.dialog(
       Dialog(
-        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0XFFF5F8FF),
-                ),
-                padding: EdgeInsets.all(12),
+              CircleAvatar(
+                backgroundColor: Color(0XFFF5F8FF),
+                radius: 30,
                 child: Icon(Icons.check, size: 60, color: Color(0xFF199A8E)),
               ),
               SizedBox(height: 16),
-              Text("Success!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text("Success!",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
-              Text("Your Account Has Been Successfully Registered",
-                  textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
+              Text("Your account has been successfully registered.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey)),
               SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => Get.offAll(Loginpage()), // Or Get.offAll(Loginpage())
+                onPressed: () => Get.offAll(Loginpage()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0XFF199A8E),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
                   minimumSize: Size(double.infinity, 50),
                 ),
-                child: Text("Login", style: TextStyle(fontSize: 16, color: Colors.white)),
+                child: Text("Login", style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void showPasswordResetDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                backgroundColor: Color(0XFFF5F8FF),
+                radius: 30,
+                child: Icon(Icons.lock_open, size: 60, color: Color(0xFF199A8E)),
+              ),
+              SizedBox(height: 16),
+              Text("Password Updated!",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text("Your password has been successfully changed.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey)),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Get.offAll(Loginpage()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0XFF199A8E),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                  minimumSize: Size(double.infinity, 50),
+                ),
+                child: Text("Go to Login", style: TextStyle(color: Colors.white)),
               ),
             ],
           ),

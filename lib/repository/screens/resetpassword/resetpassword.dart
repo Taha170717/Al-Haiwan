@@ -1,7 +1,6 @@
-import 'package:al_haiwan/repository/screens/resetpassword/verfication.dart';
 import 'package:flutter/material.dart';
-
-import '../login/loginpage.dart';
+import 'package:get/get.dart';
+import '../../controllers/auth_controller.dart';
 
 class ResetPassword extends StatefulWidget {
   @override
@@ -10,17 +9,36 @@ class ResetPassword extends StatefulWidget {
 
 class _ResetPasswordState extends State<ResetPassword> {
   bool isEmailSelected = true;
-  TextEditingController inputController = TextEditingController();
-  bool isInputValid = false;
+  final TextEditingController inputController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final authController = Get.put(AuthController());
 
   @override
-  void initState() {
-    super.initState();
-    inputController.addListener(() {
-      setState(() {
-        isInputValid = inputController.text.isNotEmpty;
-      });
-    });
+  void dispose() {
+    inputController.dispose();
+    super.dispose();
+  }
+
+  String? validateInput(String value) {
+    if (isEmailSelected) {
+      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      if (!emailRegex.hasMatch(value)) {
+        return 'Enter a valid email address';
+      }
+    } else {
+      final phoneRegex = RegExp(r'^\d{10,15}$');
+      if (!phoneRegex.hasMatch(value)) {
+        return 'Enter a valid phone number';
+      }
+    }
+    return null;
+  }
+
+  void handleSubmit() async {
+    if (_formKey.currentState!.validate()) {
+      final input = inputController.text.trim();
+      await authController.sendResetCode(input: input, isEmail: isEmailSelected);
+    }
   }
 
   @override
@@ -28,38 +46,46 @@ class _ResetPasswordState extends State<ResetPassword> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
+        centerTitle: true,
         title: Text(
           'Reset Password',
           style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18),
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: Color(0XFF199A8E)),
         ),
-        centerTitle: true,
       ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 30),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 30),
+          child: Form(
+            key: _formKey,
             child: Column(
               children: [
                 SizedBox(height: 30),
                 Text(
                   'Forgot Your Password?',
                   style: TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.w700, fontFamily: 'Inter'),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Inter',
+                    color: Color(0XFF199A8E),
+                  ),
                 ),
                 SizedBox(height: 10),
                 Text(
                   'Enter your email or phone number, we will send you a confirmation code.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: Color(0XFFA1A8B0),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400),
+                    color: Color(0XFFA1A8B0),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
                 SizedBox(height: 20),
-          
-                // Toggle between Email and Phone
+
+                // Toggle
                 Container(
                   height: 50,
                   decoration: BoxDecoration(
@@ -79,7 +105,9 @@ class _ResetPasswordState extends State<ResetPassword> {
                           child: Container(
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: isEmailSelected ? Colors.white : Colors.transparent,
+                              color: isEmailSelected
+                                  ? Colors.white
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Text(
@@ -87,7 +115,9 @@ class _ResetPasswordState extends State<ResetPassword> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: isEmailSelected ? Color(0XFF199A8E) : Colors.grey,
+                                color: isEmailSelected
+                                    ? Color(0XFF199A8E)
+                                    : Colors.grey,
                               ),
                             ),
                           ),
@@ -104,7 +134,9 @@ class _ResetPasswordState extends State<ResetPassword> {
                           child: Container(
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: !isEmailSelected ? Colors.white : Colors.transparent,
+                              color: !isEmailSelected
+                                  ? Colors.white
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Text(
@@ -112,7 +144,9 @@ class _ResetPasswordState extends State<ResetPassword> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: !isEmailSelected ? Color(0XFF199A8E) : Colors.grey,
+                                color: !isEmailSelected
+                                    ? Color(0XFF199A8E)
+                                    : Colors.grey,
                               ),
                             ),
                           ),
@@ -122,61 +156,57 @@ class _ResetPasswordState extends State<ResetPassword> {
                   ),
                 ),
                 SizedBox(height: 20),
-          
-                // Input Field
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: TextField(
-                    controller: inputController,
-                    keyboardType:
-                    isEmailSelected ? TextInputType.emailAddress : TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: isEmailSelected ? "Enter Email" : "Enter Phone Number",
-                      labelStyle: TextStyle(color: Color(0XFFA1A8B0), fontSize: 16),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding:
-                      EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                      prefixIcon: Icon(
-                        isEmailSelected ? Icons.email_outlined : Icons.phone,
-                        color: Color(0xFF199A8E),
-                      ),
-                      suffixIcon: isInputValid
-                          ? Icon(Icons.check, color: Color(0xFF199A8E))
-                          : null,
-                      hintText: isEmailSelected ? 'Enter Email' : 'Phone Number',
-                      hintStyle: TextStyle(color: Colors.grey),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide(color: Color(0XFF199A8E), width: 2),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
+
+                // Input
+                TextFormField(
+                  controller: inputController,
+                  keyboardType: isEmailSelected
+                      ? TextInputType.emailAddress
+                      : TextInputType.phone,
+                  validator: (value) =>
+                      validateInput(value!.trim()),
+                  decoration: InputDecoration(
+                    labelText:
+                    isEmailSelected ? "Enter Email" : "Enter Phone Number",
+                    prefixIcon: Icon(
+                      isEmailSelected ? Icons.email_outlined : Icons.phone,
+                      color: Color(0XFF199A8E),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: isEmailSelected ? 'Email' : 'Phone Number',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    contentPadding:
+                    EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide:
+                      BorderSide(color: Color(0XFF199A8E), width: 2),
                     ),
                   ),
                 ),
                 SizedBox(height: 24),
-          
-                // Reset Password Button
+
+                // Button
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed:  () {
-                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> Verification()),);
-                    } ,
+                    onPressed: handleSubmit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF199A8E),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
-                    child:
-                    Text('Reset Password', style: TextStyle(color: Colors.white)),
+                    child: Text(
+                      'Reset Password',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
                 ),
               ],
