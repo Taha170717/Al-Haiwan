@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "662228895986",
+    "project_id": "alhewan-cool-project",
+    "storage_bucket": "alhewan-cool-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:662228895986:android:65caf70d55dfcbbabb286b",
+        "android_client_info": {
+          "package_name": "com.example.al_haiwan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5XXgzVhg1Ws6um2dM0_-CzZG_Sv6ISjs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
