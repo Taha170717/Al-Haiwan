@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../admin/views/adminside.dart';
+
 class AuthController extends GetxController {
   var isLoading = false.obs;
   String selectedResetInput = "";
@@ -53,15 +55,23 @@ class AuthController extends GetxController {
   }) async {
     try {
       isLoading.value = true;
-      await FirebaseAuth.instance
+      UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
+
       isLoading.value = false;
-      showLoginSuccessDialog();
+
+      // Check if this is the Admin's email
+      if (userCredential.user?.email == 'tahazafar112@gmail.com') {
+        Get.offAll(() => AdminScreen()); // Replace with your actual Admin screen
+      } else {
+        showLoginSuccessDialog();
+      }
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;
       Get.snackbar("Login Error", e.message ?? "Login failed");
     }
   }
+
 
   // Google Sign-In
   Future<void> signInWithGoogle() async {
@@ -166,6 +176,9 @@ class AuthController extends GetxController {
   // ------------------ DIALOGS ------------------
 
   void showLoginSuccessDialog() {
+    final user = FirebaseAuth.instance.currentUser;
+    final isAdmin = user?.email == 'tahazafar112@gmail.com'; // Replace with actual admin email
+
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -190,7 +203,13 @@ class AuthController extends GetxController {
                   style: TextStyle(fontSize: 14, color: Colors.grey)),
               SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => Get.offAll(() => BottomNavScreen()),
+                onPressed: () {
+                  if (isAdmin) {
+                    Get.offAll(() => AdminScreen()); // 👈 Replace with actual admin screen
+                  } else {
+                    Get.offAll(() => BottomNavScreen());
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0XFF199A8E),
                   shape: RoundedRectangleBorder(
@@ -205,6 +224,7 @@ class AuthController extends GetxController {
       ),
     );
   }
+
 
   void showSuccessDialog() {
     Get.dialog(
