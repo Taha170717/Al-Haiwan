@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class AdminScreen extends StatefulWidget {
-  const AdminScreen({super.key});
+class DoctorScreen extends StatefulWidget {
+  const DoctorScreen({super.key});
 
   @override
-  State<AdminScreen> createState() => _AdminScreenState();
+  State<DoctorScreen> createState() => _DoctorScreenState();
 }
 
-class _AdminScreenState extends State<AdminScreen> {
+class _DoctorScreenState extends State<DoctorScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -16,7 +16,7 @@ class _AdminScreenState extends State<AdminScreen> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           title: const Text(
-            'Admin Dashboard',
+            'Doctor Dashboard',
             style: TextStyle(
               color: Color(0XFF199A8E),
               fontFamily: "bolditalic",
@@ -28,7 +28,7 @@ class _AdminScreenState extends State<AdminScreen> {
         backgroundColor: Colors.white,
         body: Center(
           child: Text(
-            'Welcome to the Admin Dashboard',
+            'Welcome to the Doctor Dashboard',
             style: TextStyle(
               fontSize: 24,
               color: Color(0XFF199A8E),

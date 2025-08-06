@@ -1,106 +1,182 @@
-import 'package:al_haiwan/repository/screens/resetpassword/createnewpass.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:get/get.dart';
+import '../../controllers/auth_controller.dart';
 
 class Verification extends StatefulWidget {
+  final String contactInfo;
+
+  const Verification({super.key, required this.contactInfo});
+
   @override
   State<Verification> createState() => _VerificationState();
 }
 
 class _VerificationState extends State<Verification> {
+  final TextEditingController _otpController = TextEditingController();
+  final AuthController _authController = Get.find();
+
+  bool _isLoading = false;
+  bool _isResending = false;
+
+  Future<void> _verifyOTP() async {
+    final otp = _otpController.text.trim();
+
+    if (otp.length != 6) {
+      Get.snackbar("Invalid Code", "Please enter a 6-digit OTP.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange.shade100,
+          colorText: Colors.black);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await _authController.verifyResetCode(
+        contactInfo: widget.contactInfo,
+        userOtp: otp,
+      );
+    } catch (e) {
+      Get.snackbar("Error", e.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade100,
+          colorText: Colors.black);
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _resendOTP() async {
+    setState(() => _isResending = true);
+
+    try {
+      await _authController.sendResetCode(
+        email: widget.contactInfo,
+        isEmail: true,
+      );
+
+      Get.snackbar("Success", "OTP has been resent successfully.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.shade100,
+          colorText: Colors.black);
+    } catch (e) {
+      Get.snackbar("Error", "Failed to resend OTP: $e",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade100,
+          colorText: Colors.black);
+    } finally {
+      setState(() => _isResending = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           'Verification',
-          style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: SafeArea(
-            child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 'Enter Verification Code',
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Inter',
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
-                'Enter code that we have sent to your number 08528188*** ',
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                    color: Color(0XFFA1A8B0),
+                'Enter the 6-digit code sent to ${widget.contactInfo}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: Color(0xFF7D8FAB),
                     fontSize: 14,
                     fontWeight: FontWeight.w400),
               ),
-              SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 30),
+
+              // OTP Input Field
               PinCodeTextField(
                 appContext: context,
+                controller: _otpController,
                 length: 6,
                 keyboardType: TextInputType.number,
-                obscureText: false,
                 animationType: AnimationType.fade,
+                enableActiveFill: true,
                 pinTheme: PinTheme(
                   shape: PinCodeFieldShape.box,
-                  borderRadius: BorderRadius.circular(10),
-                  fieldHeight: 50,
-                  fieldWidth: 40,
+                  borderRadius: BorderRadius.circular(8),
+                  fieldHeight: 55,
+                  fieldWidth: 45,
+                  activeColor: Colors.teal,
+                  inactiveColor: Colors.grey.shade300,
+                  selectedColor: Colors.teal,
                   activeFillColor: Colors.white,
-                  inactiveColor: Colors.grey,
-                  selectedColor: Colors.green,
+                  inactiveFillColor: Colors.white,
+                  selectedFillColor: Colors.white,
                 ),
-                onChanged: (value) {},
+                onChanged: (_) {},
               ),
-              SizedBox(height: 20,),
-              SizedBox(
-                width: 230,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed:  () {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> CreateNewPass()),);
 
-                  } ,
+              const SizedBox(height: 30),
+
+              // Verify Button
+              _isLoading
+                  ? const CircularProgressIndicator(
+                  color: Color(0XFF199A8E)
+              )
+                  : SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _verifyOTP,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF199A8E),
+                    backgroundColor: const Color(0xFF199A8E),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
-                  child:
-                  Text('Verify', style: TextStyle(color: Colors.white)),
+                  child: const Text('Verify',
+                      style: TextStyle(
+                          color: Colors.white, fontSize: 16)),
                 ),
               ),
-              SizedBox(height: 20,),
+
+              const SizedBox(height: 25),
+
+              // Resend OTP
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Didn’t receive the code? ",style: TextStyle(color: Colors.grey)),
+                  const Text("Didn’t receive the code? ",
+                      style: TextStyle(color: Colors.grey)),
                   GestureDetector(
-                    onTap: (){},
-                    child: Text("Resend Code",style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
-                  )
+                    onTap: _isResending ? null : _resendOTP,
+                    child: Text(
+                      _isResending ? "Sending..." : "Resend Code",
+                      style: TextStyle(
+                          color: Colors.teal,
+                          fontWeight: FontWeight.bold,
+                          decoration: _isResending
+                              ? TextDecoration.none
+                              : TextDecoration.underline),
+                    ),
+                  ),
                 ],
-              )
+              ),
             ],
           ),
-        )),
+        ),
       ),
     );
   }

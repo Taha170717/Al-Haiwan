@@ -95,7 +95,9 @@ class _SignupState extends State<Signup> {
           if (authController.isLoading.value)
             Container(
               color: Colors.black.withOpacity(0.5),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: CircularProgressIndicator(
+                  color: Color(0XFF199A8E)
+              )),
             ),
         ],
       )),
