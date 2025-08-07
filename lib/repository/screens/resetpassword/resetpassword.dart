@@ -1,5 +1,3 @@
-// ✅ Save this as reset_password.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
@@ -11,15 +9,29 @@ class ResetPassword extends StatefulWidget {
 
 class _ResetPasswordState extends State<ResetPassword> {
   bool isEmailSelected = true;
+  String selectedCountryCode = "+1"; // Default country code
   final TextEditingController inputController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final authController = Get.put(AuthController());
+
+  final List<String> countryCodes = [
+    "+1",
+    "+92",
+    "+44",
+    "+91",
+    "+61",
+    "+971",
+    "+81",
+    "+49",
+    "+33",
+    "+39",
+  ];
 
   String? validateInput(String? value) {
     if (value == null || value.trim().isEmpty) {
       return isEmailSelected
           ? 'Please enter your email address'
-          : 'Phone reset not supported yet';
+          : 'Please enter your phone number';
     }
 
     if (isEmailSelected) {
@@ -28,7 +40,10 @@ class _ResetPasswordState extends State<ResetPassword> {
         return 'Enter a valid email address';
       }
     } else {
-      return 'Phone reset not supported yet';
+      final phoneRegex = RegExp(r'^\d{6,14}$'); // Numeric validation for phone
+      if (!phoneRegex.hasMatch(value.trim())) {
+        return 'Enter a valid phone number (no spaces or special characters)';
+      }
     }
 
     return null;
@@ -36,11 +51,10 @@ class _ResetPasswordState extends State<ResetPassword> {
 
   void handleSubmit() async {
     if (_formKey.currentState!.validate()) {
-      final input = inputController.text.trim();
+      String input = inputController.text.trim();
 
       if (!isEmailSelected) {
-        Get.snackbar("Unavailable", "Phone reset is not supported yet.");
-        return;
+        input = selectedCountryCode + input; // Prepend country code to phone number
       }
 
       Get.dialog(
@@ -49,23 +63,32 @@ class _ResetPasswordState extends State<ResetPassword> {
       );
 
       try {
-        await authController.sendResetCode(
-          email: input,
-          isEmail: isEmailSelected,
-        );
+        if (isEmailSelected) {
+          await authController.sendResetCode(
+            email: input,
+            isEmail: true,
+          );
+        } else {
+          await authController.sendResetCodeToPhone(phoneNumber: input);
+        }
 
         Get.back(); // Close loading
 
-        // Show success dialog
         Get.defaultDialog(
           title: "Success",
-          titleStyle: const TextStyle(color: Color(0XFF199A8E), fontWeight: FontWeight.bold, fontSize: 20),
+          titleStyle: const TextStyle(
+            color: Color(0XFF199A8E),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
           content: Column(
             children: [
               const Icon(Icons.check_circle_outline, color: Color(0XFF199A8E), size: 60),
               const SizedBox(height: 10),
               Text(
-                "A confirmation code has been sent to:\n\n$input",
+                isEmailSelected
+                    ? "A confirmation code has been sent to:\n\n$input"
+                    : "A verification SMS has been sent to:\n\n$input",
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 16),
               ),
@@ -82,11 +105,39 @@ class _ResetPasswordState extends State<ResetPassword> {
         );
       } catch (e) {
         Get.back(); // Close loading
-        Get.snackbar("Error", "Failed to send confirmation code.");
+        Get.snackbar("Error", "Failed to send confirmation code: $e");
       }
     }
   }
 
+  Widget _buildToggleOption(String label, bool emailSelected) {
+    final isSelected = isEmailSelected == emailSelected;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            isEmailSelected = emailSelected;
+            inputController.clear(); // Clear input field
+          });
+        },
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: isSelected ? const Color(0XFF199A8E) : Colors.grey,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +147,8 @@ class _ResetPasswordState extends State<ResetPassword> {
         centerTitle: true,
         title: const Text(
           'Reset Password',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0XFF199A8E)),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 18, color: Color(0XFF199A8E)),
         ),
       ),
       backgroundColor: Colors.white,
@@ -108,13 +160,17 @@ class _ResetPasswordState extends State<ResetPassword> {
             child: Column(
               children: [
                 const SizedBox(height: 30),
-                const Text('Forgot Your Password?',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0XFF199A8E))),
-                const SizedBox(height: 10),
                 const Text(
-                  'Enter your email and we’ll send you a code to reset your password.',
+                  'Forgot Your Password?',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0XFF199A8E)),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  isEmailSelected
+                      ? 'Enter your email and we’ll send you a code to reset your password.'
+                      : 'Enter your phone number and we’ll send you an SMS to reset your password.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0XFFA1A8B0), fontSize: 14),
+                  style: const TextStyle(color: Color(0XFFA1A8B0), fontSize: 14),
                 ),
                 const SizedBox(height: 20),
                 // Toggle
@@ -127,27 +183,70 @@ class _ResetPasswordState extends State<ResetPassword> {
                   child: Row(
                     children: [
                       _buildToggleOption("Email", true),
-                      _buildToggleOption("Phone", false, disabled: true),
+                      _buildToggleOption("Phone", false),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Input
-                TextFormField(
-                  controller: inputController,
-                  keyboardType: isEmailSelected ? TextInputType.emailAddress : TextInputType.phone,
-                  validator: validateInput,
-                  decoration: InputDecoration(
-                    labelStyle: const TextStyle(color: Color(0XFF199A8E)),
-                    labelText: isEmailSelected ? "Enter Email" : "Phone reset not available",
-                    prefixIcon: Icon(isEmailSelected ? Icons.email_outlined : Icons.phone),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Color(0XFF199A8E), width: 2),
+                // Country code selector and phone number input
+                if (!isEmailSelected)
+                  Row(
+                    children: [
+                      DropdownButton<String>(
+                        value: selectedCountryCode,
+                        items: countryCodes
+                            .map((code) => DropdownMenuItem(
+                          value: code,
+                          child: Text(code),
+                        ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedCountryCode = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextFormField(
+                          controller: inputController,
+                          keyboardType: TextInputType.phone,
+                          validator: validateInput,
+                          decoration: InputDecoration(
+                            labelStyle: const TextStyle(color: Color(0XFF199A8E)),
+                            labelText: "Enter Phone Number",
+                            prefixIcon: const Icon(Icons.phone),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: const BorderSide(color: Color(0XFF199A8B), width: 2),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                if (isEmailSelected)
+                // Email input
+                  TextFormField(
+                    controller: inputController,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: validateInput,
+                    decoration: InputDecoration(
+                      labelStyle: const TextStyle(color: Color(0XFF199A8E)),
+                      labelText: "Enter Email",
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: const BorderSide(color: Color(0XFF199A8B), width: 2),
+                      ),
                     ),
                   ),
-                ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -162,41 +261,6 @@ class _ResetPasswordState extends State<ResetPassword> {
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToggleOption(String label, bool emailSelected, {bool disabled = false}) {
-    final isSelected = isEmailSelected == emailSelected;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (!disabled) {
-            setState(() {
-              isEmailSelected = emailSelected;
-              inputController.clear();
-            });
-          } else {
-            Get.snackbar("Unavailable", "Phone reset is not yet supported.");
-          }
-        },
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: disabled
-                  ? Colors.grey
-                  : (isSelected ? const Color(0XFF199A8E) : Colors.grey),
             ),
           ),
         ),

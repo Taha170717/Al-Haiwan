@@ -4,9 +4,16 @@ import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 
 class Verification extends StatefulWidget {
-  final String contactInfo;
+  final String contactInfo; // Can be email or phone number
+  final bool isEmail; // Indicates if it's an email or phone verification
+  final String emailLinked; // Email linked to the phone number (optional)
 
-  const Verification({super.key, required this.contactInfo});
+  const Verification({
+    super.key,
+    required this.contactInfo,
+    required this.isEmail,
+    required this.emailLinked,
+  });
 
   @override
   State<Verification> createState() => _VerificationState();
@@ -23,24 +30,41 @@ class _VerificationState extends State<Verification> {
     final otp = _otpController.text.trim();
 
     if (otp.length != 6) {
-      Get.snackbar("Invalid Code", "Please enter a 6-digit OTP.",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange.shade100,
-          colorText: Colors.black);
+      Get.snackbar(
+        "Invalid Code",
+        "Please enter a valid 6-digit OTP.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange.shade100,
+        colorText: Colors.black,
+      );
       return;
     }
 
     setState(() => _isLoading = true);
+
     try {
-      await _authController.verifyResetCode(
-        contactInfo: widget.contactInfo,
-        userOtp: otp,
-      );
+      if (widget.isEmail) {
+        // For email verification
+        await _authController.verifyResetCode(
+          contactInfo: widget.contactInfo,
+          userOtp: otp,
+        );
+      } else {
+        // For phone verification
+        await _authController.verifyPhoneResetCode(
+          phoneNumber: widget.contactInfo,
+          otp: otp,
+          emailLinked: widget.emailLinked, // Pass linked email
+        );
+      }
     } catch (e) {
-      Get.snackbar("Error", e.toString(),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.black);
+      Get.snackbar(
+        "Error",
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.black,
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -50,20 +74,30 @@ class _VerificationState extends State<Verification> {
     setState(() => _isResending = true);
 
     try {
-      await _authController.sendResetCode(
-        email: widget.contactInfo,
-        isEmail: true,
-      );
+      if (widget.isEmail) {
+        await _authController.sendResetCode(
+          email: widget.contactInfo,
+          isEmail: true,
+        );
+      } else {
+        await _authController.sendResetCodeToPhone(phoneNumber: widget.contactInfo);
+      }
 
-      Get.snackbar("Success", "OTP has been resent successfully.",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.shade100,
-          colorText: Colors.black);
+      Get.snackbar(
+        "Success",
+        "OTP has been resent successfully.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade100,
+        colorText: Colors.black,
+      );
     } catch (e) {
-      Get.snackbar("Error", "Failed to resend OTP: $e",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.black);
+      Get.snackbar(
+        "Error",
+        "Failed to resend OTP: $e",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.black,
+      );
     } finally {
       setState(() => _isResending = false);
     }
@@ -96,12 +130,15 @@ class _VerificationState extends State<Verification> {
               ),
               const SizedBox(height: 10),
               Text(
-                'Enter the 6-digit code sent to ${widget.contactInfo}',
+                widget.isEmail
+                    ? 'Enter the 6-digit code sent to your email address: ${widget.contactInfo}'
+                    : 'Enter the 6-digit code sent to your phone number: ${widget.contactInfo}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    color: Color(0xFF7D8FAB),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400),
+                  color: Color(0xFF7D8FAB),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
               const SizedBox(height: 30),
 
@@ -132,9 +169,7 @@ class _VerificationState extends State<Verification> {
 
               // Verify Button
               _isLoading
-                  ? const CircularProgressIndicator(
-                  color: Color(0XFF199A8E)
-              )
+                  ? const CircularProgressIndicator(color: Color(0XFF199A8E))
                   : SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -146,9 +181,10 @@ class _VerificationState extends State<Verification> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text('Verify',
-                      style: TextStyle(
-                          color: Colors.white, fontSize: 16)),
+                  child: const Text(
+                    'Verify',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ),
               ),
 
@@ -165,11 +201,12 @@ class _VerificationState extends State<Verification> {
                     child: Text(
                       _isResending ? "Sending..." : "Resend Code",
                       style: TextStyle(
-                          color: Colors.teal,
-                          fontWeight: FontWeight.bold,
-                          decoration: _isResending
-                              ? TextDecoration.none
-                              : TextDecoration.underline),
+                        color: Colors.teal,
+                        fontWeight: FontWeight.bold,
+                        decoration: _isResending
+                            ? TextDecoration.none
+                            : TextDecoration.underline,
+                      ),
                     ),
                   ),
                 ],

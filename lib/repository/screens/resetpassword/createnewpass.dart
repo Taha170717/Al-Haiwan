@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 
 class CreateNewPass extends StatefulWidget {
-  final String email;
+  final String email; // Email used for reset (if any)
+  final bool isEmail; // Determines if reset is via email or phone
 
   const CreateNewPass({
     Key? key,
     required this.email,
-    required String resetCode,
-    required String destination,
+    required this.isEmail, required String resetCode, required String destination,
   }) : super(key: key);
 
   @override
@@ -32,19 +32,25 @@ class _CreateNewPassState extends State<CreateNewPass> {
     setState(() => _isLoading = true);
 
     try {
-      await _authController.resetPasswordWithReauth(
-        email: widget.email,
-        oldPassword: _oldPasswordController.text.trim(),
-        newPassword: _newPasswordController.text.trim(),
-      );
+      if (widget.isEmail) {
+        // If email reset, validate and reset using old password
+        await _authController.resetPasswordWithReauth(
+          email: widget.email,
+          oldPassword: _oldPasswordController.text.trim(),
+          newPassword: _newPasswordController.text.trim(),
+        );
+      } else {
+        // For phone reset, directly reset password
+        await _authController.resetPassword(_newPasswordController.text.trim());
+      }
 
-      // On success, navigate to `PasswordResetSuccessScreen`
+      // On success, navigate to success screen
       Get.off(() => PasswordResetSuccessScreen());
     } catch (e) {
       Get.snackbar("Error", "Failed to reset password. Please try again.");
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    setState(() => _isLoading = false);
   }
 
   @override
@@ -76,26 +82,33 @@ class _CreateNewPassState extends State<CreateNewPass> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
-                    color: Color(0XFF199A8E),
+                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  "Enter your old password and set a new one.",
+                Text(
+                  widget.isEmail
+                      ? "Enter your old password and set a new one."
+                      : "Set a new password for your account.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Color(0XFFA1A8B0),
                     fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                // Old Password Field
-                _buildPasswordField(
-                  controller: _oldPasswordController,
-                  label: "Old Password",
-                ),
-                const SizedBox(height: 16),
+                // Old Password Field (only for email resets)
+                if (widget.isEmail)
+                  Column(
+                    children: [
+                      _buildPasswordField(
+                        controller: _oldPasswordController,
+                        label: "Old Password",
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
 
                 // New Password Field
                 _buildPasswordField(
@@ -143,9 +156,9 @@ class _CreateNewPassState extends State<CreateNewPass> {
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
-                            "Reset Password",
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
+                      "Reset Password",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
                   ),
                 ),
               ],

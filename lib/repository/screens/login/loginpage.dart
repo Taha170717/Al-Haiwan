@@ -124,7 +124,7 @@ class _LoginpageState extends State<Loginpage> {
       obscureText: isPassword,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Color(0XFFA1A8B0), fontSize: 16),
+        labelStyle: TextStyle(color: Color(0xFF199A8E), fontSize: 16),
         prefixIcon: Icon(icon, color: Color(0xFF199A8E)),
         hintText: 'Enter your $label',
         hintStyle: TextStyle(color: Color(0XFFA1A8B0)),

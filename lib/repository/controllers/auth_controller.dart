@@ -18,6 +18,104 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String _verificationId = "";
+
+  /// Send OTP to phone
+  /// Send OTP to phone and link to associated email
+  Future<void> sendResetCodeToPhone({required String phoneNumber}) async {
+    try {
+      isLoading.value = true;
+      print("Started fetching user for phone number: $phoneNumber"); // Debugging Log
+
+      // Query Firestore to find the user matching the phone number.
+      final userDoc = await _firestore
+          .collection('users')
+          .where('phone', isEqualTo: phoneNumber)
+          .get();
+
+      if (userDoc.docs.isEmpty) {
+        print("No user found with this phone number: $phoneNumber");
+        Get.snackbar("Error", "No account found with this phone number");
+        return;
+      }
+
+      final userEmail = userDoc.docs.first["email"];
+      print("User email associated with phone: $userEmail."); // Debugging Log
+
+      // Send OTP via Firebase phone authentication.
+      print("Starting Firebase phone verification for $phoneNumber."); // Debug Log
+
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          print("Auto-verification completed for phone: $phoneNumber"); // Debugging Log
+          Get.snackbar("Info", "Auto-verification completed.");
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          print("Phone verification failed: ${e.message}"); // Debugging Log
+          Get.snackbar("Error", "Failed to send OTP: ${e.message}");
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          _verificationId = verificationId;
+          print("OTP successfully sent to phone: $phoneNumber"); // Debugging Log
+
+          Get.to(() => Verification(
+            contactInfo: phoneNumber,
+            isEmail: false,
+            emailLinked: userEmail,
+          ));
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+          print("Code auto-retrieval timeout for phone: $phoneNumber"); // Debugging Log
+        },
+      );
+    } catch (e) {
+      print("Error sending reset code to phone: $e"); // Debugging Log
+      Get.snackbar("Error", "Failed to send OTP: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Verify Phone OTP and reset password for associated email
+  Future<void> verifyPhoneResetCode({
+    required String phoneNumber,
+    required String otp,
+    required String emailLinked, // Email to reset the password
+  }) async {
+    try {
+      isLoading.value = true;
+
+      final phoneAuthCredential = PhoneAuthProvider.credential(
+        verificationId: _verificationId,
+        smsCode: otp,
+      );
+
+      // If verification succeeds
+      await _auth.signInWithCredential(phoneAuthCredential);
+
+      // Mark OTP verification as complete in Firestore
+      await _firestore.collection('otp_verifications').doc(phoneNumber).set({
+        'used': true,
+        'verified': true,
+        'verifiedAt': FieldValue.serverTimestamp()
+      });
+
+      // Navigate to password reset screen with Email linked
+      Get.to(() => CreateNewPass(
+        email: emailLinked,
+        isEmail: true, resetCode: '', destination: '', // To show old password if needed
+      ));
+    } catch (e) {
+      Get.snackbar("Error", "Failed to verify OTP: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+
 
   /// Generate a 6-digit OTP
   String _generateOTP() {
@@ -32,31 +130,44 @@ class AuthController extends GetxController {
   }) async {
     try {
       isLoading.value = true;
-      final otp = _generateOTP();
 
+      final otp = _generateOTP();
+      final otpRef = _firestore.collection('otp_verifications').doc(email);
+
+      // ✅ Delete old OTP if it exists
+      final existingDoc = await otpRef.get();
+      if (existingDoc.exists) {
+        await otpRef.delete();
+      }
+
+      // ✅ Email setup
       final smtpServer = gmail(
         'tahazafar112@gmail.com',
-        'fyua tkso jhpq ncmv', // Use env var in production
+        'fyua tkso jhpq ncmv', // ⚠️ Store in env/secure vault in production
       );
 
       final message = Message()
         ..from = Address('tahazafar112@gmail.com', 'Al-Haiwan App')
         ..recipients.add(email)
         ..subject = 'Your OTP Code for Password Reset'
-        ..text = 'Your OTP code is: $otp.\n\nIt is valid for 5 minutes.';
+        ..text = 'Your OTP code is: $otp.\n\nThis code is valid for 5 minutes.';
 
+      // ✅ Send the email
       await send(message, smtpServer);
 
-      await _firestore.collection('otp_verifications').doc(email).set({
+      // ✅ Save OTP to Firestore
+      await otpRef.set({
         'otp': otp,
         'createdAt': FieldValue.serverTimestamp(),
+        'expiresAt': Timestamp.fromDate(DateTime.now().add(Duration(minutes: 5))),
         'used': false,
       });
 
+      // ✅ Navigate to Verification Screen
       Get.snackbar("Success", "OTP sent to your email.");
-      Get.to(() => Verification(contactInfo: email));
+      Get.to(() => Verification(contactInfo: email, isEmail: true, emailLinked: '',));
     } catch (e) {
-      Get.snackbar("Error", "Failed to send OTP: $e");
+      Get.snackbar("Error", "Failed to send OTP: ${e.toString()}");
     } finally {
       isLoading.value = false;
     }
@@ -76,6 +187,7 @@ class AuthController extends GetxController {
         return;
       }
 
+
       final data = doc.data();
       final storedOtp = data?['otp'];
       final createdAt = data?['createdAt'] as Timestamp?;
@@ -90,6 +202,14 @@ class AuthController extends GetxController {
         Get.snackbar("Error", "Incorrect OTP.");
         return;
       }
+      if (createdAt == null ||
+          DateTime.now().difference(createdAt.toDate()).inMinutes > 5) {
+        Get.snackbar("Error", "OTP has expired.");
+        // 🟢 ADD THIS LINE TO AUTO DELETE
+        await _firestore.collection('otp_verifications').doc(contactInfo).delete().catchError((_) {});
+        return;
+      }
+
 
       if (createdAt == null ||
           DateTime.now().difference(createdAt.toDate()).inMinutes > 5) {
@@ -99,7 +219,7 @@ class AuthController extends GetxController {
 
       await _firestore.collection('otp_verifications').doc(contactInfo).update({'used': true});
 
-      Get.to(() => CreateNewPass(email: contactInfo, resetCode: '', destination: '',));
+      Get.to(() => CreateNewPass(email: contactInfo, resetCode: '', destination: '', isEmail: true,));
     } catch (e) {
       Get.snackbar("Error", "Failed to verify OTP: $e");
     } finally {
@@ -114,7 +234,15 @@ class AuthController extends GetxController {
       final user = _auth.currentUser;
 
       if (user != null) {
+        final email = user.email;
+
         await user.updatePassword(newPassword);
+
+        // Delete OTP after successful password reset
+        if (email != null) {
+          await _firestore.collection('otp_verifications').doc(email).delete().catchError((_) {});
+        }
+
         Get.snackbar("Success", "Password has been reset successfully.");
         Get.offAll(() => Loginpage());
       } else {
@@ -126,6 +254,7 @@ class AuthController extends GetxController {
       isLoading.value = false;
     }
   }
+
 
   /// Re-authenticate and reset password
   Future<void> resetPasswordWithReauth({
