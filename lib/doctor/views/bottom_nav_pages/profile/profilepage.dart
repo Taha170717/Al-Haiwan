@@ -2,14 +2,14 @@ import 'package:al_haiwan/repository/screens/login/loginpage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 
-class AdminProfile extends StatefulWidget {
-  const AdminProfile({super.key});
+class DoctorProfile extends StatefulWidget {
+  const DoctorProfile({super.key});
 
   @override
-  State<AdminProfile> createState() => _AdminProfileState();
+  State<DoctorProfile> createState() => _DoctorProfileState();
 }
 
-class _AdminProfileState extends State<AdminProfile> {
+class _DoctorProfileState extends State<DoctorProfile> {
   Future<void> _logout() async {
     try {
       await FirebaseAuth.instance.signOut(); // Sign out Firebase user
@@ -29,21 +29,13 @@ class _AdminProfileState extends State<AdminProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.red, // Background color
-      appBar: AppBar(
-        title: const Text("Admin Profile"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () => _showLogoutDialog(context), // Logout action
-          ),
-        ],
-      ),
+
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              "Admin Profile Page",
+              "Doctor Profile Page",
               style: TextStyle(fontSize: 20, color: Colors.white),
             ),
             const SizedBox(height: 20),

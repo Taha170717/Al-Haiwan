@@ -82,6 +82,7 @@ flutter:
        - assets/images/
        - assets/icons/
        - assets/adminicons/
+       - assets/doctor_icons/
        - assets/animations/loadings.json
   #   - images/a_dot_ham.jpeg
 
