@@ -132,7 +132,7 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
               _buildDivider(),
               _buildDrawerTile(
-                icon: "assets/icons/patient.png",
+                icon: "assets/adminicons/patient.png",
                 label: "Patients",
                 onTap: () {},
               ),

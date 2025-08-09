@@ -292,27 +292,75 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
 
+      // 1) Create Firebase Auth user
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      final user = userCredential.user;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'user-null',
+          message: 'User could not be created.',
+        );
+      }
+
+      final uid = user.uid;
+      final now = FieldValue.serverTimestamp();
+
+      // 2) Prepare common user data
+      final userData = <String, dynamic>{
+        'uid': uid,
         'username': username,
         'email': email,
         'phone': phone,
         'isDoctor': isDoctor,
-        'createdAt': Timestamp.now(),
-      });
+        'role': isDoctor ? 'doctor' : 'user',
+        'createdAt': now,
+        'updatedAt': now,
+      };
 
-      Get.snackbar("Success", "Registration completed!");
+      // 3) Prepare doctor data if applicable
+      final doctorData = <String, dynamic>{
+        'uid': uid,
+        'name': username,
+        'email': email,
+        'phone': phone,
+        'status': 'pendingApproval',
+        'createdAt': now,
+        'updatedAt': now,
+      };
+
+      // 4) Write both documents atomically (users + doctors if needed)
+      final usersDocRef = _firestore.collection('users').doc(uid);
+      final doctorsDocRef = _firestore.collection('doctors').doc(uid);
+
+      final batch = _firestore.batch();
+      batch.set(usersDocRef, userData);
+      if (isDoctor) {
+        batch.set(doctorsDocRef, doctorData);
+      }
+      await batch.commit();
+
+      // 5) Navigate based on user type
+      Get.snackbar('Success', 'Account created successfully');
       showSuccessDialog();
     } on FirebaseAuthException catch (e) {
-      Get.snackbar("Error", e.message ?? "Unknown error occurred.");
+      Get.snackbar('Error', e.message ?? 'Registration failed');
+    } catch (e) {
+      // If Firestore write failed after auth creation, try to rollback the auth user
+      try {
+        await _auth.currentUser?.delete();
+      } catch (_) {
+        // ignore cleanup errors
+      }
+      Get.snackbar('Error', 'Failed to register: $e');
     } finally {
       isLoading.value = false;
     }
   }
+
 
   /// Login
   Future<void> loginUser({
@@ -343,7 +391,7 @@ class AuthController extends GetxController {
       final isDoctor = userDoc['isDoctor'] ?? false;
 
       Get.snackbar("Success", "Logged in successfully!");
-      showLoginSuccessDialog(isDoctor: isDoctor);
+      showLoginSuccessDialog(isDoctor: isDoctor, email: '');
     } on FirebaseAuthException catch (e) {
       Get.snackbar("Login Error", e.message ?? "Unknown error.");
     } finally {
@@ -380,7 +428,7 @@ class AuthController extends GetxController {
       }
 
       Get.snackbar("Success", "Google Sign-In successful.");
-      showLoginSuccessDialog(isDoctor: false);
+      showLoginSuccessDialog(isDoctor: false, email: '');
     } catch (e) {
       Get.snackbar("Error", "Google Sign-In failed: $e");
     } finally {
@@ -394,19 +442,36 @@ class AuthController extends GetxController {
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: Color(0xFF199A8E), size: 60),
-              const SizedBox(height: 10),
-              const Text("Registration Successful!",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Icon(Icons.check_circle_outline, color: Color(0xFF199A8E), size: 60),
               const SizedBox(height: 20),
-              ElevatedButton(
+              const Text(
+                "Registration Successful!",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF199A8E),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Your account has been created successfully.\nYou can now log in to continue.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF199A8E),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.login, color: Colors.white),
+                label: const Text("Login", style: TextStyle(color: Colors.white)),
                 onPressed: () => Get.offAll(() => Loginpage()),
-                child: const Text("Login", style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -415,7 +480,8 @@ class AuthController extends GetxController {
     );
   }
 
-  void showLoginSuccessDialog({required bool isDoctor}) {
+
+  void showLoginSuccessDialog({required bool isDoctor, required String email}) {
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -448,7 +514,11 @@ class AuthController extends GetxController {
                 onPressed: () {
                   if (isDoctor) {
                     Get.offAll(() => DoctorScreen());
-                  } else {
+                  }
+                  else if (email == "tahazafar112@gmail.com"){
+                    Get.offAll(() => AdminScreen());
+                  }
+                  else {
                     Get.offAll(() => BottomNavScreen());
                   }
                 },

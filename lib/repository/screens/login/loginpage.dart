@@ -1,4 +1,5 @@
 import 'package:al_haiwan/repository/controllers/auth_controller.dart';
+import 'package:al_haiwan/repository/screens/signup/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -97,7 +98,7 @@ class _LoginpageState extends State<Loginpage> {
                     children: [
                       Text("Don’t have an account? ", style: TextStyle(color: Colors.grey)),
                       GestureDetector(
-                        onTap: () => Get.toNamed('/signup'),
+                        onTap: () => Get.to(() => Signup()),
                         child: Text("Sign Up", style: TextStyle(color: Color(0XFF199A8E), fontWeight: FontWeight.w600)),
                       ),
                     ],
