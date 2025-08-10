@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' if (dart.library.html) 'dart:io'; // Only imports dart:io on mobile
+import 'dart:io' if (dart.library.html) 'dart:io';
 import 'package:al_haiwan/admin/views/bottom_nav_pages/products/product_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -10,7 +10,8 @@ import 'package:uuid/uuid.dart';
 
 class AddProductController extends GetxController {
   var isLoading = false.obs;
-  var selectedImages = <XFile>[].obs; // Changed from File to XFile
+  var selectedImages = <XFile>[].obs;
+  var existingImageUrls = <String>[].obs; // for update mode
 
   final nameController = TextEditingController();
   final brandController = TextEditingController();
@@ -50,15 +51,15 @@ class AddProductController extends GetxController {
     List<String> downloadUrls = [];
 
     for (var image in selectedImages) {
-      String fileName = "${productId}_${DateTime.now().millisecondsSinceEpoch}.jpg";
-      var ref = FirebaseStorage.instance.ref().child("products").child(fileName);
+      String fileName =
+          "${productId}_${DateTime.now().millisecondsSinceEpoch}.jpg";
+      var ref =
+      FirebaseStorage.instance.ref().child("products").child(fileName);
 
       if (kIsWeb) {
-        // Web: Upload as bytes
         final bytes = await image.readAsBytes();
         await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
       } else {
-        // Mobile: Upload as file
         await ref.putFile(File(image.path));
       }
 
@@ -73,14 +74,18 @@ class AddProductController extends GetxController {
     if (nameController.text.isEmpty ||
         selectedCategory.value.isEmpty ||
         priceController.text.isEmpty) {
-      Get.snackbar("Error", "Please fill required fields",
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+        "Error",
+        "Please fill required fields",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
       return;
     }
 
     try {
       isLoading.value = true;
-      String productId = Uuid().v4();
+      String productId = const Uuid().v4();
 
       List<String> imageUrls = await uploadImagesToStorage(productId);
 
@@ -105,16 +110,107 @@ class AddProductController extends GetxController {
           .doc(productId)
           .set(product.toMap());
 
-      Get.snackbar("Success", "Product added successfully",
-          backgroundColor: Colors.green, colorText: Colors.white);
       clearFields();
-      Get.back();
+      _showSuccessThenBack();
     } catch (e) {
-      Get.snackbar("Error", e.toString(),
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+        "Error",
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> updateProduct(String productId) async {
+    if (nameController.text.isEmpty ||
+        selectedCategory.value.isEmpty ||
+        priceController.text.isEmpty) {
+      Get.snackbar(
+        "Error",
+        "Please fill required fields",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      // Upload new images if selected
+      List<String> newImageUrls = [];
+      if (selectedImages.isNotEmpty) {
+        newImageUrls = await uploadImagesToStorage(productId);
+      }
+
+      // Combine old + new
+      List<String> finalImageUrls = [
+        ...existingImageUrls,
+        ...newImageUrls,
+      ];
+
+      ProductModel updatedProduct = ProductModel(
+        id: productId,
+        name: nameController.text,
+        category: selectedCategory.value,
+        brand: brandController.text,
+        description: descriptionController.text,
+        ingredients: ingredientsController.text,
+        price: double.parse(priceController.text),
+        stockQuantity: int.tryParse(stockController.text) ?? 0,
+        imageUrls: finalImageUrls,
+        weight: weightController.text,
+        animalType: animalTypeController.text,
+        expiryDate: expiryDateController.text,
+        sku: skuController.text,
+      );
+
+      await FirebaseFirestore.instance
+          .collection("products")
+          .doc(productId)
+          .update(updatedProduct.toMap());
+
+      clearFields();
+      _showSuccessThenBack(message: "Product updated successfully");
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void _showSuccessThenBack({String message = "Your product has been published successfully."}) {
+    Get.snackbar(
+      "Success",
+      message,
+      snackPosition: SnackPosition.TOP,
+      backgroundGradient: const LinearGradient(
+        colors: [Color(0xFF199A8E), Color(0xFF16CAB3)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      colorText: Colors.white,
+      icon: const Icon(Icons.check_circle_rounded, color: Colors.white),
+      borderRadius: 14,
+      margin: const EdgeInsets.all(16),
+      duration: const Duration(seconds: 2),
+      isDismissible: true,
+      snackStyle: SnackStyle.FLOATING,
+      forwardAnimationCurve: Curves.fastOutSlowIn,
+      reverseAnimationCurve: Curves.easeInBack,
+    );
+
+    Future.delayed(const Duration(milliseconds: 250), () {
+      Get.back();
+    });
   }
 
   void clearFields() {
@@ -129,6 +225,23 @@ class AddProductController extends GetxController {
     expiryDateController.clear();
     skuController.clear();
     selectedImages.clear();
+    existingImageUrls.clear();
     selectedCategory.value = '';
+  }
+
+  // Pre-fill fields for edit mode
+  void loadProductData(ProductModel product) {
+    nameController.text = product.name;
+    brandController.text = product.brand;
+    descriptionController.text = product.description;
+    ingredientsController.text = product.ingredients;
+    priceController.text = product.price.toString();
+    stockController.text = product.stockQuantity.toString();
+    weightController.text = product.weight;
+    animalTypeController.text = product.animalType;
+    expiryDateController.text = product.expiryDate;
+    skuController.text = product.sku;
+    selectedCategory.value = product.category;
+    existingImageUrls.assignAll(product.imageUrls);
   }
 }
