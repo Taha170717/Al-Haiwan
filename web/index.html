@@ -34,5 +34,12 @@
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    window.addEventListener('load', function() {
+      if (typeof firebase !== 'undefined' && firebase.storage) {
+        firebase.storage().useEmulator = false;
+      }
+    });
+  </script>
 </body>
 </html>

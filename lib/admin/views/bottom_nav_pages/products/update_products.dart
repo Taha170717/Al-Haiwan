@@ -10,7 +10,7 @@ class UpdateProducts extends StatefulWidget {
   final String productId;
   final Map<String, dynamic> existingData;
 
-  UpdateProducts({
+  const UpdateProducts({
     super.key,
     required this.productId,
     required this.existingData,
@@ -162,6 +162,79 @@ class _UpdateProductsState extends State<UpdateProducts> {
                                   width: 90,
                                   height: 90,
                                   fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      width: 90,
+                                      height: 90,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value: loadingProgress.expectedTotalBytes != null
+                                              ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                              : null,
+                                          strokeWidth: 2,
+                                          color: UpdateProducts.primary,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    print('Image load error for URL: $url, Error: $error');
+                                    return Container(
+                                      width: 90,
+                                      height: 90,
+                                      decoration: BoxDecoration(
+                                        color: Colors.red[50],
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.red[200]!, width: 1),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.error_outline,
+                                              color: Colors.red[400], size: 20),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Failed\nto load',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.red[600],
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          GestureDetector(
+                                            onTap: () {
+                                              // Force rebuild to retry image loading
+                                              setState(() {});
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red[100],
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                'Retry',
+                                                style: TextStyle(
+                                                  color: Colors.red[700],
+                                                  fontSize: 8,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                                 ),
                                 onRemove: () => controller.existingImageUrls.removeAt(index),
                               );
@@ -179,6 +252,52 @@ class _UpdateProductsState extends State<UpdateProducts> {
                                     width: 90,
                                     height: 90,
                                     fit: BoxFit.cover,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        width: 90,
+                                        height: 90,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[100],
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: UpdateProducts.primary,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      print('Selected image load error: $error');
+                                      return Container(
+                                        width: 90,
+                                        height: 90,
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange[50],
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.orange[200]!, width: 1),
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.warning_amber_outlined,
+                                                color: Colors.orange[600], size: 20),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Preview\nfailed',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.orange[700],
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   ),
                                   onRemove: () => controller.selectedImages.removeAt(index),
                                 );
@@ -186,13 +305,76 @@ class _UpdateProductsState extends State<UpdateProducts> {
                                 return FutureBuilder<Uint8List>(
                                   future: img.readAsBytes(),
                                   builder: (context, snapshot) {
-                                    if (!snapshot.hasData) {
+                                    if (snapshot.connectionState == ConnectionState.waiting) {
                                       return _imageTile(
-                                        child: const Center(
-                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: Container(
+                                          width: 90,
+                                          height: 90,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[100],
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: const Center(
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: UpdateProducts.primary,
+                                            ),
+                                          ),
                                         ),
                                       );
                                     }
+
+                                    if (snapshot.hasError) {
+                                      return _imageTile(
+                                        child: Container(
+                                          width: 90,
+                                          height: 90,
+                                          decoration: BoxDecoration(
+                                            color: Colors.red[50],
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: Colors.red[200]!, width: 1),
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.error_outline,
+                                                  color: Colors.red[400], size: 20),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Read\nfailed',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color: Colors.red[600],
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        onRemove: () => controller.selectedImages.removeAt(index),
+                                      );
+                                    }
+
+                                    if (!snapshot.hasData) {
+                                      return _imageTile(
+                                        child: Container(
+                                          width: 90,
+                                          height: 90,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[100],
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: const Center(
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: UpdateProducts.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+
                                     return _imageTile(
                                       child: Image.memory(
                                         snapshot.data!,

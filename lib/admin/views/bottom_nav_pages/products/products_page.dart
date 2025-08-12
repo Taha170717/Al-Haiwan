@@ -242,9 +242,9 @@ class _AdminProductsState extends State<AdminProducts> {
                               ? (product['imageUrls'] as List<dynamic>?)
                               : null;
 
-                          final String imageUrl = (imageUrls != null && imageUrls.isNotEmpty)
+                          final String? imageUrl = (imageUrls != null && imageUrls.isNotEmpty)
                               ? imageUrls.first.toString()
-                              : 'https://via.placeholder.com/150';
+                              : null;
 
                           return Dismissible(
                             key: Key(productId),
@@ -342,7 +342,8 @@ class _AdminProductsState extends State<AdminProducts> {
                                           child: SizedBox(
                                             width: 58,
                                             height: 58,
-                                            child: Image.network(
+                                            child: imageUrl != null && imageUrl.contains('firebasestorage.googleapis.com')
+                                                ? Image.network(
                                               imageUrl,
                                               fit: BoxFit.cover,
                                               filterQuality: FilterQuality.low,
@@ -363,11 +364,39 @@ class _AdminProductsState extends State<AdminProducts> {
                                                 );
                                               },
                                               errorBuilder: (context, error, stackTrace) {
+                                                print('Image load error for $imageUrl: $error');
                                                 return Container(
-                                                  color: Colors.grey.shade200,
-                                                  child: const Icon(Icons.broken_image, color: Colors.grey),
+                                                  color: Colors.grey.shade100,
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(Icons.refresh, color: Colors.grey.shade600, size: 16),
+                                                      Text('Tap to retry',
+                                                          style: TextStyle(
+                                                              fontSize: 8,
+                                                              color: Colors.grey.shade600
+                                                          )
+                                                      ),
+                                                    ],
+                                                  ),
                                                 );
                                               },
+                                            )
+                                                : Container(
+                                              color: Colors.grey.shade100,
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(Icons.add_photo_alternate_outlined,
+                                                      color: Colors.grey.shade400, size: 20),
+                                                  Text('No Image',
+                                                      style: TextStyle(
+                                                          fontSize: 8,
+                                                          color: Colors.grey.shade400
+                                                      )
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -499,16 +528,13 @@ class _AdminProductsState extends State<AdminProducts> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Get.to(() => AddProducts(productId: '', existingData: {}));
-        },
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Product'),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Get.to(() => AddProducts(productId: '', existingData: {})),
+        backgroundColor: const Color(0xFF199A8E),
+        tooltip: 'Add product',
+        child: const Icon(Icons.add, color: Colors.white),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
         ),
       ),
     );

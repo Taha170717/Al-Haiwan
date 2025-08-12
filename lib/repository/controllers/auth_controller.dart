@@ -163,7 +163,6 @@ class AuthController extends GetxController {
         'used': false,
       });
 
-      // ✅ Navigate to Verification Screen
       Get.snackbar("Success", "OTP sent to your email.");
       Get.to(() => Verification(contactInfo: email, isEmail: true, emailLinked: '',));
     } catch (e) {
@@ -327,7 +326,8 @@ class AuthController extends GetxController {
         'name': username,
         'email': email,
         'phone': phone,
-        'status': 'pendingApproval',
+        'status': 'Pending',
+        'isVerified': 'false',
         'createdAt': now,
         'updatedAt': now,
       };
@@ -375,7 +375,16 @@ class AuthController extends GetxController {
 
       // Admin Check
       if (email == "tahazafar112@gmail.com") {
-        Get.snackbar("Success", "Admin login successful!");
+        Get.snackbar(
+          "Success",
+          "Admin login successful!",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          icon: const Icon(Icons.admin_panel_settings, color: Colors.white),
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(10),
+          borderRadius: 10,
+        );
         Get.offAll(() => AdminScreen());
         return;
       }

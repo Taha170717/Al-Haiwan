@@ -7,9 +7,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-
 import '../../repository/screens/login/loginpage.dart';
+import 'Doctor_Verification.dart';
 import 'bottom_nav_pages/appointments/appoinmentspage.dart';
+import 'dart:ui';
 
 class DoctorScreen extends StatefulWidget {
   const DoctorScreen({super.key});
@@ -28,30 +29,48 @@ class _DoctorScreenState extends State<DoctorScreen> {
     DoctorProfile(),
   ];
 
-  User? user; // Firebase authenticated user
-  String? username; // Username of the logged-in user
-  String? email; // Email of the logged-in user
-  bool isDoctor = false; // Flag for doctor account
+  User? user;
+  String? username;
+  String? email;
+  bool isDoctor = false;
+  bool isVerified = false;
 
   @override
   void initState() {
     super.initState();
     _fetchUserDetails();
+    ever(controller.currentIndex, (index) => _checkVerificationForNavigation(index));
   }
 
   Future<void> _fetchUserDetails() async {
     try {
-      user = FirebaseAuth.instance.currentUser; // Get authenticated user
+      user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final snapshot = await FirebaseFirestore.instance
             .collection('users')
             .doc(user!.uid)
-            .get(); // Fetch data from Firestore
+            .get();
         if (snapshot.exists) {
           setState(() {
             username = snapshot.data()?['username'] ?? "Unknown";
             email = snapshot.data()?['email'] ?? user!.email;
             isDoctor = snapshot.data()?['isDoctor'] ?? false;
+            isVerified = snapshot.data()?['isVerified'] ?? false;
+          });
+        } else {
+          await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+            'username': user!.displayName ?? "Doctor",
+            'email': user!.email,
+            'isDoctor': true,
+            'isVerified': false,
+            'status': 'Pending',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          setState(() {
+            username = user!.displayName ?? "Doctor";
+            email = user!.email;
+            isDoctor = true;
+            isVerified = false;
           });
         }
       }
@@ -60,9 +79,128 @@ class _DoctorScreenState extends State<DoctorScreen> {
     }
   }
 
+  void _checkVerificationForNavigation(int targetIndex) {
+    if (!isVerified && targetIndex != 4) {
+      Future.delayed(Duration.zero, () {
+        controller.changeIndex(4);
+        _showVerificationDialog();
+      });
+    }
+  }
+
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.admin_panel_settings_outlined,
+                    color: Colors.orange,
+                    size: 48,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Admin Verification Required",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "Your doctor account is pending admin approval. Please complete your profile information and submit for verification. All features will be unlocked once approved by admin.",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.orange),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          "Later",
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.to(() => DoctorVerificationPage());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          "Verify",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _logout() async {
     await FirebaseAuth.instance.signOut();
-    Get.offAll(() =>  Loginpage());
+    Get.offAll(() => Loginpage());
   }
 
   @override
@@ -71,18 +209,104 @@ class _DoctorScreenState extends State<DoctorScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text(
-          "Welcome Doctor",
+        title: Text(
+          isVerified ? "Welcome Doctor" : "Welcome Doctor (Pending Approval)",
           style: TextStyle(
-            color: Color(0xFF199A8E),
+            color: isVerified ? const Color(0xFF199A8E) : Colors.orange.shade700,
             fontFamily: "bolditalic",
           ),
         ),
         iconTheme: const IconThemeData(color: Color(0XFF199A8E)),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isVerified
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isVerified ? Colors.green : Colors.orange,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isVerified ? Icons.verified : Icons.pending_outlined,
+                  color: isVerified ? Colors.green : Colors.orange,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  isVerified ? "Verified" : "Pending",
+                  style: TextStyle(
+                    color: isVerified ? Colors.green : Colors.orange,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      body: IndexedStack(
-        index: controller.currentIndex.value,
-        children: pages,
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: controller.currentIndex.value,
+            children: pages,
+          ),
+          if (!isVerified && controller.currentIndex.value != 4)
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: Container(
+                  color: Colors.black.withOpacity(0.3),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.symmetric(horizontal: 40),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.lock_outline,
+                            color: Colors.orange,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            "Feature Locked",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Complete your profile verification to unlock all features",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: [
@@ -91,19 +315,19 @@ class _DoctorScreenState extends State<DoctorScreen> {
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/doctor_icons/appointment.png', 1),
+            icon: _buildNavIcon('assets/doctor_icons/appointments.png', 1),
             label: 'Appointments',
           ),
           BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/doctor_icons/medicalrecord.png', 2),
+            icon: _buildNavIcon('assets/doctor_icons/medicalrecords.png', 2),
             label: 'Medical Records',
           ),
           BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/doctor_icons/chat.png', 3),
+            icon: _buildNavIcon('assets/doctor_icons/chats.png', 3),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/doctor_icons/profile.png', 4),
+            icon: _buildNavIcon('assets/doctor_icons/profilesetting.png', 4),
             label: 'Profile',
           ),
         ],
@@ -114,7 +338,13 @@ class _DoctorScreenState extends State<DoctorScreen> {
         unselectedItemColor: Colors.grey,
         selectedLabelStyle: const TextStyle(fontSize: 10),
         unselectedLabelStyle: const TextStyle(fontSize: 10),
-        onTap: controller.changeIndex,
+        onTap: (index) {
+          if (!isVerified && index != 4) {
+            _showVerificationDialog();
+          } else {
+            controller.changeIndex(index);
+          }
+        },
       ),
       drawer: _buildDrawer(),
     ));
@@ -145,61 +375,119 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 isDoctor ? (username ?? "Doctor") : "Not a Doctor",
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              accountEmail: Text(
-                isDoctor ? (email ?? "No Email") : "Not Authorized",
-                style: const TextStyle(fontSize: 14),
+              accountEmail: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isDoctor ? (email ?? "No Email") : "Not Authorized",
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isVerified ? Colors.green : Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isVerified ? "Admin Verified" : "Pending Approval",
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            _buildDivider(),
             _buildDrawerTile(
               icon: "assets/doctor_icons/dashboard.png",
               label: "Dashboard",
+              isLocked: !isVerified,
               onTap: () {
-                controller.changeIndex(0);
-                Get.back();
+                if (!isVerified) {
+                  Get.back();
+                  _showVerificationDialog();
+                } else {
+                  controller.changeIndex(0);
+                  Get.back();
+                }
               },
             ),
             _buildDivider(),
             _buildDrawerTile(
-              icon: "assets/doctor_icons/appointment.png",
+              icon: "assets/doctor_icons/appointments.png",
               label: "Appointments",
+              isLocked: !isVerified,
               onTap: () {
-                Get.to(() => AppointmentPage());
+                if (!isVerified) {
+                  Get.back();
+                  _showVerificationDialog();
+                } else {
+                  Get.to(() => AppointmentPage());
+                }
               },
             ),
             _buildDivider(),
             _buildDrawerTile(
               icon: "assets/doctor_icons/medicalrecords.png",
               label: "Patient Records",
-              onTap: () {},
+              isLocked: !isVerified,
+              onTap: () {
+                if (!isVerified) {
+                  Get.back();
+                  _showVerificationDialog();
+                }
+              },
             ),
             _buildDivider(),
             _buildDrawerTile(
-              icon: "assets/doctor_icons/chat.png",
+              icon: "assets/doctor_icons/chats.png",
               label: "Messages",
+              isLocked: !isVerified,
               onTap: () {
-                controller.changeIndex(1);
-                Get.back();
+                if (!isVerified) {
+                  Get.back();
+                  _showVerificationDialog();
+                } else {
+                  controller.changeIndex(1);
+                  Get.back();
+                }
               },
             ),
             _buildDivider(),
             _buildDrawerTile(
               icon: "assets/doctor_icons/money.png",
               label: "Earnings",
-              onTap: () {},
+              isLocked: !isVerified,
+              onTap: () {
+                if (!isVerified) {
+                  Get.back();
+                  _showVerificationDialog();
+                }
+              },
             ),
             _buildDivider(),
             _buildDrawerTile(
               icon: "assets/doctor_icons/available.png",
               label: "Availability Settings",
+              isLocked: !isVerified,
               onTap: () {
-                controller.changeIndex(2);
-                Get.back();
+                if (!isVerified) {
+                  Get.back();
+                  _showVerificationDialog();
+                } else {
+                  controller.changeIndex(2);
+                  Get.back();
+                }
               },
             ),
+            _buildDivider(),
             _buildDrawerTile(
-              icon: "assets/doctor_icons/profile.png",
+              icon: "assets/doctor_icons/profilesetting.png",
               label: "Profile",
+              isLocked: false,
               onTap: () {
                 controller.changeIndex(4);
                 Get.back();
@@ -221,24 +509,106 @@ class _DoctorScreenState extends State<DoctorScreen> {
 
   Widget _buildNavIcon(String assetPath, int index) {
     final isSelected = controller.currentIndex.value == index;
+    final isLocked = !isVerified && index != 4;
 
     return Container(
-      padding: const EdgeInsets.all(4), // Reduced padding
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isSelected ? const Color(0x1A199A8E) : Colors.transparent,
         shape: BoxShape.circle,
       ),
-      child: ColorFiltered(
-        colorFilter: ColorFilter.mode(
-          isSelected ? const Color(0XFF199A8E) : Colors.grey,
-          BlendMode.srcIn,
-        ),
-        child: Image.asset(
-          assetPath,
-          width: 22,
-          height: 22,
+      child: Stack(
+        children: [
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              isSelected ? const Color(0XFF199A8E) : Colors.grey,
+              BlendMode.srcIn,
+            ),
+            child: Image.asset(
+              assetPath,
+              width: 22,
+              height: 22,
+            ),
+          ),
+          if (isLocked)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Colors.orange,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock,
+                  color: Colors.white,
+                  size: 8,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(
+      color: Color(0xFF199A8E),
+      thickness: 0.6,
+      indent: 20,
+      endIndent: 20,
+    );
+  }
+
+  Widget _buildDrawerTile({
+    required String icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isLocked = false,
+  }) {
+    return ListTile(
+      leading: Stack(
+        children: [
+          Image.asset(
+              icon,
+              height: 24,
+              width: 24,
+              color: isLocked ? Colors.grey : const Color(0XFF199A8E)
+          ),
+          if (isLocked)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(1),
+                decoration: const BoxDecoration(
+                  color: Colors.orange,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock,
+                  color: Colors.white,
+                  size: 10,
+                ),
+              ),
+            ),
+        ],
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: isLocked ? Colors.grey : const Color(0XFF199A8E),
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
         ),
       ),
+      trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 16,
+          color: isLocked ? Colors.grey : const Color(0XFF199A8E)
+      ),
+      onTap: onTap,
     );
   }
 
@@ -283,7 +653,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
                       await FirebaseAuth.instance.signOut();
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (_) =>  Loginpage()),
+                        MaterialPageRoute(builder: (_) => Loginpage()),
                             (route) => false,
                       );
                     },
@@ -314,35 +684,6 @@ class _DoctorScreenState extends State<DoctorScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDivider() {
-    return const Divider(
-      color: Color(0xFF199A8E),
-      thickness: 0.6,
-      indent: 20,
-      endIndent: 20,
-    );
-  }
-
-  Widget _buildDrawerTile({
-    required String icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Image.asset(icon, height: 24, width: 24, color: const Color(0XFF199A8E)),
-      title: Text(
-        label,
-        style: const TextStyle(
-          color: Color(0XFF199A8E),
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0XFF199A8E)),
-      onTap: onTap,
     );
   }
 }

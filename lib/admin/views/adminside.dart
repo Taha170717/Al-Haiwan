@@ -62,6 +62,7 @@ class _AdminScreenState extends State<AdminScreen> {
         children: pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: controller.currentIndex.value,
         items: [
           BottomNavigationBarItem(
             icon: _buildNavIcon('assets/adminicons/dashboard.png', 0),
@@ -86,12 +87,11 @@ class _AdminScreenState extends State<AdminScreen> {
         ],
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        currentIndex: controller.currentIndex.value,
         selectedItemColor: const Color(0XFF199A8E),
         unselectedItemColor: Colors.grey,
         selectedLabelStyle: const TextStyle(fontSize: 10),
         unselectedLabelStyle: const TextStyle(fontSize: 10),
-        onTap: controller.changeIndex,
+        onTap: (index) => controller.changeIndex(index),
       ),
       drawer: SizedBox(
         width: MediaQuery.of(context).size.width * 0.75,

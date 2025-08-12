@@ -144,6 +144,49 @@ class AddProducts extends StatelessWidget {
                                     width: 90,
                                     height: 90,
                                     fit: BoxFit.cover,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        width: 90,
+                                        height: 90,
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      print('Image load error: $error');
+                                      return Container(
+                                        width: 90,
+                                        height: 90,
+                                        color: Colors.grey[300],
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: const [
+                                            Icon(
+                                              Icons.error_outline,
+                                              color: Colors.red,
+                                              size: 24,
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'Failed',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.red,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   ),
                                   onRemove: () => controller.selectedImages
                                       .removeAt(index),
@@ -157,24 +200,72 @@ class AddProducts extends StatelessWidget {
                                         ConnectionState.waiting ||
                                         !snapshot.hasData) {
                                       return _imageTile(
-                                        child: const Center(
-                                          child: SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
+                                        child: Container(
+                                          width: 90,
+                                          height: 90,
+                                          color: Colors.grey[200],
+                                          child: const Center(
+                                            child: SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
                                             ),
                                           ),
                                         ),
                                         onRemove: null,
                                       );
                                     }
+
+                                    if (snapshot.hasError) {
+                                      return _imageTile(
+                                        child: Container(
+                                          width: 90,
+                                          height: 90,
+                                          color: Colors.grey[300],
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: const [
+                                              Icon(
+                                                Icons.error_outline,
+                                                color: Colors.red,
+                                                size: 24,
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                'Error',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        onRemove: () => controller.selectedImages
+                                            .removeAt(index),
+                                      );
+                                    }
+
                                     return _imageTile(
                                       child: Image.memory(
                                         snapshot.data!,
                                         width: 90,
                                         height: 90,
                                         fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            width: 90,
+                                            height: 90,
+                                            color: Colors.grey[300],
+                                            child: const Icon(
+                                              Icons.broken_image,
+                                              color: Colors.grey,
+                                              size: 32,
+                                            ),
+                                          );
+                                        },
                                       ),
                                       onRemove: () => controller.selectedImages
                                           .removeAt(index),
@@ -461,7 +552,6 @@ class AddProducts extends StatelessWidget {
     );
   }
 
-  // Image tile with remove button
   Widget _imageTile({required Widget child, VoidCallback? onRemove}) {
     return Stack(
       children: [
@@ -482,7 +572,7 @@ class AddProducts extends StatelessWidget {
               onTap: onRemove,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withOpacity(0.7),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(4),

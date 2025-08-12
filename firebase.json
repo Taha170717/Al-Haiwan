@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"alhewan-cool-project","appId":"1:662228895986:android:65caf70d55dfcbbabb286b","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"alhewan-cool-project","configurations":{"android":"1:662228895986:android:65caf70d55dfcbbabb286b","ios":"1:662228895986:ios:42346ea1004a4bc2bb286b","macos":"1:662228895986:ios:42346ea1004a4bc2bb286b","web":"1:662228895986:web:e87a71702002eb80bb286b","windows":"1:662228895986:web:7777d8489f5e951bbb286b"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "alhewan-cool-project",
+          "appId": "1:662228895986:android:65caf70d55dfcbbabb286b",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "alhewan-cool-project",
+          "configurations": {
+            "android": "1:662228895986:android:65caf70d55dfcbbabb286b",
+            "ios": "1:662228895986:ios:42346ea1004a4bc2bb286b",
+            "macos": "1:662228895986:ios:42346ea1004a4bc2bb286b",
+            "web": "1:662228895986:web:e87a71702002eb80bb286b",
+            "windows": "1:662228895986:web:7777d8489f5e951bbb286b"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

@@ -11,6 +11,14 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   String? _error;
 
+  void _setErrorOnce(String message) {
+    if (_error == null) {
+      setState(() {
+        _error = message;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -26,14 +34,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
     // Card height responsive with sane min/max to prevent overflow
     final double cardHeight = (h * 0.25).clamp(140.0, 220.0) as double;
 
-    // Adjust these queries to match your collections/fields
+    // Queries
     final Query usersQuery = FirebaseFirestore.instance.collection('users');
     // If doctors are in the same "users" collection with a boolean "isDoctor":
     final Query doctorsQuery = FirebaseFirestore.instance
         .collection('users')
         .where('isDoctor', isEqualTo: true);
-    // If doctors are in a separate collection, use the following instead:
-    // final Query doctorsQuery = FirebaseFirestore.instance.collection('doctors');
+    // Products collection
+    final Query productsQuery =
+    FirebaseFirestore.instance.collection('products');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
@@ -54,7 +63,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            // With streams, data is live. This just triggers a visual refresh.
             setState(() {});
             await Future.delayed(const Duration(milliseconds: 350));
           },
@@ -67,6 +75,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
             children: [
               SizedBox(height: topSpacing),
+
+              // Row 1: Users and Doctors
               Row(
                 children: [
                   // Total Users
@@ -76,9 +86,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       builder: (context, snapshot) {
                         final loading =
                             snapshot.connectionState == ConnectionState.waiting;
-                        final value = snapshot.hasData
-                            ? snapshot.data!.size
-                            : 0;
+                        final value =
+                        snapshot.hasData ? snapshot.data!.size : 0;
 
                         if (snapshot.hasError) {
                           _setErrorOnce(
@@ -93,7 +102,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           icon: Icons.group_rounded,
                           gradient: const [
                             Color(0xFF6A8DFF),
-                            Color(0xFF8A6BFF)
+                            Color(0xFF8A6BFF),
                           ],
                           accent: const Color(0xFF3D5AFE),
                           height: cardHeight,
@@ -109,9 +118,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       builder: (context, snapshot) {
                         final loading =
                             snapshot.connectionState == ConnectionState.waiting;
-                        final value = snapshot.hasData
-                            ? snapshot.data!.size
-                            : 0;
+                        final value =
+                        snapshot.hasData ? snapshot.data!.size : 0;
 
                         if (snapshot.hasError) {
                           _setErrorOnce(
@@ -126,9 +134,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           icon: Icons.local_hospital_rounded,
                           gradient: const [
                             Color(0xFF2ECC71),
-                            Color(0xFF20C997)
+                            Color(0xFF27AE60),
                           ],
-                          accent: const Color(0xFF17A673),
+                          accent: const Color(0xFF1B5E20),
                           height: cardHeight,
                         );
                       },
@@ -136,27 +144,82 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ],
               ),
-              SizedBox(height: bottomSpacing),
-              if (_error != null)
-                _ErrorCard(
-                  message: _error!,
-                  onRetry: () async {
-                    setState(() => _error = null);
-                  },
+
+              SizedBox(height: gapBetweenCards),
+
+              // Row 2: Products
+              Row(
+                children: [
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: productsQuery.snapshots(),
+                      builder: (context, snapshot) {
+                        final loading =
+                            snapshot.connectionState == ConnectionState.waiting;
+                        final value =
+                        snapshot.hasData ? snapshot.data!.size : 0;
+
+                        if (snapshot.hasError) {
+                          _setErrorOnce(
+                            'Failed to load products: ${snapshot.error}',
+                          );
+                        }
+
+                        return _StatCard(
+                          title: 'Total Products',
+                          value: value,
+                          loading: loading,
+                          icon: Icons.inventory_2_rounded,
+                          gradient: const [
+                            Color(0xFFFFA726), // orange
+                            Color(0xFFFF7043), // deep orange
+                          ],
+                          accent: const Color(0xFFFF6D00),
+                          height: cardHeight,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              if (_error != null) ...[
+                SizedBox(height: topSpacing),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.red.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => setState(() => _error = null),
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        tooltip: 'Dismiss',
+                      )
+                    ],
+                  ),
                 ),
+              ],
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _setErrorOnce(String message) {
-    if (_error == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _error = message);
-      });
-    }
   }
 }
 
@@ -181,18 +244,7 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // MediaQuery driven sizes inside the card
-    final size = MediaQuery.of(context).size;
-    final w = size.width;
-
-    final cardRadius = 20.0;
-    final outerPadding = w * 0.04; // responsive padding
-    final iconBgOpacity = 0.2;
-
-    // Decorative bubble sizes scaled by card height
-    final bigBubbleSize = height * 0.55;
-    final smallBubbleSize = height * 0.43;
-
+    final textColor = Colors.white;
     return Container(
       height: height,
       decoration: BoxDecoration(
@@ -201,96 +253,103 @@ class _StatCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(cardRadius),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 18,
-            offset: Offset(0, 10),
+            color: gradient.last.withOpacity(0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Stack(
-        clipBehavior: Clip.none,
         children: [
+          // Decorative circles
           Positioned(
-            right: -bigBubbleSize * 0.22,
-            top: -bigBubbleSize * 0.22,
-            child: _Bubble(
-              color: Colors.white.withOpacity(0.15),
-              size: bigBubbleSize,
-            ),
+            right: -20,
+            top: -20,
+            child: _Bubble(color: Colors.white.withOpacity(0.12), size: 120),
           ),
           Positioned(
-            left: -smallBubbleSize * 0.17,
-            bottom: -smallBubbleSize * 0.2,
-            child: _Bubble(
-              color: Colors.white.withOpacity(0.12),
-              size: smallBubbleSize,
-            ),
+            left: -30,
+            bottom: -30,
+            child: _Bubble(color: Colors.white.withOpacity(0.08), size: 160),
           ),
+          // Content
           Padding(
-            padding: EdgeInsets.all(outerPadding.clamp(12.0, 18.0)),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _IconBadge(icon: icon, bg: Colors.white.withOpacity(iconBgOpacity)),
-                const Spacer(),
+                Icon(icon, color: textColor.withOpacity(0.95), size: 28),
+                const SizedBox(height: 12),
                 Text(
                   title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.95),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    letterSpacing: 0.2,
                   ),
                 ),
-                SizedBox(height: height * 0.035),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 350),
-                  transitionBuilder: (child, anim) =>
-                      FadeTransition(opacity: anim, child: child),
+                const Spacer(),
+                Align(
+                  alignment: Alignment.bottomLeft,
                   child: loading
-                      ? _Skeleton(
-                    key: const ValueKey('skeleton'),
-                    width: (w * 0.16).clamp(48.0, 84.0),
-                    height: (height * 0.2).clamp(26.0, 38.0),
-                    radius: 8,
-                  )
-                      : Text(
-                    '$value',
-                    key: ValueKey(value),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: (height * 0.2).clamp(24.0, 36.0),
-                      fontWeight: FontWeight.w900,
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-                SizedBox(height: height * 0.02),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: (w * 0.025).clamp(8.0, 12.0),
-                    vertical: (height * 0.035).clamp(6.0, 8.0),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white24, width: 1),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                      ? Row(
                     children: [
-                      const Icon(Icons.trending_up_rounded, color: Colors.white, size: 16),
-                      const SizedBox(width: 6),
+                      SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor:
+                          AlwaysStoppedAnimation<Color>(textColor),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
-                        'Live Firestore',
+                        'Loading...',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.95),
-                          fontSize: 12,
+                          color: textColor.withOpacity(0.9),
                           fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  )
+                      : Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '$value',
+                        style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 36,
+                          height: 0.9,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.35),
+                          ),
+                        ),
+                        child: Text(
+                          'Live Update',
+                          style: TextStyle(
+                            color: textColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            letterSpacing: 0.3,
+                          ),
                         ),
                       ),
                     ],
@@ -308,120 +367,16 @@ class _StatCard extends StatelessWidget {
 class _Bubble extends StatelessWidget {
   final Color color;
   final double size;
+
   const _Bubble({required this.color, required this.size});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: size,
       height: size,
+      width: size,
       decoration:
-      BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [
-        BoxShadow(color: color.withOpacity(0.2), blurRadius: 12, spreadRadius: 2)
-      ]),
-    );
-  }
-}
-
-class _IconBadge extends StatelessWidget {
-  final IconData icon;
-  final Color bg;
-  const _IconBadge({required this.icon, required this.bg});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration:
-      BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      padding: const EdgeInsets.all(10),
-      child: Icon(icon, color: Colors.white, size: 22),
-    );
-  }
-}
-
-class _Skeleton extends StatefulWidget {
-  final double width;
-  final double height;
-  final double radius;
-
-  const _Skeleton({
-    super.key,
-    required this.width,
-    required this.height,
-    this.radius = 10,
-  });
-
-  @override
-  State<_Skeleton> createState() => _SkeletonState();
-}
-
-class _SkeletonState extends State<_Skeleton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-  AnimationController(vsync: this, duration: const Duration(seconds: 1))
-    ..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: Tween(begin: 0.4, end: 1.0).animate(_c),
-      child: Container(
-        width: widget.width,
-        height: widget.height,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.45),
-          borderRadius: BorderRadius.circular(widget.radius),
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorCard extends StatelessWidget {
-  final String message;
-  final Future<void> Function() onRetry;
-
-  const _ErrorCard({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    // Responsive paddings using MediaQuery
-    final size = MediaQuery.of(context).size;
-    final pad = (size.width * 0.035).clamp(10.0, 16.0);
-
-    return Container(
-      padding: EdgeInsets.all(pad),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        border: Border.all(color: Colors.red.shade200),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline_rounded, color: Colors.red.shade400),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                color: Colors.red.shade700,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
+      BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
