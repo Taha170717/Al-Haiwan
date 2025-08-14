@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'introsreen3.dart';
 import 'loginsignupintro.dart';
-
+//abc
 class Intro2Controller extends GetxController {
   void skip() => Get.off(() => Loginsignupintro());
   void next() => Get.off(() => Introscreen3());
