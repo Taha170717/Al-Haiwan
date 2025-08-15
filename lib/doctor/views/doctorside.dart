@@ -11,7 +11,7 @@ import '../../repository/screens/login/loginpage.dart';
 import 'Doctor_Verification.dart';
 import 'bottom_nav_pages/appointments/appoinmentspage.dart';
 import 'dart:ui';
-
+/andjjdjs
 class DoctorScreen extends StatefulWidget {
   const DoctorScreen({super.key});
 
