@@ -18,6 +18,10 @@ class DoctorVerificationPage extends StatefulWidget {
 class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
   final _formKey = GlobalKey<FormState>();
   bool isLoading = false;
+  String loadingMessage = '';
+  double uploadProgress = 0.0;
+  int currentStep = 0;
+  int totalSteps = 6;
 
   // Basic Information Controllers
   final fullNameController = TextEditingController();
@@ -156,6 +160,9 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
 
     setState(() {
       isLoading = true;
+      currentStep = 0;
+      uploadProgress = 0.0;
+      loadingMessage = 'Preparing verification request...';
     });
 
     try {
@@ -167,25 +174,47 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
       final userId = user.uid;
       final timestamp = DateTime.now().millisecondsSinceEpoch;
 
-      // Upload files
+      setState(() {
+        currentStep = 1;
+        uploadProgress = 0.17;
+        loadingMessage = 'Uploading profile picture...';
+      });
       final profilePictureUrl = await _uploadFile(
           profilePicture, 'profile_pictures', '${userId}_profile_$timestamp.jpg'
       );
 
+      setState(() {
+        currentStep = 2;
+        uploadProgress = 0.33;
+        loadingMessage = 'Uploading medical license...';
+      });
       final medicalLicenseUrl = await _uploadFile(
           medicalLicense, 'medical_licenses', '${userId}_license_$timestamp'
       );
 
+      setState(() {
+        currentStep = 3;
+        uploadProgress = 0.50;
+        loadingMessage = 'Uploading degree certificate...';
+      });
       final degreeCertificateUrl = await _uploadFile(
           degreeCertificate, 'degree_certificates', '${userId}_degree_$timestamp'
       );
 
+      setState(() {
+        currentStep = 4;
+        uploadProgress = 0.67;
+        loadingMessage = 'Uploading government ID...';
+      });
       final governmentIdUrl = await _uploadFile(
           governmentId, 'government_ids', '${userId}_id_$timestamp'
       );
 
       String? specializationCertificateUrl;
       if (specializationCertificate != null) {
+        setState(() {
+          loadingMessage = 'Uploading specialization certificate...';
+        });
         specializationCertificateUrl = await _uploadFile(
             specializationCertificate, 'specialization_certificates', '${userId}_specialization_$timestamp'
         );
@@ -193,10 +222,19 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
 
       String? affiliationLetterUrl;
       if (affiliationLetter != null) {
+        setState(() {
+          loadingMessage = 'Uploading affiliation letter...';
+        });
         affiliationLetterUrl = await _uploadFile(
             affiliationLetter, 'affiliation_letters', '${userId}_affiliation_$timestamp'
         );
       }
+
+      setState(() {
+        currentStep = 5;
+        uploadProgress = 0.83;
+        loadingMessage = 'Saving verification data...';
+      });
 
       // Create verification request document
       final verificationData = {
@@ -245,6 +283,13 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
         'verificationSubmittedAt': FieldValue.serverTimestamp(),
       });
 
+      setState(() {
+        currentStep = 6;
+        uploadProgress = 1.0;
+        loadingMessage = 'Verification request submitted successfully!';
+      });
+
+      await Future.delayed(const Duration(milliseconds: 500));
       _showSuccessDialog();
 
     } catch (e) {
@@ -252,6 +297,9 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
     } finally {
       setState(() {
         isLoading = false;
+        uploadProgress = 0.0;
+        currentStep = 0;
+        loadingMessage = '';
       });
     }
   }
@@ -346,105 +394,279 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
         iconTheme: const IconThemeData(color: Color(0xFF199A8E)),
         elevation: 0,
       ),
-      body: isLoading
-          ? const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF199A8E),
-        ),
-      )
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionHeader("Basic Information"),
-              const SizedBox(height: 15),
-              _buildTextField("Full Name", fullNameController, "Enter your full name as per official documents"),
-              const SizedBox(height: 15),
-              _buildTextField("Father's Name", fatherNameController, "Enter your father's name"),
-              const SizedBox(height: 15),
-              _buildDateField("Date of Birth", dobController),
-              const SizedBox(height: 15),
-              _buildGenderDropdown(),
-              const SizedBox(height: 15),
-              _buildTextField("Contact Number", contactController, "Enter your contact number", TextInputType.phone),
-              const SizedBox(height: 15),
-              _buildTextField("Email Address", emailController, "Enter your email address", TextInputType.emailAddress),
-              const SizedBox(height: 15),
-              _buildTextField("Current Address", addressController, "Enter your current address", TextInputType.multiline,),
-
-              const SizedBox(height: 30),
-              _buildSectionHeader("Professional Details"),
-              const SizedBox(height: 15),
-              _buildTextField("Professional Registration Number", registrationController, "Enter your veterinary council registration number"),
-              const SizedBox(height: 15),
-              _buildTextField("Clinic / Hospital Name", clinicNameController, "Enter clinic or hospital name"),
-              const SizedBox(height: 15),
-              _buildTextField("Clinic / Hospital Address", clinicAddressController, "Enter clinic or hospital address", TextInputType.multiline,),
-              const SizedBox(height: 15),
-              _buildTextField("Clinic / Hospital Contact", clinicContactController, "Enter clinic or hospital contact number", TextInputType.phone),
-              const SizedBox(height: 15),
-              _buildTextField("Specialization", specializationController, "Enter your specialization (optional)", TextInputType.text, ),
-
-              const SizedBox(height: 30),
-              _buildSectionHeader("Required Documents"),
-              const SizedBox(height: 15),
-              _buildProfilePictureUpload(),
-              const SizedBox(height: 15),
-              _buildDocumentUpload("Medical / Veterinary License", medicalLicense, 'medical_license', required: true),
-              const SizedBox(height: 15),
-              _buildDocumentUpload("Degree / Diploma Certificate", degreeCertificate, 'degree_certificate', required: true),
-              const SizedBox(height: 15),
-              _buildDocumentUpload("Specialization Certificate", specializationCertificate, 'specialization_certificate'),
-              const SizedBox(height: 15),
-              _buildDocumentUpload("Government-issued ID", governmentId, 'government_id', required: true),
-              const SizedBox(height: 15),
-              _buildDocumentUpload("Clinic / Hospital Affiliation Letter", affiliationLetter, 'affiliation_letter'),
-
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submitVerificationRequest,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF199A8E),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF199A8E).withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Text(
-                    "Submit Verification Request",
-                    style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.verified_user,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Complete Your Verification",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Please fill out all required information to get your account verified by our admin team.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader("Basic Information", Icons.person),
+                      const SizedBox(height: 20),
+                      _buildTextField("Full Name", fullNameController, "Enter your full name as per official documents"),
+                      const SizedBox(height: 16),
+                      _buildTextField("Father's Name", fatherNameController, "Enter your father's name"),
+                      const SizedBox(height: 16),
+                      _buildDateField("Date of Birth", dobController),
+                      const SizedBox(height: 16),
+                      _buildGenderDropdown(),
+                      const SizedBox(height: 16),
+                      _buildTextField("Contact Number", contactController, "Enter your contact number", TextInputType.phone),
+                      const SizedBox(height: 16),
+                      _buildTextField("Email Address", emailController, "Enter your email address", TextInputType.emailAddress),
+                      const SizedBox(height: 16),
+                      _buildTextField("Current Address", addressController, "Enter your current address", TextInputType.multiline,),
+
+                      const SizedBox(height: 35),
+                      _buildSectionHeader("Professional Details", Icons.work),
+                      const SizedBox(height: 20),
+                      _buildTextField("Professional Registration Number", registrationController, "Enter your veterinary council registration number"),
+                      const SizedBox(height: 16),
+                      _buildTextField("Clinic / Hospital Name", clinicNameController, "Enter clinic or hospital name"),
+                      const SizedBox(height: 16),
+                      _buildTextField("Clinic / Hospital Address", clinicAddressController, "Enter clinic or hospital address", TextInputType.multiline, ),
+                      const SizedBox(height: 16),
+                      _buildTextField("Clinic / Hospital Contact", clinicContactController, "Enter clinic or hospital contact number", TextInputType.phone),
+                      const SizedBox(height: 16),
+                      _buildTextField("Specialization", specializationController, "Enter your specialization (optional)", TextInputType.text, ),
+
+                      const SizedBox(height: 35),
+                      _buildSectionHeader("Required Documents", Icons.folder),
+                      const SizedBox(height: 20),
+                      _buildProfilePictureUpload(),
+                      const SizedBox(height: 16),
+                      _buildDocumentUpload("Medical / Veterinary License", medicalLicense, 'medical_license', required: true),
+                      const SizedBox(height: 16),
+                      _buildDocumentUpload("Degree / Diploma Certificate", degreeCertificate, 'degree_certificate', required: true),
+                      const SizedBox(height: 16),
+                      _buildDocumentUpload("Specialization Certificate", specializationCertificate, 'specialization_certificate'),
+                      const SizedBox(height: 16),
+                      _buildDocumentUpload("Government-issued ID", governmentId, 'government_id', required: true),
+                      const SizedBox(height: 16),
+                      _buildDocumentUpload("Clinic / Hospital Affiliation Letter", affiliationLetter, 'affiliation_letter'),
+
+                      const SizedBox(height: 50),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.4),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : _submitVerificationRequest,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                          ),
+                          child: const Text(
+                            "Submit Verification Request",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.7),
+              child: Center(
+                child: Container(
+                  margin: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(30),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 80,
+                            height: 80,
+                            child: CircularProgressIndicator(
+                              value: uploadProgress,
+                              strokeWidth: 6,
+                              backgroundColor: Colors.grey[200],
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                            ),
+                          ),
+                          Text(
+                            '${(uploadProgress * 100).toInt()}%',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF199A8E),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        loadingMessage,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Step $currentStep of $totalSteps',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(totalSteps, (index) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: index < currentStep
+                                  ? const Color(0xFF199A8E)
+                                  : Colors.grey[300],
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, IconData icon) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF199A8E).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF199A8E).withOpacity(0.3)),
-      ),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF199A8E),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF199A8E).withOpacity(0.1),
+            const Color(0xFF17C3B2).withOpacity(0.05),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF199A8E).withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: const Color(0xFF199A8E),
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF199A8E),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -458,19 +680,19 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
           text: TextSpan(
             text: label,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
               color: Colors.black87,
             ),
             children: required ? [
               const TextSpan(
                 text: ' *',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: Colors.red, fontSize: 16),
               ),
             ] : [],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
@@ -483,22 +705,26 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
           } : null,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey[400]),
+            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
             filled: true,
             fillColor: Colors.grey[50],
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: Color(0xFF199A8E), width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Colors.red, width: 1),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           ),
         ),
       ],

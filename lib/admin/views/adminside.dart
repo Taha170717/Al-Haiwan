@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../repository/screens/login/loginpage.dart';
+import 'bottom_nav_pages/admin_doctor_verfication/doctor_verfication.dart';
 import 'bottom_nav_pages/appointments/appointmentspage.dart';
 import 'bottom_nav_pages/dashboard/dashboardpage.dart';
 import 'bottom_nav_pages/orders/order_page.dart';
@@ -141,8 +142,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 icon: "assets/icons/consult.png",
                 label: "Doctors",
                 onTap: () {
-                  controller.changeIndex(1);
-                  Get.back();
+                  Get.to(() => AdminDoctorVerificationPage());
                 },
               ),
               _buildDivider(),

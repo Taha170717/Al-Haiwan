@@ -20,17 +20,18 @@ class _AdminProductsState extends State<AdminProducts> {
     final length = name.trim().length;
     double size;
     if (length <= 16) {
-      size = 16;
+      size = 18;
     } else if (length <= 24) {
-      size = 14;
+      size = 16;
     } else {
-      size = 13;
+      size = 14;
     }
     return TextStyle(
-      fontWeight: FontWeight.w800,
+      fontWeight: FontWeight.w900,
       fontSize: size,
-      letterSpacing: 0.2,
-      height: 1.2,
+      letterSpacing: 0.3,
+      height: 1.3,
+      color: Colors.grey.shade900,
     );
   }
 
@@ -57,33 +58,34 @@ class _AdminProductsState extends State<AdminProducts> {
         surfaceTintColor: Colors.transparent,
         titleSpacing: 0,
         title: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
+          padding: EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             'Products',
             style: TextStyle(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w900,
               color: primary,
               fontFamily: "bolditalic",
-              letterSpacing: 0.3,
+              letterSpacing: 0.4,
+              fontSize: 24,
             ),
           ),
         ),
         centerTitle: false,
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       body: Column(
         children: [
           // Search bar (UI polish only)
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 14,
+                    offset: const Offset(0, 7),
                   ),
                 ],
               ),
@@ -93,36 +95,37 @@ class _AdminProductsState extends State<AdminProducts> {
                 },
                 decoration: InputDecoration(
                   hintText: "Search product...",
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search, color: primary),
                   suffixIcon: searchQuery.isEmpty
                       ? null
                       : IconButton(
                     tooltip: 'Clear',
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close, color: primary),
                     onPressed: () {
                       setState(() => searchQuery = '');
                     },
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(color: dividerColor),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(color: dividerColor),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: primary, width: 1.4),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: primary, width: 1.6),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: Colors.white,
                 ),
+                style: const TextStyle(fontSize: 16),
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
 
           // Product list from Firestore
           Expanded(
@@ -159,30 +162,30 @@ class _AdminProductsState extends State<AdminProducts> {
                             width: 90,
                             height: 90,
                             decoration: BoxDecoration(
-                              color: primary.withOpacity(0.08),
+                              color: primary.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.inventory_2_outlined, color: primary, size: 46),
+                            child: const Icon(Icons.inventory_2_outlined, color: primary, size: 48),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 18),
                           Text(
                             "No products found",
                             style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
                               color: Colors.grey.shade900,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 8),
                           Text(
                             "Try a different search or add a new product.",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 13.5,
+                              fontSize: 14,
                               color: Colors.grey.shade600,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           OutlinedButton.icon(
                             onPressed: () {
                               Get.to(() => AddProducts(productId: '', existingData: {}));
@@ -191,9 +194,10 @@ class _AdminProductsState extends State<AdminProducts> {
                             label: const Text('Add Product'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: primary,
-                              side: const BorderSide(color: primary),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              side: BorderSide(color: primary.withOpacity(0.9)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                             ),
                           ),
                         ],
@@ -206,26 +210,26 @@ class _AdminProductsState extends State<AdminProducts> {
                 return Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Showing ${products.length} item${products.length == 1 ? '' : 's'}',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Colors.grey.shade700,
                             fontWeight: FontWeight.w600,
-                            fontSize: 12.5,
+                            fontSize: 13,
                           ),
                         ),
                       ),
                     ),
                     Expanded(
                       child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         itemCount: products.length,
                         physics: const BouncingScrollPhysics(),
                         cacheExtent: 800,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, __) => const SizedBox(height: 14),
                         itemBuilder: (context, index) {
                           final product = products[index];
                           final productId = product.id;
@@ -256,10 +260,10 @@ class _AdminProductsState extends State<AdminProducts> {
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                 ),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(18),
                               ),
                               alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: const [
@@ -267,11 +271,12 @@ class _AdminProductsState extends State<AdminProducts> {
                                     'Delete',
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16,
                                     ),
                                   ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.delete, color: Colors.white),
+                                  SizedBox(width: 10),
+                                  Icon(Icons.delete, color: Colors.white, size: 22),
                                 ],
                               ),
                             ),
@@ -279,7 +284,7 @@ class _AdminProductsState extends State<AdminProducts> {
                               final res = await showDialog<bool>(
                                 context: context,
                                 builder: (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                   title: const Text('Delete product?'),
                                   content: Text('Are you sure you want to delete "$name"?'),
                                   actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -315,40 +320,40 @@ class _AdminProductsState extends State<AdminProducts> {
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(18),
                                 onTap: () {
                                   // Quick access to edit on card tap
-                                  Get.to(() => AddProducts(
+                                  Get.to(() => UpdateProducts(
                                     productId: productId,
                                     existingData: product.data() as Map<String, dynamic>,
                                   ));
                                 },
                                 child: Card(
-                                  elevation: 2.5,
+                                  elevation: 3,
                                   shadowColor: Colors.black12,
                                   color: Colors.white,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(18),
                                     side: BorderSide(color: dividerColor),
                                   ),
                                   child: Padding(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(14),
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
                                         // Image
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(14),
                                           child: SizedBox(
-                                            width: 58,
-                                            height: 58,
+                                            width: 64,
+                                            height: 64,
                                             child: imageUrl != null && imageUrl.contains('firebasestorage.googleapis.com')
                                                 ? Image.network(
                                               imageUrl,
                                               fit: BoxFit.cover,
                                               filterQuality: FilterQuality.low,
-                                              cacheWidth: 232,
-                                              cacheHeight: 232,
+                                              cacheWidth: 256,
+                                              cacheHeight: 256,
                                               gaplessPlayback: true,
                                               loadingBuilder: (context, child, progress) {
                                                 if (progress == null) return child;
@@ -356,27 +361,25 @@ class _AdminProductsState extends State<AdminProducts> {
                                                   color: Colors.grey.shade200,
                                                   child: const Center(
                                                     child: SizedBox(
-                                                      width: 18,
-                                                      height: 18,
-                                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                                      width: 20,
+                                                      height: 20,
+                                                      child: CircularProgressIndicator(strokeWidth: 2.2),
                                                     ),
                                                   ),
                                                 );
                                               },
                                               errorBuilder: (context, error, stackTrace) {
-                                                print('Image load error for $imageUrl: $error');
+                                                debugPrint('Image load error for $imageUrl: $error');
                                                 return Container(
                                                   color: Colors.grey.shade100,
                                                   child: Column(
                                                     mainAxisAlignment: MainAxisAlignment.center,
                                                     children: [
-                                                      Icon(Icons.refresh, color: Colors.grey.shade600, size: 16),
+                                                      Icon(Icons.refresh, color: Colors.grey.shade600, size: 18),
                                                       Text('Tap to retry',
                                                           style: TextStyle(
-                                                              fontSize: 8,
-                                                              color: Colors.grey.shade600
-                                                          )
-                                                      ),
+                                                              fontSize: 9,
+                                                              color: Colors.grey.shade600)),
                                                     ],
                                                   ),
                                                 );
@@ -388,19 +391,17 @@ class _AdminProductsState extends State<AdminProducts> {
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   Icon(Icons.add_photo_alternate_outlined,
-                                                      color: Colors.grey.shade400, size: 20),
+                                                      color: Colors.grey.shade400, size: 22),
                                                   Text('No Image',
                                                       style: TextStyle(
-                                                          fontSize: 8,
-                                                          color: Colors.grey.shade400
-                                                      )
-                                                  ),
+                                                          fontSize: 9,
+                                                          color: Colors.grey.shade400)),
                                                 ],
                                               ),
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
+                                        const SizedBox(width: 16),
 
                                         // Texts
                                         Expanded(
@@ -416,70 +417,68 @@ class _AdminProductsState extends State<AdminProducts> {
                                               ),
                                               const SizedBox(height: 6),
 
-                                              // Brand chip + Price badge
+                                              // Brand row
+                                              if (brand.isNotEmpty)
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                                  decoration: BoxDecoration(
+                                                    color: primary.withOpacity(0.12),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(color: primary.withOpacity(0.3)),
+                                                  ),
+                                                  child: Text(
+                                                    brand,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Color(0xFF147E75),
+                                                      letterSpacing: 0.2,
+                                                    ),
+                                                  ),
+                                                ),
+                                              if (brand.isNotEmpty) const SizedBox(height: 10),
+
+                                              // Stock and Price row
                                               Row(
                                                 children: [
-                                                  // Brand tag
-                                                  if (brand.isNotEmpty)
-                                                    Container(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                      decoration: BoxDecoration(
-                                                        color: primary.withOpacity(0.08),
-                                                        borderRadius: BorderRadius.circular(8),
-                                                        border: Border.all(color: primary.withOpacity(0.2)),
-                                                      ),
-                                                      child: Text(
-                                                        brand,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow.ellipsis,
-                                                        style: const TextStyle(
-                                                          fontSize: 11.5,
-                                                          fontWeight: FontWeight.w700,
-                                                          color: primary,
-                                                        ),
+                                                  // Stock badge
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                    decoration: BoxDecoration(
+                                                      color: _stockColor(stockQty).withOpacity(0.15),
+                                                      borderRadius: BorderRadius.circular(14),
+                                                      border: Border.all(color: _stockColor(stockQty).withOpacity(0.35)),
+                                                    ),
+                                                    child: Text(
+                                                      '${_stockLabel(stockQty)} • $stockQty',
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.w800,
+                                                        color: _stockColor(stockQty),
+                                                        letterSpacing: 0.15,
                                                       ),
                                                     ),
-                                                  const SizedBox(width: 8),
+                                                  ),
+                                                  const SizedBox(width: 14),
 
                                                   // Price pill
                                                   Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                                     decoration: BoxDecoration(
                                                       gradient: const LinearGradient(
                                                         colors: [primary, Color(0xFF147E75)],
                                                       ),
-                                                      borderRadius: BorderRadius.circular(8),
+                                                      borderRadius: BorderRadius.circular(14),
                                                     ),
                                                     child: Text(
                                                       'Rs ${price.toStringAsFixed(2)}',
                                                       style: const TextStyle(
                                                         color: Colors.white,
-                                                        fontSize: 11.5,
-                                                        fontWeight: FontWeight.w800,
-                                                        letterSpacing: 0.2,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 8),
-
-                                              // Stock badge
-                                              Row(
-                                                children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: _stockColor(stockQty).withOpacity(0.12),
-                                                      borderRadius: BorderRadius.circular(8),
-                                                      border: Border.all(color: _stockColor(stockQty).withOpacity(0.3)),
-                                                    ),
-                                                    child: Text(
-                                                      '${_stockLabel(stockQty)} • $stockQty',
-                                                      style: TextStyle(
-                                                        fontSize: 11.5,
-                                                        fontWeight: FontWeight.w700,
-                                                        color: _stockColor(stockQty),
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.w900,
+                                                        letterSpacing: 0.25,
                                                       ),
                                                     ),
                                                   ),
@@ -489,19 +488,19 @@ class _AdminProductsState extends State<AdminProducts> {
                                           ),
                                         ),
 
-                                        const SizedBox(width: 8),
+                                        const SizedBox(width: 12),
 
                                         // Edit button
                                         Tooltip(
                                           message: 'Edit',
                                           child: Ink(
                                             decoration: BoxDecoration(
-                                              color: primary.withOpacity(0.08),
-                                              borderRadius: BorderRadius.circular(10),
+                                              color: primary.withOpacity(0.12),
+                                              borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: IconButton(
                                               icon: const Icon(Icons.edit, color: primary),
-                                              splashRadius: 22,
+                                              splashRadius: 24,
                                               onPressed: () {
                                                 Get.to(() => UpdateProducts(
                                                   productId: productId,
@@ -530,11 +529,11 @@ class _AdminProductsState extends State<AdminProducts> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Get.to(() => AddProducts(productId: '', existingData: {})),
-        backgroundColor: const Color(0xFF199A8E),
+        backgroundColor: primary,
         tooltip: 'Add product',
         child: const Icon(Icons.add, color: Colors.white),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     );
