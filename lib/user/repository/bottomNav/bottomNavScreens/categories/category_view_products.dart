@@ -478,7 +478,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                       children: [
                         Container(
                           width: screenWidth * 0.2,
-                          height: screenWidth * 0.2,
+                          height: screenWidth * 0.1,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(15),
                             color: Colors.grey[100],
@@ -501,7 +501,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                               Text(
                                 data['name'] ?? 'Unknown Product',
                                 style: TextStyle(
-                                  fontSize: screenWidth * 0.045,
+                                  fontSize: screenWidth * 0.035,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 maxLines: 2,

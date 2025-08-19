@@ -99,7 +99,7 @@ class CartViewModel extends GetxController {
   }
 
   double get subtotal => cartItems.fold(0, (sum, item) => sum + (item.price * item.quantity));
-  double get tax => subtotal * 0.1; // 10% tax
+  double get tax => subtotal * 0.02; // 10% tax
   double get total => subtotal + tax;
 
   Future<void> addToCart(String name, String image, String quantityLabel, double price, int quantity) async {

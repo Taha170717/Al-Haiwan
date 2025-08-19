@@ -22,42 +22,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   int quantity = 1;
   final CartViewModel cartVM = Get.put(CartViewModel());
 
-  Widget _buildBulletPoints(String text, double screenWidth) {
+  Widget _buildCleanText(String text, double screenWidth) {
     if (text.isEmpty) return const SizedBox.shrink();
 
-    final points = text.split('\n').where((point) => point.trim().isNotEmpty).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: points.map((point) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: screenWidth * 0.02),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: EdgeInsets.only(top: screenWidth * 0.015, right: screenWidth * 0.03),
-                width: screenWidth * 0.015,
-                height: screenWidth * 0.015,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF199A8E),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  point.trim(),
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.04,
-                    color: Colors.grey[700],
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(screenWidth * 0.04),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Text(
+        text.trim(),
+        style: TextStyle(
+          fontSize: screenWidth * 0.042,
+          color: Colors.grey[800],
+          height: 1.6,
+          letterSpacing: 0.3,
+        ),
+        textAlign: TextAlign.justify,
+      ),
     );
   }
 
@@ -468,97 +453,119 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       if (description.isNotEmpty) ...[
                         Container(
                           width: double.infinity,
-                          padding: EdgeInsets.all(screenWidth * 0.04),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF199A8E).withOpacity(0.05),
-                                Colors.white,
-                              ],
-                            ),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFF199A8E).withOpacity(0.2)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF199A8E).withOpacity(0.08),
+                                blurRadius: 15,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(screenWidth * 0.02),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF199A8E),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      Icons.description,
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(screenWidth * 0.045),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(0xFF199A8E),
+                                      const Color(0xFF17C3B2),
+                                    ],
+                                  ),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.description_outlined,
                                       color: Colors.white,
-                                      size: screenWidth * 0.05,
+                                      size: screenWidth * 0.055,
                                     ),
-                                  ),
-                                  SizedBox(width: screenWidth * 0.03),
-                                  Text(
-                                    'Description',
-                                    style: TextStyle(
-                                      fontSize: screenWidth * 0.05,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF199A8E),
+                                    SizedBox(width: screenWidth * 0.03),
+                                    Text(
+                                      'Product Description',
+                                      style: TextStyle(
+                                        fontSize: screenWidth * 0.048,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                              SizedBox(height: screenHeight * 0.015),
-                              _buildBulletPoints(description, screenWidth),
+                              Padding(
+                                padding: EdgeInsets.all(screenWidth * 0.045),
+                                child: _buildCleanText(description, screenWidth),
+                              ),
                             ],
                           ),
                         ),
-                        SizedBox(height: screenHeight * 0.02),
+                        SizedBox(height: screenHeight * 0.025),
                       ],
 
                       if (ingredients.isNotEmpty) ...[
                         Container(
                           width: double.infinity,
-                          padding: EdgeInsets.all(screenWidth * 0.04),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF199A8E).withOpacity(0.05),
-                                Colors.white,
-                              ],
-                            ),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFF199A8E).withOpacity(0.2)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF199A8E).withOpacity(0.08),
+                                blurRadius: 15,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(screenWidth * 0.02),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF199A8E),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      Icons.local_pharmacy,
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(screenWidth * 0.045),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(0xFF199A8E),
+                                      const Color(0xFF17C3B2),
+                                    ],
+                                  ),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.science_outlined,
                                       color: Colors.white,
-                                      size: screenWidth * 0.05,
+                                      size: screenWidth * 0.055,
                                     ),
-                                  ),
-                                  SizedBox(width: screenWidth * 0.03),
-                                  Text(
-                                    'Ingredients',
-                                    style: TextStyle(
-                                      fontSize: screenWidth * 0.05,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF199A8E),
+                                    SizedBox(width: screenWidth * 0.03),
+                                    Text(
+                                      'Ingredients & Composition',
+                                      style: TextStyle(
+                                        fontSize: screenWidth * 0.048,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                              SizedBox(height: screenHeight * 0.015),
-                              _buildBulletPoints(ingredients, screenWidth),
+                              Padding(
+                                padding: EdgeInsets.all(screenWidth * 0.045),
+                                child: _buildCleanText(ingredients, screenWidth),
+                              ),
                             ],
                           ),
                         ),
