@@ -1,5 +1,5 @@
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreen.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreen.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';

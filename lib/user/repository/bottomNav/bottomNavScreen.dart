@@ -1,12 +1,12 @@
-import 'package:al_haiwan/repository/controllers/bottom_nav_controller.dart';
+import 'package:al_haiwan/user/repository/controllers/bottom_nav_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/cart/cartscreen.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/categories/categoryscreen.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/myappointments/myAppointment.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/cart/cartscreen.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/categories/categoryscreen.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/homescreen.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/myappointments/myAppointment.dart';
 
 import '../screens/login/loginpage.dart';
 import 'bottomNavScreens/myorders/myorders.dart';

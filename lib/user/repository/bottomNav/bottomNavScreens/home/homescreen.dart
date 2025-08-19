@@ -1,7 +1,7 @@
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/product/Product%20ViewModel.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/product/Product_detail.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/product/product%20Modal.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/product/Product%20ViewModel.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/product/Product_detail.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/product/product%20Modal.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controllers/bottom_nav_controller.dart';

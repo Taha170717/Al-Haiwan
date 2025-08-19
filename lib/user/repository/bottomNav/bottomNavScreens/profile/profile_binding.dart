@@ -1,5 +1,5 @@
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/profile/profile_viewmodal.dart';
 import 'package:get/get.dart';
-import 'profile_viewmodal.dart';
 class ProfileBinding extends Bindings {
   @override
   void dependencies() {

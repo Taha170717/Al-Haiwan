@@ -1,8 +1,8 @@
 import 'dart:math';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreen.dart';
-import 'package:al_haiwan/repository/screens/resetpassword/verfication.dart';
-import 'package:al_haiwan/repository/screens/login/loginpage.dart';
-import 'package:al_haiwan/repository/screens/resetpassword/createnewpass.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreen.dart';
+import 'package:al_haiwan/user/repository/screens/resetpassword/verfication.dart';
+import 'package:al_haiwan/user/repository/screens/login/loginpage.dart';
+import 'package:al_haiwan/user/repository/screens/resetpassword/createnewpass.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +11,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 
-import '../../admin/views/adminside.dart';
-import '../../doctor/views/doctorside.dart';
+import '../../../admin/views/adminside.dart';
+import '../../../doctor/views/doctorside.dart';
 
 class AuthController extends GetxController {
   final isLoading = false.obs;

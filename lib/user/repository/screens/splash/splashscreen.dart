@@ -8,9 +8,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Screens
-import 'package:al_haiwan/repository/screens/introscreens/introscreen1.dart';
-import '../../../admin/views/adminside.dart';
-import '../../../doctor/views/doctorside.dart';
+import 'package:al_haiwan/user/repository/screens/introscreens/introscreen1.dart';
+import '../../../../admin/views/adminside.dart';
+import '../../../../doctor/views/doctorside.dart';
 import '../../bottomNav/bottomNavScreen.dart';
 import '../login/loginpage.dart';
 

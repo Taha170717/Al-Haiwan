@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../repository/screens/login/loginpage.dart';
+import '../../user/repository/screens/login/loginpage.dart';
 import 'bottom_nav_pages/admin_doctor_verfication/doctor_verfication.dart';
 import 'bottom_nav_pages/appointments/appointmentspage.dart';
 import 'bottom_nav_pages/dashboard/dashboardpage.dart';

@@ -1,5 +1,5 @@
 // viewmodels/product_list_viewmodel.dart
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/product/product%20Modal.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/product/product%20Modal.dart';
 import 'package:get/get.dart';
 
 class ProductListViewModel extends GetxController {

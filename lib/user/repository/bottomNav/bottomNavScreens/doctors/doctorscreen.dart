@@ -1,4 +1,4 @@
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/doctors/DoctorDetailView.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/doctors/DoctorDetailView.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'doctor_list_viewmodel.dart';

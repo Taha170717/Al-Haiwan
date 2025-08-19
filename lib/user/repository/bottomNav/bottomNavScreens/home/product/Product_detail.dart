@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:al_haiwan/repository/bottomNav/bottomNavScreens/home/product/product%20Modal.dart';
+import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/product/product%20Modal.dart';
 
 class ProductDetailView extends StatelessWidget {
   final Product product;

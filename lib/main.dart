@@ -1,12 +1,12 @@
-import 'package:al_haiwan/repository/user_service.dart';
+import 'package:al_haiwan/user/repository/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get_storage/get_storage.dart';
 
 import 'firebase_options.dart';
-import 'package:al_haiwan/repository/screens/splash/splashscreen.dart';
-import 'package:al_haiwan/repository/controllers/auth_controller.dart';
+import 'package:al_haiwan/user/repository/screens/splash/splashscreen.dart';
+import 'package:al_haiwan/user/repository/controllers/auth_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

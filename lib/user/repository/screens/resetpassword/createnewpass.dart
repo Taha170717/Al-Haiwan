@@ -1,4 +1,4 @@
-import 'package:al_haiwan/repository/screens/resetpassword/passresetsucessscreen.dart';
+import 'package:al_haiwan/user/repository/screens/resetpassword/passresetsucessscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
