@@ -59,159 +59,168 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isTablet = screenWidth > 600;
+    final isLargeScreen = screenWidth > 900;
+
     final basicInfo = widget.doctorData['basicInfo'] ?? {};
     final professionalDetails = widget.doctorData['professionalDetails'] ?? {};
     final documents = widget.doctorData['documents'] ?? {};
     final isVerified = widget.doctorData['isVerified'] ?? false;
+    final profilePicture = documents['profilePicture'] ?? '';
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 320,
-              pinned: true,
-              backgroundColor: const Color(0xFF199A8E),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF199A8E),
-                        Color(0xFF17C3B2),
-                        Color(0xFF1DD1A1),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+      body: AnimatedBuilder(
+        animation: _fadeAnimation,
+        builder: (context, child) => FadeTransition(
+          opacity: _fadeAnimation,
+          child: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: isLargeScreen ? 400 : (isTablet ? 360 : 320),
+                pinned: true,
+                backgroundColor: const Color(0xFF199A8E),
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF199A8E),
+                          Color(0xFF17C3B2),
+                          Color(0xFF1DD1A1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 60),
-                      Hero(
-                        tag: 'doctor_${widget.doctorId}',
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: 140,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 5),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
-                                    blurRadius: 25,
-                                    offset: const Offset(0, 15),
-                                  ),
-                                  BoxShadow(
-                                    color: Colors.white.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, -5),
-                                  ),
-                                ],
-                              ),
-                              child: ClipOval(
-                                child: documents['profilePicture'] != null
-                                    ? Image.network(
-                                  documents['profilePicture'],
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [Colors.grey[300]!, Colors.grey[400]!],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: screenHeight * 0.08),
+                        Hero(
+                          tag: 'doctor_${widget.doctorId}',
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: isLargeScreen ? 180 : (isTablet ? 160 : 140),
+                                height: isLargeScreen ? 180 : (isTablet ? 160 : 140),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: isTablet ? 6 : 5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 25,
+                                      offset: const Offset(0, 15),
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.white.withOpacity(0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, -5),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: profilePicture.isNotEmpty
+                                      ? Image.network(
+                                    profilePicture,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Container(
+                                          color: Colors.grey[300],
+                                          child: Icon(
+                                            Icons.person,
+                                            size: isLargeScreen ? 90 : (isTablet ? 80 : 70),
+                                            color: Colors.grey[600],
+                                          ),
                                         ),
-                                      ),
-                                      child: const Icon(Icons.person, size: 70, color: Colors.white),
-                                    );
-                                  },
-                                )
-                                    : Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [Colors.grey[300]!, Colors.grey[400]!],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                                  )
+                                      : Container(
+                                    color: Colors.grey[300],
+                                    child: Icon(
+                                      Icons.person,
+                                      size: isLargeScreen ? 90 : (isTablet ? 80 : 70),
+                                      color: Colors.grey[600],
                                     ),
                                   ),
-                                  child: const Icon(Icons.person, size: 70, color: Colors.white),
                                 ),
                               ),
-                            ),
-                            if (isVerified)
-                              Positioned(
-                                bottom: 5,
-                                right: 5,
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 3),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.green.withOpacity(0.4),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
+                              if (isVerified)
+                                Positioned(
+                                  bottom: isTablet ? 12 : 8,
+                                  right: isTablet ? 12 : 8,
+                                  child: Container(
+                                    width: isTablet ? 50 : 44,
+                                    height: isTablet ? 50 : 44,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 3),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.green.withOpacity(0.4),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.verified,
+                                      color: Colors.white,
+                                      size: isTablet ? 28 : 24,
+                                    ),
                                   ),
-                                  child: const Icon(Icons.verified, color: Colors.white, size: 24),
                                 ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        basicInfo['fullName'] ?? 'Unknown Doctor',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black26,
-                              offset: Offset(0, 2),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          professionalDetails['specialization'] ?? 'General Veterinarian',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            ],
                           ),
                         ),
-                      ),
-                    ],
+                        SizedBox(height: screenHeight * 0.025),
+                        Text(
+                          basicInfo['fullName'] ?? 'Unknown Doctor',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isLargeScreen ? 32 : (isTablet ? 30 : 28),
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            shadows: const [
+                              Shadow(
+                                color: Colors.black26,
+                                offset: Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.01),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isTablet ? 20 : 16,
+                            vertical: isTablet ? 8 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            professionalDetails['specialization'] ?? 'General Veterinarian',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 18 : 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: EdgeInsets.all(isTablet ? 24 : 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -220,7 +229,6 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
                       _buildSection(
                         'Basic Information',
                         Icons.person_outline,
-                        Colors.blue,
                         [
                           _buildDetailRow('Full Name', basicInfo['fullName']),
                           _buildDetailRow('Father\'s Name', basicInfo['fatherName']),
@@ -231,33 +239,32 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
                           _buildDetailRow('Current Address', basicInfo['currentAddress']),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: screenHeight * 0.03),
                       _buildSection(
                         'Professional Details',
                         Icons.work_outline,
-                        Colors.orange,
                         [
                           _buildDetailRow('Registration Number', professionalDetails['registrationNumber']),
                           _buildDetailRow('Clinic/Hospital Name', professionalDetails['clinicName']),
-                          _buildDetailRow('Clinic Address', professionalDetails['clinicAddress']),
+                          _buildDetailRow('Clinic/Hospital Address', professionalDetails['clinicAddress']),
                           _buildDetailRow('Clinic Contact', professionalDetails['clinicContact']),
                           _buildDetailRow('Specialization', professionalDetails['specialization']),
                         ],
                       ),
-                      const SizedBox(height: 24),
-                      _buildDocumentsSection(documents),
-                      const SizedBox(height: 100),
+                      SizedBox(height: screenHeight * 0.03),
+                      _buildDocumentsSection(),
+                      SizedBox(height: screenHeight * 0.1),
                     ],
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: !isVerified ? Container(
-        width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 20),
+        width: screenWidth > 600 ? screenWidth * 0.6 : double.infinity,
+        margin: EdgeInsets.symmetric(horizontal: isTablet ? 40 : 20),
         child: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -280,25 +287,29 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
               borderRadius: BorderRadius.circular(30),
               onTap: isLoading ? null : () => _showApprovalDialog(),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: isTablet ? 20 : 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (isLoading)
-                      const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      SizedBox(
+                        width: isTablet ? 28 : 24,
+                        height: isTablet ? 28 : 24,
+                        child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
                     else
-                      const Icon(Icons.check_circle_outline, color: Colors.white, size: 24),
-                    const SizedBox(width: 12),
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.white,
+                        size: isTablet ? 28 : 24,
+                      ),
+                    SizedBox(width: isTablet ? 16 : 12),
                     Text(
                       isLoading ? 'Approving...' : 'Approve Doctor',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: isTablet ? 18 : 16,
                       ),
                     ),
                   ],
@@ -312,131 +323,81 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
     );
   }
 
-  Widget _buildStatusCard(bool isVerified) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isVerified
-              ? [Colors.green.withOpacity(0.1), Colors.green.withOpacity(0.05)]
-              : [Colors.orange.withOpacity(0.1), Colors.orange.withOpacity(0.05)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isVerified ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isVerified ? Colors.green : Colors.orange,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isVerified ? Icons.verified_user : Icons.pending,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isVerified ? 'Verified Doctor' : 'Pending Verification',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isVerified ? Colors.green[700] : Colors.orange[700],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isVerified
-                      ? 'This doctor has been verified and approved'
-                      : 'This doctor is awaiting verification approval',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildSection(String title, IconData icon, List<Widget> children) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
 
-  Widget _buildSection(String title, IconData icon, Color accentColor, List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
             blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(isTablet ? 24 : 20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(isTablet ? 12 : 10),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [accentColor.withOpacity(0.1), accentColor.withOpacity(0.05)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: accentColor.withOpacity(0.2)),
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: accentColor, size: 28),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: isTablet ? 28 : 24,
+                  ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: isTablet ? 16 : 12),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 22,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isTablet ? 22 : 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            ...children,
-          ],
-        ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(isTablet ? 24 : 20),
+            child: Column(children: children),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildDetailRow(String label, dynamic value) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: isTablet ? 20 : 16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isTablet ? 20 : 16),
         decoration: BoxDecoration(
           color: Colors.grey[50],
           borderRadius: BorderRadius.circular(12),
@@ -446,13 +407,13 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: 130,
+              width: isTablet ? 160 : 130,
               child: Text(
                 '$label:',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
-                  fontSize: 15,
+                  fontSize: isTablet ? 17 : 15,
                 ),
               ),
             ),
@@ -461,7 +422,7 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
                 value?.toString() ?? 'Not specified',
                 style: TextStyle(
                   color: Colors.grey[700],
-                  fontSize: 15,
+                  fontSize: isTablet ? 17 : 15,
                   height: 1.4,
                 ),
               ),
@@ -472,121 +433,150 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
     );
   }
 
-  Widget _buildDocumentsSection(Map<String, dynamic> documents) {
-    final List<Map<String, Object>> docList = [
-      {'label': 'Medical License', 'key': 'medicalLicense', 'icon': Icons.medical_services},
-      {'label': 'Degree Certificate', 'key': 'degreeCertificate', 'icon': Icons.school},
-      {'label': 'Specialization Certificate', 'key': 'specializationCertificate', 'icon': Icons.workspace_premium},
-      {'label': 'Government ID', 'key': 'governmentId', 'icon': Icons.badge},
-      {'label': 'Clinic Affiliation Letter', 'key': 'clinicAffiliationLetter', 'icon': Icons.business},
-    ];
+  Widget _buildDocumentsSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
+    final isLargeScreen = screenWidth > 900;
+    final documents = widget.doctorData['documents'] ?? {};
 
-    return _buildSection(
-      'Documents',
-      Icons.description_outlined,
-      Colors.purple,
-      docList.map((doc) => _buildDocumentRow(
-          doc['label'] as String,
-          documents[doc['key'] as String],
-          doc['icon'] as IconData
-      )).toList(),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(isTablet ? 24 : 20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(isTablet ? 12 : 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.folder_outlined,
+                    color: Colors.white,
+                    size: isTablet ? 28 : 24,
+                  ),
+                ),
+                SizedBox(width: isTablet ? 16 : 12),
+                Text(
+                  'Documents',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isTablet ? 22 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(isTablet ? 24 : 20),
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: isLargeScreen ? 4 : (isTablet ? 3 : 2),
+              crossAxisSpacing: isTablet ? 16 : 12,
+              mainAxisSpacing: isTablet ? 16 : 12,
+              childAspectRatio: isTablet ? 1.1 : 1.0,
+              children: documents.entries.map<Widget>((entry) {
+                return _buildDocumentCard(entry.key, entry.value);
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildDocumentRow(String label, dynamic documentUrl, IconData icon) {
-    final hasDocument = documentUrl != null && documentUrl.toString().isNotEmpty;
+  Widget _buildDocumentCard(String documentName, String? url) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: hasDocument ? Colors.green[50] : Colors.red[50],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: hasDocument ? Colors.green[200]! : Colors.red[200]!,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: hasDocument ? Colors.green[100] : Colors.red[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: hasDocument ? Colors.green[700] : Colors.red[700],
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Icon(
-              hasDocument ? Icons.check_circle : Icons.cancel,
-              color: hasDocument ? Colors.green[600] : Colors.red[600],
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: hasDocument ? Colors.green[800] : Colors.red[800],
-                  fontSize: 15,
+          onTap: url != null && url.isNotEmpty ? () => _viewDocument(url, documentName) : null,
+          child: Padding(
+            padding: EdgeInsets.all(isTablet ? 16 : 12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  url != null && url.isNotEmpty ? Icons.description : Icons.description_outlined,
+                  size: isTablet ? 40 : 32,
+                  color: url != null && url.isNotEmpty ? const Color(0xFF199A8E) : Colors.grey,
                 ),
-              ),
-            ),
-            if (hasDocument)
-              Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                SizedBox(height: isTablet ? 12 : 8),
+                Text(
+                  documentName,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: isTablet ? 14 : 12,
+                    fontWeight: FontWeight.w500,
+                    color: url != null && url.isNotEmpty ? Colors.black87 : Colors.grey,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () => _viewDocument(documentUrl.toString(), label),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.visibility, color: Colors.white, size: 16),
-                          SizedBox(width: 6),
-                          Text(
-                            'View',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                if (url == null || url.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: isTablet ? 8 : 4),
+                    child: Text(
+                      'Not uploaded',
+                      style: TextStyle(
+                        fontSize: isTablet ? 12 : 10,
+                        color: Colors.red,
                       ),
                     ),
                   ),
-                ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   void _viewDocument(String url, String documentName) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.9,
+        height: screenHeight * 0.9,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -597,7 +587,7 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 24 : 20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
@@ -618,184 +608,160 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.description, color: Colors.white, size: 24),
-                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       documentName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: MediaQuery.of(context).size.width > 600 ? 20 : 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: IconButton(
-                          onPressed: () => _launchUrl(url),
-                          icon: const Icon(Icons.open_in_new, color: Colors.white, size: 20),
-                          tooltip: 'Open in browser',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close, color: Colors.white),
-                        ),
-                      ),
-                    ],
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: MediaQuery.of(context).size.width > 600 ? 28 : 24,
+                    ),
                   ),
                 ],
               ),
             ),
             Expanded(
               child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: PhotoView(
-                    imageProvider: NetworkImage(url),
-                    minScale: PhotoViewComputedScale.contained * 0.8,
-                    maxScale: PhotoViewComputedScale.covered * 4,
-                    initialScale: PhotoViewComputedScale.contained,
-                    backgroundDecoration: BoxDecoration(
-                      color: Colors.grey[100],
-                    ),
-                    loadingBuilder: (context, event) => Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.grey[50]!, Colors.grey[100]!],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF199A8E).withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const CircularProgressIndicator(
-                                color: Color(0xFF199A8E),
-                                strokeWidth: 3,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Loading document...',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Please wait while we fetch the document',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
+                padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 24 : 16),
+                child: PhotoView(
+                  imageProvider: NetworkImage(url),
+                  minScale: PhotoViewComputedScale.contained * 0.8,
+                  maxScale: PhotoViewComputedScale.covered * 4,
+                  initialScale: PhotoViewComputedScale.contained,
+                  backgroundDecoration: BoxDecoration(
+                    color: Colors.grey[100],
+                  ),
+                  loadingBuilder: (context, event) => Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.grey[50]!, Colors.grey[100]!],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
                     ),
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.red[50]!, Colors.red[100]!],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF199A8E).withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const CircularProgressIndicator(
+                              color: Color(0xFF199A8E),
+                              strokeWidth: 3,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Loading document...',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Please wait while we fetch the document',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.red[100],
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.error_outline,
-                                size: 48,
-                                color: Colors.red[600],
-                              ),
+                    ),
+                  ),
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.red[50]!, Colors.red[100]!],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.red[100],
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Failed to load document',
-                              style: TextStyle(
-                                color: Colors.red[700],
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            child: Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: Colors.red[600],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'The document could not be displayed',
-                              style: TextStyle(
-                                color: Colors.red[600],
-                                fontSize: 14,
-                              ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Failed to load document',
+                            style: TextStyle(
+                              color: Colors.red[700],
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            const SizedBox(height: 16),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'The document could not be displayed',
+                            style: TextStyle(
+                              color: Colors.red[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
                                 borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: () => _launchUrl(url),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.open_in_new, color: Colors.white, size: 18),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          'Open in Browser',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
+                                onTap: () => _launchUrl(url),
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.open_in_new, color: Colors.white, size: 18),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Open in Browser',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -997,5 +963,104 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
         isLoading = false;
       });
     }
+  }
+
+  Widget _buildStatusCard(bool isVerified) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isTablet ? 24 : 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isVerified
+              ? [Colors.green[400]!, Colors.green[600]!]
+              : [Colors.orange[400]!, Colors.orange[600]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: (isVerified ? Colors.green : Colors.orange).withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(isTablet ? 16 : 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isVerified ? Icons.verified : Icons.pending,
+              color: Colors.white,
+              size: isTablet ? 32 : 28,
+            ),
+          ),
+          SizedBox(width: isTablet ? 20 : 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isVerified ? 'Verified Doctor' : 'Pending Verification',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isTablet ? 22 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: isTablet ? 8 : 6),
+                Text(
+                  isVerified
+                      ? 'This doctor has been verified and approved'
+                      : 'This doctor is awaiting admin approval',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: isTablet ? 16 : 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isVerified)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 16 : 12,
+                vertical: isTablet ? 8 : 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.white,
+                    size: isTablet ? 20 : 18,
+                  ),
+                  SizedBox(width: isTablet ? 8 : 6),
+                  Text(
+                    'Active',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isTablet ? 14 : 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

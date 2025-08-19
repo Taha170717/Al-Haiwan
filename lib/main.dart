@@ -1,3 +1,4 @@
+import 'package:al_haiwan/repository/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,16 +11,14 @@ import 'package:al_haiwan/repository/controllers/auth_controller.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // ✅ Initialize GetStorage BEFORE using any controller that depends on it
   await GetStorage.init();
 
-  // ✅ Now it's safe to initialize your controller
   Get.put(AuthController());
+  Get.put(UserService());
 
   runApp(const MyApp());
 }

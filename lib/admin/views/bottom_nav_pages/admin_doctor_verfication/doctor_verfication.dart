@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+
 import 'doctor_verfication_detail.dart';
 
 class AdminDoctorVerificationPage extends StatefulWidget {
@@ -15,80 +16,66 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
   final TextEditingController searchController = TextEditingController();
   String searchQuery = '';
 
-  static const Color primaryColor = Color(0xFF199A8E);
-  static const Color secondaryColor = Color(0xFF147E75);
-
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isTablet = screenWidth > 600;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: Text(
+          'Doctor Verification Management',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: isTablet ? 22 : 18,
+          ),
+        ),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: Column(
         children: [
-          // Custom header with gradient and curved bottom
           Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [primaryColor, secondaryColor],
+            padding: EdgeInsets.fromLTRB(
+                screenWidth * 0.05,
+                screenHeight * 0.025,
+                screenWidth * 0.05,
+                screenHeight * 0.04
+            ),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(40),
-                bottomRight: Radius.circular(40),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.18),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
             ),
-            padding: const EdgeInsets.fromLTRB(28, 56, 28, 28),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
-                Text(
-                  'Doctor Verification',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 32,
-                    letterSpacing: 0.7,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.3),
-                        offset: const Offset(0, 3),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Subtitle
-                Text(
-                  'Manage doctor verification requests',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.3,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Search Bar
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 20,
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
@@ -101,34 +88,66 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                     },
                     decoration: InputDecoration(
                       hintText: 'Search doctors by name...',
-                      prefixIcon: Icon(Icons.search, color: primaryColor),
+                      hintStyle: TextStyle(color: Colors.grey[500]),
+                      prefixIcon: Container(
+                        padding: const EdgeInsets.all(12),
+                        child: Icon(
+                            Icons.search,
+                            color: const Color(0xFF199A8E),
+                            size: isTablet ? 26 : 24
+                        ),
+                      ),
+                      suffixIcon: searchQuery.isNotEmpty
+                          ? IconButton(
+                        onPressed: () {
+                          searchController.clear();
+                          setState(() {
+                            searchQuery = '';
+                          });
+                        },
+                        icon: Icon(
+                          Icons.clear,
+                          color: Colors.grey,
+                          size: isTablet ? 24 : 22,
+                        ),
+                      )
+                          : null,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.05,
+                          vertical: screenHeight * 0.022
+                      ),
                     ),
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: isTablet ? 18 : 16),
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                // Filter Chips
-                Row(
+                SizedBox(height: screenHeight * 0.025),
+                isTablet
+                    ? Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildFilterChip('All', 'all'),
-                    _buildFilterChip('Verified', 'verified'),
-                    _buildFilterChip('Pending', 'pending'),
+                    _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet),
+                    _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet),
+                    _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet),
+                  ],
+                )
+                    : Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  spacing: screenWidth * 0.02,
+                  children: [
+                    _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet),
+                    _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet),
+                    _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet),
                   ],
                 ),
               ],
             ),
           ),
-
-          // Expanded list area
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -137,9 +156,38 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(screenWidth * 0.05),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF199A8E).withOpacity(0.2),
+                                blurRadius: 20,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: CircularProgressIndicator(
+                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                            strokeWidth: isTablet ? 4 : 3,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.025),
+                        Text(
+                          'Loading doctors...',
+                          style: TextStyle(
+                            fontSize: isTablet ? 18 : 16,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }
@@ -149,11 +197,23 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Error loading doctors',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Please try again later',
+                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                         ),
                       ],
                     ),
@@ -165,11 +225,23 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No doctors found',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No verification requests yet',
+                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                         ),
                       ],
                     ),
@@ -203,11 +275,23 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No doctors match your criteria',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Try adjusting your search or filters',
+                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                         ),
                       ],
                     ),
@@ -215,12 +299,12 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: EdgeInsets.all(screenWidth * 0.05),
                   itemCount: filteredDocs.length,
                   itemBuilder: (context, index) {
                     final doc = filteredDocs[index];
                     final data = doc.data() as Map<String, dynamic>;
-                    return _buildDoctorCard(data, doc.id);
+                    return _buildDoctorCard(data, doc.id, screenWidth, screenHeight, isTablet);
                   },
                 );
               },
@@ -231,229 +315,163 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
+  Widget _buildFilterChip(String label, String value, IconData icon, Color? statusColor, double screenWidth, bool isTablet) {
     final isSelected = selectedFilter == value;
-    return FilterChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : primaryColor,
-          fontWeight: FontWeight.w700,
-          fontSize: 14,
-          letterSpacing: 0.3,
-        ),
-      ),
-      selected: isSelected,
-      onSelected: (selected) {
+    return GestureDetector(
+      onTap: () {
         setState(() {
           selectedFilter = value;
         });
       },
-      backgroundColor: Colors.white,
-      selectedColor: primaryColor,
-      checkmarkColor: Colors.white,
-      elevation: 3,
-      shadowColor: Colors.black26,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.04,
+            vertical: isTablet ? 12 : 10
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(
+            color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+            width: 2,
+          ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ] : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: isTablet ? 20 : 18,
+              color: isSelected
+                  ? (statusColor ?? const Color(0xFF199A8E))
+                  : Colors.white,
+            ),
+            SizedBox(width: screenWidth * 0.015),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? (statusColor ?? const Color(0xFF199A8E))
+                    : Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: isTablet ? 16 : 14,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildDoctorCard(Map<String, dynamic> data, String docId) {
+  Widget _buildDoctorCard(Map<String, dynamic> data, String docId, double screenWidth, double screenHeight, bool isTablet) {
     final basicInfo = data['basicInfo'] ?? {};
     final professionalDetails = data['professionalDetails'] ?? {};
     final documents = data['documents'] ?? {};
     final isVerified = data['isVerified'] ?? false;
+    final verificationStatus = data['verificationStatus'] ?? 'pending';
     final submittedAt = data['submittedAt'] as Timestamp?;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: EdgeInsets.only(bottom: screenHeight * 0.025),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 2,
           ),
         ],
+        border: Border.all(
+          color: isVerified
+              ? Colors.green.withOpacity(0.3)
+              : Colors.orange.withOpacity(0.3),
+          width: 1,
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(22),
+        padding: EdgeInsets.all(screenWidth * 0.06),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            isTablet
+                ? Row(
               children: [
-                // Profile Picture with border and shadow
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isVerified ? Colors.green.shade600 : Colors.orange.shade700,
-                      width: 3.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: documents['profilePicture'] != null
-                        ? Image.network(
-                      documents['profilePicture'],
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.person, size: 44, color: Colors.grey),
-                        );
-                      },
-                    )
-                        : Container(
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.person, size: 44, color: Colors.grey),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                // Name and Status
+                _buildProfileSection(documents, isVerified, screenWidth, isTablet),
+                SizedBox(width: screenWidth * 0.05),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        basicInfo['fullName'] ?? 'Unknown Doctor',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black87,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        professionalDetails['specialization'] ?? 'General Veterinarian',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Verification Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: isVerified ? Colors.green.shade100 : Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: isVerified ? Colors.green.shade600 : Colors.orange.shade700,
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (isVerified ? Colors.green : Colors.orange).withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isVerified ? Icons.verified : Icons.pending,
-                              size: 18,
-                              color: isVerified ? Colors.green.shade700 : Colors.orange.shade700,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              isVerified ? 'Verified' : 'Pending',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: isVerified ? Colors.green.shade700 : Colors.orange.shade700,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: _buildDoctorInfo(basicInfo, professionalDetails, isVerified, screenWidth, isTablet),
+                ),
+              ],
+            )
+                : Column(
+              children: [
+                Row(
+                  children: [
+                    _buildProfileSection(documents, isVerified, screenWidth, isTablet),
+                    SizedBox(width: screenWidth * 0.05),
+                    Expanded(
+                      child: _buildDoctorInfo(basicInfo, professionalDetails, isVerified, screenWidth, isTablet),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: screenHeight * 0.03),
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(screenWidth * 0.05),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(18),
+                gradient: LinearGradient(
+                  colors: [Colors.grey[50] ?? Colors.grey.shade50, Colors.grey[100] ?? Colors.grey.shade100],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey[200] ?? Colors.grey.shade200, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow(Icons.business, 'Clinic', professionalDetails['clinicName'] ?? 'Not specified'),
-                  const SizedBox(height: 12),
-                  _buildInfoRow(Icons.phone, 'Contact', basicInfo['contactNumber'] ?? 'Not specified'),
-                  const SizedBox(height: 12),
-                  _buildInfoRow(Icons.email, 'Email', basicInfo['email'] ?? 'Not specified'),
-                  const SizedBox(height: 12),
-                  _buildInfoRow(Icons.badge, 'Registration', professionalDetails['registrationNumber'] ?? 'Not specified'),
+                  _buildInfoRow(Icons.business, 'Clinic', professionalDetails['clinicName'] ?? 'Not specified', screenWidth, isTablet),
+                  SizedBox(height: screenHeight * 0.015),
+                  _buildInfoRow(Icons.phone, 'Contact', basicInfo['contactNumber'] ?? 'Not specified', screenWidth, isTablet),
+                  SizedBox(height: screenHeight * 0.015),
+                  _buildInfoRow(Icons.email, 'Email', basicInfo['email'] ?? 'Not specified', screenWidth, isTablet),
+                  SizedBox(height: screenHeight * 0.015),
+                  _buildInfoRow(Icons.badge, 'Registration', professionalDetails['registrationNumber'] ?? 'Not specified', screenWidth, isTablet),
                   if (submittedAt != null) ...[
-                    const SizedBox(height: 12),
-                    _buildInfoRow(Icons.schedule, 'Submitted', _formatDate(submittedAt.toDate())),
+                    SizedBox(height: screenHeight * 0.015),
+                    _buildInfoRow(Icons.schedule, 'Submitted', _formatDate(submittedAt.toDate()), screenWidth, isTablet),
                   ],
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Row(
+            SizedBox(height: screenHeight * 0.025),
+            isTablet
+                ? Row(
+              children: _buildActionButtons(isVerified, data, docId, screenWidth, isTablet),
+            )
+                : Column(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _viewDoctorDetails(data, docId),
-                    icon: const Icon(Icons.visibility, size: 20),
-                    label: const Text('View Details'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      elevation: 6,
-                      shadowColor: primaryColor.withOpacity(0.6),
-                    ),
-                  ),
+                SizedBox(
+                  width: double.infinity,
+                  child: _buildViewDetailsButton(data, docId, screenWidth, isTablet),
                 ),
                 if (!isVerified) ...[
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _approveDoctor(docId, data),
-                      icon: const Icon(Icons.check_circle, size: 20),
-                      label: const Text('Approve'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade600,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 6,
-                        shadowColor: Colors.green.shade600.withOpacity(0.6),
-                      ),
-                    ),
+                  SizedBox(height: screenHeight * 0.015),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _buildApproveButton(docId, data, screenWidth, isTablet),
                   ),
                 ],
               ],
@@ -464,15 +482,283 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildProfileSection(Map<String, dynamic> documents, bool isVerified, double screenWidth, bool isTablet) {
+    return Stack(
+      children: [
+        Container(
+          width: isTablet ? screenWidth * 0.12 : screenWidth * 0.2,
+          height: isTablet ? screenWidth * 0.12 : screenWidth * 0.2,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: isVerified
+                  ? [Colors.green.withOpacity(0.2), Colors.green.withOpacity(0.1)]
+                  : [Colors.orange.withOpacity(0.2), Colors.orange.withOpacity(0.1)],
+            ),
+            border: Border.all(
+              color: isVerified ? Colors.green : Colors.orange,
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (isVerified ? Colors.green : Colors.orange).withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: documents['profilePicture'] != null
+                ? Image.network(
+              documents['profilePicture'],
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.grey[300]!, Colors.grey[200]!],
+                    ),
+                  ),
+                  child: Icon(
+                      Icons.person,
+                      size: isTablet ? screenWidth * 0.06 : screenWidth * 0.1,
+                      color: Colors.grey
+                  ),
+                );
+              },
+            )
+                : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.grey[300]!, Colors.grey[200]!],
+                ),
+              ),
+              child: Icon(
+                  Icons.person,
+                  size: isTablet ? screenWidth * 0.06 : screenWidth * 0.1,
+                  color: Colors.grey
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: Container(
+            padding: EdgeInsets.all(screenWidth * 0.01),
+            decoration: BoxDecoration(
+              color: isVerified ? Colors.green : Colors.orange,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: Icon(
+              isVerified ? Icons.verified : Icons.pending,
+              size: isTablet ? 18 : 16,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDoctorInfo(Map<String, dynamic> basicInfo, Map<String, dynamic> professionalDetails, bool isVerified, double screenWidth, bool isTablet) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          basicInfo['fullName'] ?? 'Unknown Doctor',
+          style: TextStyle(
+            fontSize: isTablet ? 24 : 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+        ),
+        SizedBox(height: screenWidth * 0.015),
+        Text(
+          professionalDetails['specialization'] ?? 'General Veterinarian',
+          style: TextStyle(
+            fontSize: isTablet ? 18 : 16,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
+        SizedBox(height: screenWidth * 0.03),
+        Container(
+          padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.04,
+              vertical: screenWidth * 0.02
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isVerified
+                  ? [Colors.green.withOpacity(0.15), Colors.green.withOpacity(0.05)]
+                  : [Colors.orange.withOpacity(0.15), Colors.orange.withOpacity(0.05)],
+            ),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(
+              color: isVerified ? Colors.green : Colors.orange,
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isVerified ? Icons.verified : Icons.pending,
+                size: isTablet ? 20 : 18,
+                color: isVerified ? Colors.green : Colors.orange,
+              ),
+              SizedBox(width: screenWidth * 0.015),
+              Flexible(
+                child: Text(
+                  isVerified ? 'Verified' : 'Pending Approval',
+                  style: TextStyle(
+                    fontSize: isTablet ? 15 : 13,
+                    fontWeight: FontWeight.w700,
+                    color: isVerified ? Colors.green : Colors.orange,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildActionButtons(bool isVerified, Map<String, dynamic> data, String docId, double screenWidth, bool isTablet) {
+    List<Widget> buttons = [
+      Expanded(
+        child: _buildViewDetailsButton(data, docId, screenWidth, isTablet),
+      ),
+    ];
+
+    if (!isVerified) {
+      buttons.addAll([
+        SizedBox(width: screenWidth * 0.04),
+        Expanded(
+          child: _buildApproveButton(docId, data, screenWidth, isTablet),
+        ),
+      ]);
+    }
+
+    return buttons;
+  }
+
+  Widget _buildViewDetailsButton(Map<String, dynamic> data, String docId, double screenWidth, bool isTablet) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+        ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF199A8E).withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: () => _viewDoctorDetails(data, docId),
+        icon: Icon(
+            Icons.visibility,
+            size: isTablet ? 22 : 20
+        ),
+        label: Text(
+            'View Details',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: isTablet ? 16 : 14,
+            )
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
+          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.035),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApproveButton(String docId, Map<String, dynamic> data, double screenWidth, bool isTablet) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.green, Color(0xFF4CAF50)],
+        ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: () => _approveDoctor(docId, data),
+        icon: Icon(
+            Icons.check_circle,
+            size: isTablet ? 22 : 20
+        ),
+        label: Text(
+            'Approve',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: isTablet ? 16 : 14,
+            )
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
+          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.035),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, double screenWidth, bool isTablet) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: primaryColor),
-        const SizedBox(width: 12),
+        Container(
+          padding: EdgeInsets.all(screenWidth * 0.02),
+          decoration: BoxDecoration(
+            color: const Color(0xFF199A8E).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+              icon,
+              size: isTablet ? 20 : 18,
+              color: const Color(0xFF199A8E)
+          ),
+        ),
+        SizedBox(width: screenWidth * 0.03),
         Text(
           '$label: ',
-          style: const TextStyle(
-            fontSize: 15,
+          style: TextStyle(
+            fontSize: isTablet ? 17 : 15,
             fontWeight: FontWeight.w700,
             color: Colors.black87,
           ),
@@ -481,8 +767,9 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
           child: Text(
             value,
             style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey[800],
+              fontSize: isTablet ? 17 : 15,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -492,10 +779,11 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   void _viewDoctorDetails(Map<String, dynamic> data, String docId) {
+    // Navigate to detailed view page
     Get.to(() => DoctorDetailPage(doctorData: data, doctorId: docId));
   }
 
@@ -503,33 +791,50 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Approve Doctor'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.check_circle, color: Colors.green),
+            ),
+            const SizedBox(width: 12),
+            const Text('Approve Doctor'),
+          ],
+        ),
         content: Text('Are you sure you want to approve ${data['basicInfo']?['fullName'] ?? 'this doctor'}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _updateDoctorVerification(docId, data['userId']);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade600,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Colors.green, Color(0xFF4CAF50)]),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text('Approve'),
+            child: ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _updateDoctorVerification(docId, data['userId']);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+              ),
+              child: const Text('Approve', style: TextStyle(color: Colors.white)),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _updateDoctorVerification(String docId, String userId) async {
+  Future<void> _updateDoctorVerification(String docId, String? userId) async {
     try {
       // Update verification request
       await FirebaseFirestore.instance
@@ -555,26 +860,23 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
       Get.snackbar(
         'Success',
         'Doctor has been approved successfully!',
-        backgroundColor: Colors.green.shade600,
+        backgroundColor: Colors.green,
         colorText: Colors.white,
         snackPosition: SnackPosition.TOP,
-        margin: const EdgeInsets.all(12),
-        borderRadius: 12,
-        duration: const Duration(seconds: 3),
-        animationDuration: const Duration(milliseconds: 400),
+        borderRadius: 10,
+        margin: const EdgeInsets.all(16),
       );
     } catch (e) {
       Get.snackbar(
         'Error',
         'Failed to approve doctor: $e',
-        backgroundColor: Colors.red.shade600,
+        backgroundColor: Colors.red,
         colorText: Colors.white,
         snackPosition: SnackPosition.TOP,
-        margin: const EdgeInsets.all(12),
-        borderRadius: 12,
-        duration: const Duration(seconds: 4),
-        animationDuration: const Duration(milliseconds: 400),
+        borderRadius: 10,
+        margin: const EdgeInsets.all(16),
       );
     }
   }
 }
+

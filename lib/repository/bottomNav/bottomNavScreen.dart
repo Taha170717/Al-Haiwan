@@ -19,7 +19,7 @@ class BottomNavScreen extends StatelessWidget {
     HomeScreen(),
     Doctorscreen(),
     Categoryscreen(),
-    Cartscreen(),
+    CartScreen(),
   ];
 
   @override

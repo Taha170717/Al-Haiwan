@@ -12,7 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../../repository/screens/login/loginpage.dart';
 import 'dart:ui';
-/andjjdjs
+
 class DoctorScreen extends StatefulWidget {
   const DoctorScreen({super.key});
 
