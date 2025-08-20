@@ -1,146 +1,271 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../doctors/doctor_list_viewmodel.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Appointment {
-  final Doctor doctor;
+  final String id;
+  final String doctorId;
+  final String doctorName;
+  final String doctorSpecialty;
+  final String doctorProfileImage;
+  final String petName;
   final String date;
   final String time;
   final String reason;
+  final String status;
+  final DateTime createdAt;
 
   Appointment({
-    required this.doctor,
+    required this.id,
+    required this.doctorId,
+    required this.doctorName,
+    required this.doctorSpecialty,
+    required this.doctorProfileImage,
+    required this.petName,
     required this.date,
     required this.time,
     required this.reason,
+    required this.status,
+    required this.createdAt,
   });
+
+  factory Appointment.fromFirestore(Map<String, dynamic> data, String id) {
+    return Appointment(
+      id: id,
+      doctorId: data['doctorId'] ?? '',
+      doctorName: data['doctorName'] ?? 'Unknown Doctor',
+      doctorSpecialty: data['doctorSpecialty'] ?? 'Veterinarian',
+      doctorProfileImage: data['doctorProfileImage'] ?? '',
+      petName: data['petName'] ?? '',
+      date: data['appointmentDate'] ?? '',
+      time: data['appointmentTime'] ?? '',
+      reason: data['reason'] ?? '',
+      status: data['status'] ?? 'pending',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
 }
 
 class MyAppointmentScreen extends StatelessWidget {
-  final List<Appointment> bookedAppointments = [
-    Appointment(
-      doctor: Doctor(
-        name: "Dr. Marcus Horizon",
-        speciality: "Veterinarian",
-        image: "assets/images/doc1.png",
-        rating: 4.7,
-        distance: "1200m",
-      ),
-      date: "Mon, 21",
-      time: "08:00 AM",
-      reason: "Follow-up checkup",
-    ),
-    Appointment(
-      doctor: Doctor(
-        name: "Dr. Maria Elena",
-        speciality: "Veterinarian",
-        image: "assets/images/doc2.png",
-        rating: 4.7,
-        distance: "600m",
-      ),
-      date: "Wed, 23",
-      time: "10:00 AM",
-      reason: "Vaccination",
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
+    final isTablet = screen.width > 600;
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           'My Appointments',
-          style: TextStyle(color: Color(0xFF199A8E), fontFamily: 'bolditalic'),
+          style: TextStyle(
+            color: Color(0xFF199A8E),
+            fontFamily: 'bolditalic',
+            fontSize: screen.width * (isTablet ? 0.035 : 0.045),
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: Color(0xFF199A8E)),
       ),
-      body: bookedAppointments.isEmpty
-          ? Center(
-        child: Text(
-          'No appointments found.',
-          style: TextStyle(color: Colors.grey, fontSize: 16),
-        ),
-      )
-          : ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: bookedAppointments.length,
-        itemBuilder: (context, index) {
-          final appointment = bookedAppointments[index];
-          return Container(
-            margin: EdgeInsets.only(bottom: 16),
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Color(0xFFF6F8F9),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('appointments')
+            .where('userId', isEqualTo: 'current_user_id') // Replace with actual user ID
+            .orderBy('createdAt', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error loading appointments',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: screen.width * (isTablet ? 0.03 : 0.04),
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.asset(
-                    appointment.doctor.image,
-                    width: screen.width * 0.18,
-                    height: screen.width * 0.18,
-                    fit: BoxFit.cover,
+              ),
+            );
+          }
+
+          final appointments = snapshot.data?.docs.map((doc) =>
+              Appointment.fromFirestore(doc.data() as Map<String, dynamic>, doc.id)
+          ).toList() ?? [];
+
+          if (appointments.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.calendar_today, size: screen.width * 0.2, color: Colors.grey[300]),
+                  SizedBox(height: screen.height * 0.02),
+                  Text(
+                    'No appointments found.',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: screen.width * (isTablet ? 0.03 : 0.04),
+                    ),
                   ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.all(screen.width * 0.04),
+            itemCount: appointments.length,
+            itemBuilder: (context, index) {
+              final appointment = appointments[index];
+              return Container(
+                margin: EdgeInsets.only(bottom: screen.height * 0.02),
+                padding: EdgeInsets.all(screen.width * 0.04),
+                decoration: BoxDecoration(
+                  color: Color(0xFFF6F8F9),
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        appointment.doctor.name,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: screen.width * (isTablet ? 0.12 : 0.18),
+                      height: screen.width * (isTablet ? 0.12 : 0.18),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(screen.width * 0.025),
+                        border: Border.all(color: Color(0xFF199A8E), width: 1),
                       ),
-                      Text(
-                        appointment.doctor.speciality,
-                        style: TextStyle(color: Colors.grey),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(screen.width * 0.025),
+                        child: appointment.doctorProfileImage.isNotEmpty
+                            ? Image.network(
+                          appointment.doctorProfileImage,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: Icon(Icons.person, color: Colors.grey),
+                            );
+                          },
+                        )
+                            : Container(
+                          color: Colors.grey[200],
+                          child: Icon(Icons.person, color: Colors.grey),
+                        ),
                       ),
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today, size: 14, color: Color(0xFF199A8E)),
-                          SizedBox(width: 4),
-                          Text('${appointment.date}, ${appointment.time}'),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Row(
+                    ),
+                    SizedBox(width: screen.width * 0.03),
+                    Expanded(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.notes, size: 14, color: Colors.grey),
-                          SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              appointment.reason,
-                              style: TextStyle(fontSize: 13),
+                          Text(
+                            appointment.doctorName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: screen.width * (isTablet ? 0.03 : 0.04),
                             ),
+                          ),
+                          Text(
+                            appointment.doctorSpecialty,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: screen.width * (isTablet ? 0.025 : 0.035),
+                            ),
+                          ),
+                          SizedBox(height: screen.height * 0.005),
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: screen.width * (isTablet ? 0.03 : 0.035), color: Color(0xFF199A8E)),
+                              SizedBox(width: screen.width * 0.01),
+                              Text(
+                                '${appointment.date}, ${appointment.time}',
+                                style: TextStyle(fontSize: screen.width * (isTablet ? 0.025 : 0.03)),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screen.height * 0.005),
+                          Row(
+                            children: [
+                              Icon(Icons.pets, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
+                              SizedBox(width: screen.width * 0.01),
+                              Text(
+                                appointment.petName,
+                                style: TextStyle(
+                                  fontSize: screen.width * (isTablet ? 0.025 : 0.03),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screen.height * 0.005),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.notes, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
+                              SizedBox(width: screen.width * 0.01),
+                              Expanded(
+                                child: Text(
+                                  appointment.reason,
+                                  style: TextStyle(fontSize: screen.width * (isTablet ? 0.025 : 0.03)),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screen.width * 0.02,
+                        vertical: screen.height * 0.005,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(appointment.status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(screen.width * 0.02),
+                      ),
+                      child: Text(
+                        appointment.status.toUpperCase(),
+                        style: TextStyle(
+                          color: _getStatusColor(appointment.status),
+                          fontSize: screen.width * (isTablet ? 0.02 : 0.025),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'confirmed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

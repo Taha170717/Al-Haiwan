@@ -37,6 +37,8 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
   final clinicAddressController = TextEditingController();
   final clinicContactController = TextEditingController();
   final specializationController = TextEditingController();
+  final experienceController = TextEditingController();
+  final aboutController = TextEditingController();
 
   // Gender Selection
   String selectedGender = '';
@@ -254,6 +256,8 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
           'clinicAddress': clinicAddressController.text.trim(),
           'clinicContact': clinicContactController.text.trim(),
           'specialization': specializationController.text.trim(),
+          'experience': experienceController.text.trim(),
+          'about': aboutController.text.trim(),
         },
         'documents': {
           'profilePicture': profilePictureUrl,
@@ -482,7 +486,20 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
                       _buildTextField("Clinic / Hospital Contact", clinicContactController, "Enter clinic or hospital contact number", TextInputType.phone),
                       const SizedBox(height: 16),
                       _buildTextField("Specialization", specializationController, "Enter your specialization (optional)", TextInputType.text, ),
-
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                          "Years of Experience",
+                          experienceController,
+                          "Enter your years of experience",
+                          TextInputType.number),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                          "About You",
+                          aboutController,
+                          "Tell us about yourself",
+                          TextInputType.multiline,
+                          4,
+                          true),
                       const SizedBox(height: 35),
                       _buildSectionHeader("Required Documents", Icons.folder),
                       const SizedBox(height: 20),
@@ -1046,6 +1063,8 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
     clinicAddressController.dispose();
     clinicContactController.dispose();
     specializationController.dispose();
+    experienceController.dispose();
+    aboutController.dispose();
     super.dispose();
   }
 }

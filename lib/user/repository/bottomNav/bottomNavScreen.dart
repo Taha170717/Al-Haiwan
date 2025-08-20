@@ -17,7 +17,7 @@ class BottomNavScreen extends StatelessWidget {
 
   final List<Widget> pages = [
     HomeScreen(),
-    Doctorscreen(),
+    VerifiedDoctorsScreen(),
     Categoryscreen(),
     CartScreen(),
   ];

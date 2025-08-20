@@ -1,19 +1,15 @@
-import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
-import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/product/Product%20ViewModel.dart';
 import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/product/Product_detail.dart';
-import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/home/product/product%20Modal.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controllers/bottom_nav_controller.dart';
+
+import '../../../controllers/verified_doctor_controller.dart';
 import '../doctors/DoctorDetailView.dart';
-import '../doctors/doctor_list_viewmodel.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({Key? key}) : super(key: key);
 
-  final DoctorListViewModel doctorController = Get.put(DoctorListViewModel());
-  final ProductListViewModel productController = Get.put(ProductListViewModel());
-
+  final VerifiedDoctorsController doctorController = Get.put(VerifiedDoctorsController());
 
   @override
   Widget build(BuildContext context) {
@@ -23,95 +19,89 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(
+              horizontal: screen.width * 0.04,
+              vertical: screen.height * 0.01
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Search bar
               SizedBox(
-                height: 40,
+                height: screen.height * 0.05,
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Search doctor, drugs, articles...",
-                    prefixIcon: const Icon(Icons.search, size: 20),
+                    hintStyle: TextStyle(fontSize: screen.width * 0.035),
+                    prefixIcon: Icon(Icons.search, size: screen.width * 0.05),
                     filled: true,
                     fillColor: Colors.white30,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-
-                    // Border when NOT focused
+                    contentPadding: EdgeInsets.symmetric(
+                        vertical: screen.height * 0.012,
+                        horizontal: screen.width * 0.04
+                    ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(screen.width * 0.075),
                       borderSide: const BorderSide(
                         color: Color(0xFF199A8E),
                         width: 1.5,
                       ),
                     ),
-
-                    // Border when focused (active)
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(screen.width * 0.075),
                       borderSide: const BorderSide(
-                        color: Color(0xFF199A8E), // Custom teal
-                        width: 1.0, // Slightly thinner border
+                        color: Color(0xFF199A8E),
+                        width: 1.0,
                       ),
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: screen.height * 0.025),
 
               // Category Icons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCategoryIcon(Icons.local_hospital, "Doctor"),
-                  _buildCategoryIcon(Icons.local_pharmacy, "Pharmacy"),
-                  _buildCategoryIcon(Icons.local_hospital_outlined, "Food"),
-                  _buildCategoryIcon(Icons.local_shipping, "Ambulance"),
+                  _buildCategoryIcon(Icons.local_hospital, "Doctor", screen),
+                  _buildCategoryIcon(Icons.local_pharmacy, "Pharmacy", screen),
+                  _buildCategoryIcon(Icons.local_hospital_outlined, "Food", screen),
+                  _buildCategoryIcon(Icons.local_shipping, "Ambulance", screen),
                 ],
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: screen.height * 0.025),
 
               // Promo Banner
               _buildPromoBanner(screen),
-              const SizedBox(height: 20),
+              SizedBox(height: screen.height * 0.025),
 
               // Top Doctor Section
-              _buildSectionHeader("Top Doctor"),
+              _buildSectionHeader("Top Doctor", screen),
+              SizedBox(height: screen.height * 0.018),
               SizedBox(
-                height: 15,
+                height: screen.height * 0.22,
+                child: Obx(() {
+                  if (doctorController.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (doctorController.verifiedDoctors.isEmpty) {
+                    return const Center(child: Text("No doctors available"));
+                  }
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: doctorController.verifiedDoctors.length,
+                    itemBuilder: (context, index) {
+                      final doc = doctorController.verifiedDoctors[index];
+                      return _buildDoctorCard(doc, screen);
+                    },
+                  );
+                }),
               ),
-              SizedBox(
-                height: 180,
-                child: Obx(() => ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: doctorController.doctors.length,
-                  itemBuilder: (context, index) {
-                    final doc = doctorController.doctors[index];
-                    return _buildDoctorCard(doc);
-                  },
-                )),
-              ),
-              const SizedBox(height: 20),
+              SizedBox(height: screen.height * 0.025),
 
               // Products Section
-              _buildSectionHeader("Pharmacy"),
-              Obx(() => GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 3 / 4,
-                ),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: productController.products.length,
-                itemBuilder: (context, index) {
-                  final product = productController.products[index];
-                  return _buildProductCard(product);
-                },
-              )),
+              _buildSectionHeader("Pharmacy", screen),
 
             ],
           ),
@@ -123,10 +113,10 @@ class HomeScreen extends StatelessWidget {
   Widget _buildPromoBanner(Size screen) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screen.width * 0.04),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(screen.width * 0.04),
       ),
       child: Row(
         children: [
@@ -134,22 +124,35 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "Early protection for your family health",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: screen.width * 0.04,
+                      fontWeight: FontWeight.bold
+                  ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screen.height * 0.012),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF199A8E),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: screen.width * 0.04,
+                        vertical: screen.height * 0.01
+                    ),
                   ),
                   onPressed: () {},
-                  child: const Text("Learn more", style: TextStyle(color: Colors.white)),
+                  child: Text(
+                      "Learn more",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screen.width * 0.035
+                      )
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: screen.width * 0.025),
           Container(
             width: screen.width * 0.25,
             height: screen.width * 0.25,
@@ -157,7 +160,7 @@ class HomeScreen extends StatelessWidget {
               color: Colors.white,
               shape: BoxShape.circle,
             ),
-            padding: const EdgeInsets.all(2),
+            padding: EdgeInsets.all(screen.width * 0.005),
             child: ClipOval(
               child: Image.asset(
                 'assets/images/dcotor.png',
@@ -170,88 +173,136 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryIcon(IconData icon, String label) {
+  Widget _buildCategoryIcon(IconData icon, String label, Size screen) {
     return Column(
       children: [
         Container(
-          width: 60,
-          height: 60,
+          width: screen.width * 0.15,
+          height: screen.width * 0.15,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(color: const Color(0xFF199A8E), width: 1.5),
           ),
-          child: Icon(icon, color: const Color(0xFF199A8E), size: 28),
+          child: Icon(icon, color: const Color(0xFF199A8E), size: screen.width * 0.07),
         ),
-        const SizedBox(height: 6),
-        Text(label, style: const TextStyle(color: Colors.black87, fontSize: 13)),
+        SizedBox(height: screen.height * 0.008),
+        Text(
+            label,
+            style: TextStyle(
+                color: Colors.black87,
+                fontSize: screen.width * 0.032
+            )
+        ),
       ],
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, Size screen) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: screen.width * 0.04
+          ),
         ),
         GestureDetector(
           onTap: () {
             final controller = Get.find<BottomNavController>();
-            controller.changeIndex(1); // Assuming Doctorscreen is at index 1
+            controller.changeIndex(1);
           },
-          child: const Text(
+          child: Text(
             "See all",
-            style: TextStyle(color: Colors.blue),
+            style: TextStyle(
+                color: Colors.blue,
+                fontSize: screen.width * 0.035
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDoctorCard(Doctor doc) {
+  Widget _buildDoctorCard(dynamic doc, Size screen) {
     return GestureDetector(
       onTap: () {
-        Get.to(() => DoctorDetailView(doctor: doc)); // Pass the doctor object
+        Get.to(() => DoctorDetailView(doctorId: doc.id, doctor: doc,));
       },
       child: Container(
-        width: 140,
-        margin: const EdgeInsets.only(right: 12),
+        width: screen.width * 0.35,
+        margin: EdgeInsets.only(right: screen.width * 0.03),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(screen.width * 0.03),
           boxShadow: [
-            BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: const Offset(0, 2)),
+            BoxShadow(
+                color: Colors.grey.shade300,
+                blurRadius: 6,
+                offset: const Offset(0, 2)
+            ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-              child: Image.asset(
-                doc.image,
-                height: 90,
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(screen.width * 0.03),
+                  topRight: Radius.circular(screen.width * 0.03)
+              ),
+              child: Image.network(
+                doc.profileImageUrl ?? 'assets/images/default_doctor.png',
+                height: screen.height * 0.11,
                 width: double.infinity,
-                fit: BoxFit.contain,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: screen.height * 0.11,
+                    color: Colors.grey[200],
+                    child: Icon(Icons.person, size: screen.width * 0.1),
+                  );
+                },
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(6.0),
+              padding: EdgeInsets.all(screen.width * 0.015),
               child: Column(
                 children: [
-                  Text(doc.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                  Text(doc.speciality, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                  const SizedBox(height: 4),
+                  Text(
+                    doc.fullName ?? doc.name ?? 'Unknown Doctor',
+                    style: TextStyle(
+                        fontSize: screen.width * 0.032,
+                        fontWeight: FontWeight.bold
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    doc.specialty ?? 'General',
+                    style: TextStyle(
+                        fontSize: screen.width * 0.028,
+                        color: Colors.grey
+                    ),
+                  ),
+                  SizedBox(height: screen.height * 0.005),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.star, size: 12, color: Colors.orange),
-                      Text(doc.rating.toString(), style: const TextStyle(fontSize: 11)),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.location_on, size: 12, color: Colors.grey),
-                      Text(doc.distance, style: const TextStyle(fontSize: 11)),
+                      Icon(Icons.star, size: screen.width * 0.03, color: Colors.orange),
+                      Text(
+                          doc.rating?.toString() ?? '0.0',
+                          style: TextStyle(fontSize: screen.width * 0.028)
+                      ),
+                      SizedBox(width: screen.width * 0.01),
+                      Icon(Icons.location_on, size: screen.width * 0.03, color: Colors.grey),
+                      Flexible(
+                        child: Text(
+                          doc.location ?? 'Unknown',
+                          style: TextStyle(fontSize: screen.width * 0.028),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -263,7 +314,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(Product product) {
+  Widget _buildProductCard(dynamic product, Size screen) {
     return GestureDetector(
       onTap: () {
         Get.to(() => ProductDetailView(product: product));
@@ -271,24 +322,47 @@ class HomeScreen extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(screen.width * 0.03),
           boxShadow: [
-            BoxShadow(color: Colors.grey.shade300, blurRadius: 4, offset: const Offset(0, 2)),
+            BoxShadow(
+                color: Colors.grey.shade300,
+                blurRadius: 4,
+                offset: const Offset(0, 2)
+            ),
           ],
         ),
         child: Column(
           children: [
             Container(
-              height: 80,
-              padding: const EdgeInsets.all(4),
-              child: Image.asset(product.imagePath, fit: BoxFit.contain),
+              height: screen.height * 0.1,
+              padding: EdgeInsets.all(screen.width * 0.01),
+              child: Image.asset(
+                product.imagePath ?? 'assets/images/default_product.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.medical_services, size: screen.width * 0.1);
+                },
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.all(2.0),
+              padding: EdgeInsets.all(screen.width * 0.005),
               child: Column(
                 children: [
-                  Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text(product.price, style: const TextStyle(color: Colors.green)),
+                  Text(
+                    product.name ?? 'Unknown Product',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: screen.width * 0.032
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    product.price ?? '₨0',
+                    style: TextStyle(
+                        color: Colors.green,
+                        fontSize: screen.width * 0.03
+                    ),
+                  ),
                 ],
               ),
             )
@@ -297,5 +371,4 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
 }

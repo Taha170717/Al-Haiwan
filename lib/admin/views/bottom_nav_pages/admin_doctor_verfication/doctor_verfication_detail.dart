@@ -249,6 +249,10 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
                           _buildDetailRow('Clinic/Hospital Address', professionalDetails['clinicAddress']),
                           _buildDetailRow('Clinic Contact', professionalDetails['clinicContact']),
                           _buildDetailRow('Specialization', professionalDetails['specialization']),
+                          _buildDetailRow(
+                              'Experience', professionalDetails['experience']),
+                          _buildDetailRow(
+                              'About', professionalDetails['about']),
                         ],
                       ),
                       SizedBox(height: screenHeight * 0.03),

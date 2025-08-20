@@ -6,11 +6,18 @@ class MyOrdersPage extends StatelessWidget {
   final List<Order> orders = [
     Order(
       doctor: Doctor(
+        id: "doc1",
         name: "Dr. Marcus Horizon",
-        speciality: "Veterinarian",
-        image: "assets/images/doc1.png",
+        specialty: "Veterinarian", // Updated from speciality to specialty
+        profileImageUrl: "assets/images/doc1.png", // Updated from image to profileImageUrl
         rating: 4.7,
-        distance: "1200m",
+        experience: "5 years",
+        location: "1200m away", // Updated from distance to location
+        isVerified: true,
+        consultationFee: 800,
+        about: "Experienced veterinarian",
+        availableDays: [],
+        availableTimeSlots: [], fullName: '', email: '', phoneNumber: '', clinicName: '', registrationNumber: '',
       ),
       date: "21 May, 2025",
       time: "10:00 AM",
@@ -43,7 +50,11 @@ class MyOrdersPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("My Orders", style: TextStyle(color: Color(0xFF199A8E), fontFamily: "bolditalic")),
+        title: Text("My Orders", style: TextStyle(
+          color: Color(0xFF199A8E),
+          fontFamily: "bolditalic",
+          fontSize: screen.width * 0.045, // Added responsive font size
+        )),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -51,23 +62,28 @@ class MyOrdersPage extends StatelessWidget {
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(screen.width * 0.04), // Made padding responsive
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             /// Section 1: Doctor Appointments
             if (orders.isNotEmpty) ...[
-              Text("Doctor Appointments", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 10),
+              Text("Doctor Appointments", style: TextStyle(
+                  fontSize: screen.width * 0.045, // Added responsive font size
+                  fontWeight: FontWeight.bold
+              )),
+              SizedBox(height: screen.height * 0.012), // Made spacing responsive
               ...orders.map((order) => _buildDoctorOrderCard(order, screen)).toList(),
-              SizedBox(height: 20),
+              SizedBox(height: screen.height * 0.025), // Made spacing responsive
             ],
 
             /// Section 2: Product Orders (Medicines)
             if (productOrders.isNotEmpty) ...[
-              Text("Medicine Orders", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 10),
+              Text("Medicine Orders", style: TextStyle(
+                  fontSize: screen.width * 0.045, // Added responsive font size
+                  fontWeight: FontWeight.bold
+              )),
+              SizedBox(height: screen.height * 0.012), // Made spacing responsive
               ...productOrders.map((product) => _buildProductCard(product, screen)).toList(),
             ],
           ],
@@ -79,11 +95,11 @@ class MyOrdersPage extends StatelessWidget {
   /// Doctor Appointment Card
   Widget _buildDoctorOrderCard(Order order, Size screen) {
     return Container(
-      margin: EdgeInsets.only(bottom: 14),
-      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: screen.height * 0.017), // Made margin responsive
+      padding: EdgeInsets.all(screen.width * 0.03), // Made padding responsive
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(screen.width * 0.03), // Made border radius responsive
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
       ),
       child: Column(
@@ -93,27 +109,35 @@ class MyOrdersPage extends StatelessWidget {
           Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(screen.width * 0.025), // Made border radius responsive
                 child: Image.asset(
-                  order.doctor.image,
+                  order.doctor.profileImageUrl, // Updated property name
                   width: screen.width * 0.18,
                   height: screen.width * 0.18,
                   fit: BoxFit.cover,
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: screen.width * 0.03), // Made spacing responsive
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(order.doctor.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text(order.doctor.speciality, style: TextStyle(color: Colors.grey)),
-                    SizedBox(height: 4),
+                    Text(order.doctor.name, style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: screen.width * 0.04 // Added responsive font size
+                    )),
+                    Text(order.doctor.specialty, style: TextStyle( // Updated property name
+                        color: Colors.grey,
+                        fontSize: screen.width * 0.035 // Added responsive font size
+                    )),
+                    SizedBox(height: screen.height * 0.005), // Made spacing responsive
                     Row(
                       children: [
-                        Icon(Icons.star, size: 14, color: Color(0xFF199A8E)),
-                        SizedBox(width: 4),
-                        Text(order.doctor.rating.toString()),
+                        Icon(Icons.star, size: screen.width * 0.035, color: Color(0xFF199A8E)), // Made icon size responsive
+                        SizedBox(width: screen.width * 0.01), // Made spacing responsive
+                        Text(order.doctor.rating.toString(), style: TextStyle(
+                            fontSize: screen.width * 0.035 // Added responsive font size
+                        )),
                       ],
                     ),
                   ],
@@ -121,28 +145,28 @@ class MyOrdersPage extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 10),
+          SizedBox(height: screen.height * 0.012), // Made spacing responsive
           Divider(),
           Row(
             children: [
-              Icon(Icons.calendar_today, size: 16, color: Color(0xFF199A8E)),
-              SizedBox(width: 8),
+              Icon(Icons.calendar_today, size: screen.width * 0.035, color: Color(0xFF199A8E)), // Made icon size responsive
+              SizedBox(width: screen.width * 0.03), // Made spacing responsive
               Text("${order.date} | ${order.time}"),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: screen.height * 0.008), // Made spacing responsive
           Row(
             children: [
-              Icon(Icons.edit_note, size: 16, color: Color(0xFF199A8E)),
-              SizedBox(width: 8),
+              Icon(Icons.edit_note, size: screen.width * 0.035, color: Color(0xFF199A8E)), // Made icon size responsive
+              SizedBox(width: screen.width * 0.03), // Made spacing responsive
               Expanded(child: Text(order.reason)),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: screen.height * 0.008), // Made spacing responsive
           Row(
             children: [
-              Icon(Icons.payment, size: 16, color: Color(0xFF199A8E)),
-              SizedBox(width: 8),
+              Icon(Icons.payment, size: screen.width * 0.035, color: Color(0xFF199A8E)), // Made icon size responsive
+              SizedBox(width: screen.width * 0.03), // Made spacing responsive
               Text(order.paid ? "Paid" : "Pending", style: TextStyle(color: order.paid ? Colors.green : Colors.red)),
               Spacer(),
               Text(order.status, style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
@@ -156,27 +180,41 @@ class MyOrdersPage extends StatelessWidget {
   /// Product Order Card
   Widget _buildProductCard(ProductOrder product, Size screen) {
     return Container(
-      margin: EdgeInsets.only(bottom: 14),
-      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: screen.height * 0.017), // Made margin responsive
+      padding: EdgeInsets.all(screen.width * 0.03), // Made padding responsive
       decoration: BoxDecoration(
         color: Colors.teal[50],
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(screen.width * 0.03), // Made border radius responsive
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
       ),
       child: Row(
         children: [
-          Image.asset(product.image, width: 60, height: 60, fit: BoxFit.cover),
-          SizedBox(width: 12),
+          Image.asset(product.image,
+              width: screen.width * 0.15, // Made image size responsive
+              height: screen.width * 0.15, // Made image size responsive
+              fit: BoxFit.cover
+          ),
+          SizedBox(width: screen.width * 0.03), // Made spacing responsive
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                SizedBox(height: 4),
-                Text("Qty: ${product.quantity}"),
-                Text("Total: \$${(product.quantity * product.price).toStringAsFixed(2)}"),
-                SizedBox(height: 4),
-                Text("Status: ${product.status}", style: TextStyle(color: Colors.deepPurple)),
+                Text(product.name, style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: screen.width * 0.038 // Added responsive font size
+                )),
+                SizedBox(height: screen.height * 0.005), // Made spacing responsive
+                Text("Qty: ${product.quantity}", style: TextStyle(
+                    fontSize: screen.width * 0.035 // Added responsive font size
+                )),
+                Text("Total: \$${(product.quantity * product.price).toStringAsFixed(2)}", style: TextStyle(
+                    fontSize: screen.width * 0.035 // Added responsive font size
+                )),
+                SizedBox(height: screen.height * 0.005), // Made spacing responsive
+                Text("Status: ${product.status}", style: TextStyle(
+                    color: Colors.deepPurple,
+                    fontSize: screen.width * 0.035 // Added responsive font size
+                )),
               ],
             ),
           )
