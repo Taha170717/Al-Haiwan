@@ -31,16 +31,11 @@ class VerifiedDoctorsScreen extends StatelessWidget {
             color: const Color(0xFF199A8E),
             fontSize: titleFontSize,
             fontWeight: FontWeight.bold,
+            fontFamily: 'bolditalic'
           ),
         ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFF199A8E)),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, size: iconSize * 1.2),
-            onPressed: () => controller.refreshDoctors(),
-          ),
-        ],
+
       ),
       body: Obx(() {
         if (controller.isLoading.value) {

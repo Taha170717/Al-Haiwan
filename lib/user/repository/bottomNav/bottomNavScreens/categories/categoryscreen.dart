@@ -17,11 +17,7 @@ class Categoryscreen extends StatelessWidget {
         child: AppBar(
           flexibleSpace: Container(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Colors.white
             ),
           ),
           title: Text(
@@ -29,7 +25,8 @@ class Categoryscreen extends StatelessWidget {
             style: TextStyle(
               fontSize: screenWidth * 0.055,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Color(0xFF199A8E),
+              fontFamily: 'bolditalic'
             ),
           ),
           centerTitle: true,

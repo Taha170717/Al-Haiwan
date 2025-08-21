@@ -26,12 +26,10 @@ class CartScreen extends StatelessWidget {
             color: const Color(0xFF199A8E),
             fontSize: screenWidth * 0.055,
             fontWeight: FontWeight.bold,
+            fontFamily: 'bolditalic'
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF199A8E)),
-          onPressed: () => Get.back(),
-        ),
+        centerTitle: true,
         actions: [
           Obx(() => userService.isLoggedIn
               ? Icon(Icons.person, color: const Color(0xFF199A8E), size: 20)
@@ -313,8 +311,9 @@ class CartScreen extends StatelessWidget {
                             'Proceed to Checkout',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: screenWidth * 0.045,
+                              fontSize: screenWidth * 0.04,
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'bolditalic'
                             ),
                           ),
                         ],

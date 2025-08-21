@@ -253,6 +253,8 @@ class _DoctorDetailPageState extends State<DoctorDetailPage>
                               'Experience', professionalDetails['experience']),
                           _buildDetailRow(
                               'About', professionalDetails['about']),
+                          _buildDetailRow(
+                              'Consultation Fee', professionalDetails['consultationFee']),
                         ],
                       ),
                       SizedBox(height: screenHeight * 0.03),

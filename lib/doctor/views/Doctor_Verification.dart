@@ -39,6 +39,7 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
   final specializationController = TextEditingController();
   final experienceController = TextEditingController();
   final aboutController = TextEditingController();
+  final consultationFeeController = TextEditingController();
 
   // Gender Selection
   String selectedGender = '';
@@ -256,6 +257,7 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
           'clinicAddress': clinicAddressController.text.trim(),
           'clinicContact': clinicContactController.text.trim(),
           'specialization': specializationController.text.trim(),
+          'consultationFee': consultationFeeController.text.trim(),
           'experience': experienceController.text.trim(),
           'about': aboutController.text.trim(),
         },
@@ -486,6 +488,12 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
                       _buildTextField("Clinic / Hospital Contact", clinicContactController, "Enter clinic or hospital contact number", TextInputType.phone),
                       const SizedBox(height: 16),
                       _buildTextField("Specialization", specializationController, "Enter your specialization (optional)", TextInputType.text, ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                          "Consultation Fee (Rs.)",
+                          consultationFeeController,
+                          "Enter your consultation fee",
+                          TextInputType.number),
                       const SizedBox(height: 16),
                       _buildTextField(
                           "Years of Experience",
@@ -1063,6 +1071,7 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
     clinicAddressController.dispose();
     clinicContactController.dispose();
     specializationController.dispose();
+    consultationFeeController.dispose();
     experienceController.dispose();
     aboutController.dispose();
     super.dispose();

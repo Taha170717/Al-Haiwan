@@ -449,6 +449,14 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                   _buildInfoRow(Icons.email, 'Email', basicInfo['email'] ?? 'Not specified', screenWidth, isTablet),
                   SizedBox(height: screenHeight * 0.015),
                   _buildInfoRow(Icons.badge, 'Registration', professionalDetails['registrationNumber'] ?? 'Not specified', screenWidth, isTablet),
+                  SizedBox(height: screenHeight * 0.015),
+                  _buildInfoRow(
+                      Icons.attach_money,
+                      'Consultation Fee',
+                      professionalDetails['consultationFee']?.toString() ??
+                          'Not specified',
+                      screenWidth,
+                      isTablet),
                   if (submittedAt != null) ...[
                     SizedBox(height: screenHeight * 0.015),
                     _buildInfoRow(Icons.schedule, 'Submitted', _formatDate(submittedAt.toDate()), screenWidth, isTablet),
