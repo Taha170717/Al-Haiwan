@@ -1,4 +1,4 @@
-import 'package:al_haiwan/user/repository/controllers/bottom_nav_controller.dart';
+import 'package:al_haiwan/user/controllers/bottom_nav_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

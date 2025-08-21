@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 
-import '../bottomNav/bottomNavScreens/doctors/doctor_list_viewmodel.dart';
+import '../repository/bottomNav/bottomNavScreens/doctors/doctor_list_viewmodel.dart';
 
 class VerifiedDoctorsController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

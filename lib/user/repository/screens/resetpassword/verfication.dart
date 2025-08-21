@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:get/get.dart';
-import '../../controllers/auth_controller.dart';
+import '../../../controllers/auth_controller.dart';
 
 class Verification extends StatefulWidget {
   final String contactInfo; // Can be email or phone number

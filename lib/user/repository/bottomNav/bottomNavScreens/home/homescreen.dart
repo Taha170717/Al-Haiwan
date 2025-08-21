@@ -2,8 +2,8 @@ import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/cart/cartsc
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../controllers/bottom_nav_controller.dart';
-import '../../../controllers/verified_doctor_controller.dart';
+import '../../../../controllers/bottom_nav_controller.dart';
+import '../../../../controllers/verified_doctor_controller.dart';
 import '../cart/cart_viewmodel.dart';
 import '../categories/category_view_products.dart';
 import '../categories/product_detail_page.dart';
