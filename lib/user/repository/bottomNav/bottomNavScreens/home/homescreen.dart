@@ -423,11 +423,10 @@ class HomeScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.star, size: screen.width * 0.03, color: Colors.orange),
-                      Text(
-                          doc.rating?.toString() ?? '0.0',
-                          style: TextStyle(fontSize: screen.width * 0.028)
-                      ),
+                      Icon(Icons.work,
+                          size: screen.width * 0.03, color: Colors.blueGrey),
+                      Text(doc.experience?.toString() ?? 'N/A',
+                          style: TextStyle(fontSize: screen.width * 0.028)),
                       SizedBox(width: screen.width * 0.01),
                       Icon(Icons.location_on, size: screen.width * 0.03, color: Colors.grey),
                       Flexible(

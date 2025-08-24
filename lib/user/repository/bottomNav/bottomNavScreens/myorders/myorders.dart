@@ -7,17 +7,14 @@ class MyOrdersPage extends StatelessWidget {
     Order(
       doctor: Doctor(
         id: "doc1",
-        name: "Dr. Marcus Horizon",
         specialty: "Veterinarian", // Updated from speciality to specialty
         profileImageUrl: "assets/images/doc1.png", // Updated from image to profileImageUrl
-        rating: 4.7,
         experience: "5 years",
-        location: "1200m away", // Updated from distance to location
         isVerified: true,
         consultationFee: 800,
         about: "Experienced veterinarian",
         availableDays: [],
-        availableTimeSlots: [], fullName: '', email: '', phoneNumber: '', clinicName: '', registrationNumber: '',
+        availableTimeSlots: [], fullName: '', email: '', phoneNumber: '', clinicName: '', registrationNumber: '', clinicAddress: '', bio: '',
       ),
       date: "21 May, 2025",
       time: "10:00 AM",
@@ -135,9 +132,7 @@ class MyOrdersPage extends StatelessWidget {
                       children: [
                         Icon(Icons.star, size: screen.width * 0.035, color: Color(0xFF199A8E)), // Made icon size responsive
                         SizedBox(width: screen.width * 0.01), // Made spacing responsive
-                        Text(order.doctor.rating.toString(), style: TextStyle(
-                            fontSize: screen.width * 0.035 // Added responsive font size
-                        )),
+
                       ],
                     ),
                   ],

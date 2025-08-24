@@ -79,6 +79,10 @@ class DoctorProfile {
   final bool isCurrentlyAvailable;
   final List<DayAvailability> weeklyAvailability;
   final DateTime lastUpdated;
+  final String easypaisaJazzcash;
+  final String bankName;
+  final String bankAccountNumber;
+  final String bankHolderName;
 
   DoctorProfile({
     required this.doctorId,
@@ -95,6 +99,10 @@ class DoctorProfile {
     required this.isCurrentlyAvailable,
     required this.weeklyAvailability,
     required this.lastUpdated,
+    required this.easypaisaJazzcash,
+    required this.bankName,
+    required this.bankAccountNumber,
+    required this.bankHolderName,
   });
 
   Map<String, dynamic> toMap() {
@@ -113,6 +121,10 @@ class DoctorProfile {
       'isCurrentlyAvailable': isCurrentlyAvailable,
       'weeklyAvailability': weeklyAvailability.map((day) => day.toMap()).toList(),
       'lastUpdated': lastUpdated.toIso8601String(),
+      'easypaisaJazzcash': easypaisaJazzcash,
+      'bankName': bankName,
+      'bankAccountNumber': bankAccountNumber,
+      'bankHolderName': bankHolderName,
     };
   }
 
@@ -134,6 +146,10 @@ class DoctorProfile {
         map['weeklyAvailability']?.map((day) => DayAvailability.fromMap(day)) ?? [],
       ),
       lastUpdated: DateTime.parse(map['lastUpdated'] ?? DateTime.now().toIso8601String()),
+      easypaisaJazzcash: map['easypaisaJazzcash'] ?? '',
+      bankName: map['bankName'] ?? '',
+      bankAccountNumber: map['bankAccountNumber'] ?? '',
+      bankHolderName: map['bankHolderName'] ?? '',
     );
   }
 }

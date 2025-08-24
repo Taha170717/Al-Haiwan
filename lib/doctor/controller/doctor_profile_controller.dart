@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,9 +23,19 @@ class DoctorProfileController extends GetxController {
   var isCurrentlyAvailable = true.obs;
   var weeklyAvailability = <DayAvailability>[].obs;
 
+  var easypaisaJazzcash = ''.obs;
+  var bankName = ''.obs;
+  var bankAccountNumber = ''.obs;
+  var bankHolderName = ''.obs;
+
   final List<String> daysOfWeek = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-    'Friday', 'Saturday', 'Sunday'
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
   ];
 
   @override
@@ -35,13 +46,13 @@ class DoctorProfileController extends GetxController {
   }
 
   void initializeWeeklyAvailability() {
-    weeklyAvailability.value = daysOfWeek.map((day) =>
-        DayAvailability(
-          day: day,
-          isAvailable: false,
-          timeSlots: [],
-        )
-    ).toList();
+    weeklyAvailability.value = daysOfWeek
+        .map((day) => DayAvailability(
+              day: day,
+              isAvailable: false,
+              timeSlots: [],
+            ))
+        .toList();
   }
 
   Future<void> loadDoctorProfile() async {
@@ -50,20 +61,15 @@ class DoctorProfileController extends GetxController {
       final user = _auth.currentUser;
       if (user == null) return;
 
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
 
       if (!userDoc.exists || userDoc.data()?['isVerified'] != true) {
         Get.snackbar('Error', 'Only verified doctors can access this feature');
         return;
       }
 
-      final profileDoc = await _firestore
-          .collection('doctor_profiles')
-          .doc(user.uid)
-          .get();
+      final profileDoc =
+          await _firestore.collection('doctor_profiles').doc(user.uid).get();
 
       if (profileDoc.exists) {
         doctorProfile.value = DoctorProfile.fromMap(profileDoc.data()!);
@@ -91,12 +97,14 @@ class DoctorProfileController extends GetxController {
 
       Map<String, dynamic> professionalDetails = {};
       if (verificationDoc.exists) {
-        professionalDetails = verificationDoc.data()?['professionalDetails'] ?? {};
+        professionalDetails =
+            verificationDoc.data()?['professionalDetails'] ?? {};
       }
 
       final defaultProfile = DoctorProfile(
         doctorId: user.uid,
-        consultationFee: (professionalDetails['consultationFee'] ?? 500.0).toDouble(),
+        consultationFee:
+            (professionalDetails['consultationFee'] ?? 500.0).toDouble(),
         profileImageUrl: '',
         bio: professionalDetails['about'] ?? '',
         clinicAddress: professionalDetails['clinicAddress'] ?? '',
@@ -109,6 +117,10 @@ class DoctorProfileController extends GetxController {
         isCurrentlyAvailable: true,
         weeklyAvailability: weeklyAvailability.value,
         lastUpdated: DateTime.now(),
+        easypaisaJazzcash: professionalDetails['easypaisaJazzcash'] ?? '',
+        bankName: professionalDetails['bankName'] ?? '',
+        bankAccountNumber: professionalDetails['bankAccountNumber'] ?? '',
+        bankHolderName: professionalDetails['bankHolderName'] ?? '',
       );
 
       await _firestore
@@ -116,13 +128,11 @@ class DoctorProfileController extends GetxController {
           .doc(user.uid)
           .set(defaultProfile.toMap());
 
-      await _firestore
-          .collection('doctor_availability')
-          .doc(user.uid)
-          .set({
+      await _firestore.collection('doctor_availability').doc(user.uid).set({
         'doctorId': user.uid,
         'isCurrentlyAvailable': true,
-        'weeklyAvailability': weeklyAvailability.value.map((day) => day.toMap()).toList(),
+        'weeklyAvailability':
+            weeklyAvailability.value.map((day) => day.toMap()).toList(),
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
@@ -146,6 +156,10 @@ class DoctorProfileController extends GetxController {
       isOnlineOnly.value = doctorProfile.value!.isOnlineOnly;
       isCurrentlyAvailable.value = doctorProfile.value!.isCurrentlyAvailable;
       weeklyAvailability.value = doctorProfile.value!.weeklyAvailability;
+      easypaisaJazzcash.value = doctorProfile.value!.easypaisaJazzcash;
+      bankName.value = doctorProfile.value!.bankName;
+      bankAccountNumber.value = doctorProfile.value!.bankAccountNumber;
+      bankHolderName.value = doctorProfile.value!.bankHolderName;
     }
   }
 
@@ -170,6 +184,10 @@ class DoctorProfileController extends GetxController {
         isCurrentlyAvailable: isCurrentlyAvailable.value,
         weeklyAvailability: weeklyAvailability.value,
         lastUpdated: DateTime.now(),
+        easypaisaJazzcash: easypaisaJazzcash.value,
+        bankName: bankName.value,
+        bankAccountNumber: bankAccountNumber.value,
+        bankHolderName: bankHolderName.value,
       );
 
       await _firestore
@@ -177,18 +195,48 @@ class DoctorProfileController extends GetxController {
           .doc(user.uid)
           .set(updatedProfile.toMap());
 
-      await _firestore
-          .collection('doctor_availability')
-          .doc(user.uid)
-          .set({
+      await _firestore.collection('doctor_availability').doc(user.uid).set({
         'doctorId': user.uid,
         'isCurrentlyAvailable': isCurrentlyAvailable.value,
-        'weeklyAvailability': weeklyAvailability.value.map((day) => day.toMap()).toList(),
+        'weeklyAvailability':
+            weeklyAvailability.value.map((day) => day.toMap()).toList(),
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
       doctorProfile.value = updatedProfile;
-      Get.snackbar('Success', 'Profile updated successfully');
+      Get.snackbar(
+        'Success',
+        'Profile updated successfully',
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        margin: EdgeInsets.all(16),
+        borderRadius: 16,
+        duration: Duration(seconds: 2),
+        icon: Icon(Icons.check_circle, color: Colors.white, size: 28),
+      );
+      Future.delayed(Duration(milliseconds: 900), () {
+        Get.offAll(() => DoctorProfile(
+              doctorId: '',
+              consultationFee: 0.0,
+              profileImageUrl: '',
+              bio: '',
+              clinicAddress: '',
+              clinicContact: '',
+              clinicName: '',
+              about: '',
+              registrationNumber: '',
+              specialization: '',
+              isOnlineOnly: false,
+              isCurrentlyAvailable: true,
+              weeklyAvailability: [],
+              lastUpdated: DateTime.now(),
+              easypaisaJazzcash: '',
+              bankName: '',
+              bankAccountNumber: '',
+              bankHolderName: '',
+            ));
+      });
     } catch (e) {
       Get.snackbar('Error', 'Failed to update profile: $e');
     } finally {
@@ -205,7 +253,8 @@ class DoctorProfileController extends GetxController {
     weeklyAvailability[dayIndex] = updatedDay;
   }
 
-  void addTimeSlot(int dayIndex, String startTime, String endTime, int maxPatients) {
+  void addTimeSlot(
+      int dayIndex, String startTime, String endTime, int maxPatients) {
     final newSlot = TimeSlot(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       startTime: startTime,
@@ -213,7 +262,8 @@ class DoctorProfileController extends GetxController {
       maxPatients: maxPatients,
     );
 
-    final updatedSlots = List<TimeSlot>.from(weeklyAvailability[dayIndex].timeSlots);
+    final updatedSlots =
+        List<TimeSlot>.from(weeklyAvailability[dayIndex].timeSlots);
     updatedSlots.add(newSlot);
 
     final updatedDay = DayAvailability(
@@ -226,7 +276,8 @@ class DoctorProfileController extends GetxController {
   }
 
   void removeTimeSlot(int dayIndex, String slotId) {
-    final updatedSlots = weeklyAvailability[dayIndex].timeSlots
+    final updatedSlots = weeklyAvailability[dayIndex]
+        .timeSlots
         .where((slot) => slot.id != slotId)
         .toList();
 

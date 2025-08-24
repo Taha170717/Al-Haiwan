@@ -31,11 +31,16 @@ class VerifiedDoctorsScreen extends StatelessWidget {
             color: const Color(0xFF199A8E),
             fontSize: titleFontSize,
             fontWeight: FontWeight.bold,
-            fontFamily: 'bolditalic'
           ),
         ),
         centerTitle: true,
-
+        iconTheme: const IconThemeData(color: Color(0xFF199A8E)),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, size: iconSize * 1.2),
+            onPressed: () => controller.refreshDoctors(),
+          ),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -204,14 +209,12 @@ class VerifiedDoctorsScreen extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(screenWidth * 0.04),
           onTap: () {
-            // Navigate to doctor detail page
-             Get.to(() => DoctorDetailView(doctor: doctor, doctorId: doctor,));
+            Get.to(() => DoctorDetailView(doctor: doctor, doctorId: doctor.id));
           },
           child: Padding(
             padding: EdgeInsets.all(padding),
             child: Row(
               children: [
-                // Profile Image
                 Container(
                   width: imageSize,
                   height: imageSize,
@@ -239,17 +242,15 @@ class VerifiedDoctorsScreen extends StatelessWidget {
                 ),
                 SizedBox(width: padding),
 
-                // Doctor Information
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Name and Verification Badge
                       Row(
                         children: [
                           Expanded(
                             child: Text(
-                              doctor.name,
+                              doctor.fullName,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: titleFontSize * 0.9,
@@ -292,7 +293,6 @@ class VerifiedDoctorsScreen extends StatelessWidget {
                       ),
                       SizedBox(height: screenWidth * 0.01),
 
-                      // Specialty
                       Text(
                         doctor.specialty,
                         style: TextStyle(
@@ -303,27 +303,8 @@ class VerifiedDoctorsScreen extends StatelessWidget {
                       ),
                       SizedBox(height: screenWidth * 0.02),
 
-                      // Rating, Experience, and Location
                       Row(
                         children: [
-                          // Rating
-                          Icon(
-                            Icons.star,
-                            size: iconSize,
-                            color: Colors.amber,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            doctor.rating.toStringAsFixed(1),
-                            style: TextStyle(
-                              fontSize: subtitleFontSize,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(width: screenWidth * 0.04),
-
-                          // Experience
                           Icon(
                             Icons.work_outline,
                             size: iconSize,
@@ -345,7 +326,6 @@ class VerifiedDoctorsScreen extends StatelessWidget {
                       ),
                       SizedBox(height: screenWidth * 0.01),
 
-                      // Location
                       Row(
                         children: [
                           Icon(
@@ -356,7 +336,7 @@ class VerifiedDoctorsScreen extends StatelessWidget {
                           SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              doctor.location,
+                              doctor.clinicAddress,
                               style: TextStyle(
                                 fontSize: subtitleFontSize,
                                 color: Colors.grey[600],

@@ -52,6 +52,8 @@ class DoctorProfileManagementScreen extends StatelessWidget {
               SizedBox(height: screenHeight * 0.02),
               _buildProfessionalDetailsCard(context),
               SizedBox(height: screenHeight * 0.02),
+              _buildPaymentDetailsCard(context),
+              SizedBox(height: screenHeight * 0.02),
               _buildAvailabilityCard(context),
               SizedBox(height: screenHeight * 0.02),
               _buildSaveButton(context),
@@ -268,6 +270,77 @@ class DoctorProfileManagementScreen extends StatelessWidget {
               },
                   activeColor: themeColor,
                 )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentDetailsCard(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final themeColor = const Color(0xFF199A8E);
+
+    return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: themeColor,
+                  child: Icon(Icons.payment, color: Colors.white),
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                Text(
+                  'Payment Details',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.045,
+                    fontWeight: FontWeight.bold,
+                    color: themeColor,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: screenHeight * 0.03),
+            _buildProfileTextField(
+              context,
+              initialValue: controller.easypaisaJazzcash.value,
+              label: 'Easypaisa/Jazzcash Number',
+              icon: Icons.phone_android,
+              keyboardType: TextInputType.phone,
+              onChanged: (v) => controller.easypaisaJazzcash.value = v,
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            _buildProfileTextField(
+              context,
+              initialValue: controller.bankName.value,
+              label: 'Bank Name',
+              icon: Icons.account_balance,
+              onChanged: (v) => controller.bankName.value = v,
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            _buildProfileTextField(
+              context,
+              initialValue: controller.bankAccountNumber.value,
+              label: 'Account Number',
+              icon: Icons.numbers,
+              keyboardType: TextInputType.number,
+              onChanged: (v) => controller.bankAccountNumber.value = v,
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            _buildProfileTextField(
+              context,
+              initialValue: controller.bankHolderName.value,
+              label: 'Account Holder Name',
+              icon: Icons.perm_identity,
+              onChanged: (v) => controller.bankHolderName.value = v,
+            ),
           ],
         ),
       ),

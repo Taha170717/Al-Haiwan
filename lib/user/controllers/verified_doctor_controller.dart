@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-
 import '../repository/bottomNav/bottomNavScreens/doctors/doctor_list_viewmodel.dart';
 
 class VerifiedDoctorsController extends GetxController {
@@ -27,10 +26,13 @@ class VerifiedDoctorsController extends GetxController {
           .where('isVerified', isEqualTo: true)
           .get();
 
-      final List<Doctor> doctors = snapshot.docs
-          .map((doc) => Doctor.fromFirestore(
-          doc.data() as Map<String, dynamic>, doc.id))
-          .toList();
+      final List<Doctor> doctors = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final doctor = Doctor.fromFirestore(data, doc.id);
+        doctors.add(doctor);
+      }
 
       verifiedDoctors.value = doctors;
     } catch (e) {
@@ -54,7 +56,8 @@ class VerifiedDoctorsController extends GetxController {
           .get();
 
       if (doc.exists) {
-        return Doctor.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+        final data = doc.data() as Map<String, dynamic>;
+        return Doctor.fromFirestore(data, doctorId);
       }
       return null;
     } catch (e) {

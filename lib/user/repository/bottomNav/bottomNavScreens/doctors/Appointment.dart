@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../bottomNavScreen.dart';
-
 import 'doctor_detail_viewmodel.dart';
 import 'doctor_list_viewmodel.dart';
 
-enum CardType { Visa, MasterCard, Unknown }
+enum PaymentMethod { CreditCard, EasyPaisa, JazzCash, BankAccount }
 
 class CardNumberInputFormatter extends TextInputFormatter {
   @override
@@ -40,35 +39,26 @@ class AppointmentSummaryView extends StatefulWidget {
 class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
   final reasonController = TextEditingController();
   final paymentController = TextEditingController();
-  final double consultationFee = 800;
+  final accountNumberController = TextEditingController();
+  final phoneNumberController = TextEditingController();
+
+  PaymentMethod selectedPaymentMethod = PaymentMethod.CreditCard;
+  double consultationFee = 800;
   final double adminFee = 100;
-  CardType cardType = CardType.Unknown;
 
   @override
   void initState() {
     super.initState();
-    paymentController.addListener(() {
-      final rawNumber = paymentController.text.replaceAll(' ', '');
-      final type = detectCardType(rawNumber);
-      setState(() => cardType = type);
-    });
+    consultationFee = widget.doctor.consultationFee;
   }
 
   @override
   void dispose() {
     reasonController.dispose();
     paymentController.dispose();
+    accountNumberController.dispose();
+    phoneNumberController.dispose();
     super.dispose();
-  }
-
-  CardType detectCardType(String input) {
-    if (input.startsWith('4')) {
-      return CardType.Visa;
-    } else if (RegExp(r'^(5[1-5]|2[2-7])').hasMatch(input)) {
-      return CardType.MasterCard;
-    } else {
-      return CardType.Unknown;
-    }
   }
 
   Widget _paymentRow(String title, String value, {bool isBold = false}) {
@@ -95,6 +85,183 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
         ],
       ),
     );
+  }
+
+  Widget _buildPaymentMethodSelector(Size screen) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Select Payment Method", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
+        SizedBox(height: screen.height * 0.02),
+
+        _buildPaymentOption(
+          screen,
+          PaymentMethod.CreditCard,
+          "Credit/Debit Card",
+          Icons.credit_card,
+          Colors.blue,
+        ),
+        _buildPaymentOption(
+          screen,
+          PaymentMethod.EasyPaisa,
+          "EasyPaisa",
+          Icons.phone_android,
+          Colors.green,
+        ),
+        _buildPaymentOption(
+          screen,
+          PaymentMethod.JazzCash,
+          "JazzCash",
+          Icons.phone_android,
+          Colors.red,
+        ),
+        _buildPaymentOption(
+          screen,
+          PaymentMethod.BankAccount,
+          "Bank Account",
+          Icons.account_balance,
+          Colors.purple,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentOption(Size screen, PaymentMethod method, String title, IconData icon, Color color) {
+    return Container(
+      margin: EdgeInsets.only(bottom: screen.height * 0.01),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: selectedPaymentMethod == method ? Color(0xFF199A8E) : Colors.grey[300]!,
+          width: selectedPaymentMethod == method ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(screen.width * 0.03),
+      ),
+      child: CheckboxListTile(
+        value: selectedPaymentMethod == method,
+        onChanged: (bool? value) {
+          if (value == true) {
+            setState(() {
+              selectedPaymentMethod = method;
+            });
+          }
+        },
+        title: Row(
+          children: [
+            Icon(icon, color: color, size: screen.width * 0.05),
+            SizedBox(width: screen.width * 0.03),
+            Text(title, style: TextStyle(fontSize: screen.width * 0.035)),
+          ],
+        ),
+        activeColor: Color(0xFF199A8E),
+        controlAffinity: ListTileControlAffinity.trailing,
+      ),
+    );
+  }
+
+  Widget _buildPaymentInputFields(Size screen) {
+    switch (selectedPaymentMethod) {
+      case PaymentMethod.CreditCard:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Card Number", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
+            SizedBox(height: screen.height * 0.01),
+            TextField(
+              controller: paymentController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(19),
+                CardNumberInputFormatter(),
+              ],
+              decoration: InputDecoration(
+                hintText: "1234 5678 9012 3456",
+                hintStyle: TextStyle(fontSize: screen.width * 0.032),
+                prefixIcon: Icon(Icons.credit_card, size: screen.width * 0.05),
+                fillColor: Colors.white,
+                filled: true,
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: screen.width * 0.03,
+                    vertical: screen.height * 0.02
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        );
+
+      case PaymentMethod.EasyPaisa:
+      case PaymentMethod.JazzCash:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Phone Number", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
+            SizedBox(height: screen.height * 0.01),
+            TextField(
+              controller: phoneNumberController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                hintText: "03XX XXXXXXX",
+                hintStyle: TextStyle(fontSize: screen.width * 0.032),
+                prefixIcon: Icon(Icons.phone, size: screen.width * 0.05),
+                fillColor: Colors.white,
+                filled: true,
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: screen.width * 0.03,
+                    vertical: screen.height * 0.02
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        );
+
+      case PaymentMethod.BankAccount:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Account Number", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
+            SizedBox(height: screen.height * 0.01),
+            TextField(
+              controller: accountNumberController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: "Enter account number",
+                hintStyle: TextStyle(fontSize: screen.width * 0.032),
+                prefixIcon: Icon(Icons.account_balance, size: screen.width * 0.05),
+                fillColor: Colors.white,
+                filled: true,
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: screen.width * 0.03,
+                    vertical: screen.height * 0.02
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        );
+    }
   }
 
   @override
@@ -125,7 +292,6 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Doctor Info
             Container(
               padding: EdgeInsets.all(screen.width * 0.03),
               decoration: BoxDecoration(
@@ -136,9 +302,8 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(screen.width * 0.025),
-                    child: // Updated to use network image with error handling
-                    Image.network(
-                      widget.doctor.profileImageUrl ?? '',
+                    child: Image.network(
+                      widget.doctor.profileImageUrl,
                       width: screen.width * 0.18,
                       height: screen.width * 0.18,
                       fit: BoxFit.cover,
@@ -158,14 +323,14 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                            widget.doctor.fullName ?? widget.doctor.name ?? 'Unknown Doctor',
+                            widget.doctor.fullName,
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: screen.width * 0.04
                             )
                         ),
                         Text(
-                            widget.doctor.specialty ?? 'General',
+                            widget.doctor.specialty,
                             style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: screen.width * 0.035
@@ -173,17 +338,17 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                         ),
                         Row(
                           children: [
-                            Icon(Icons.star, size: screen.width * 0.035, color: Color(0xFF199A8E)),
+                            Icon(Icons.work_outline, size: screen.width * 0.035, color: Colors.grey),
                             SizedBox(width: screen.width * 0.01),
                             Text(
-                                "${widget.doctor.rating ?? 0.0}",
+                                widget.doctor.experience,
                                 style: TextStyle(fontSize: screen.width * 0.035)
                             ),
                             SizedBox(width: screen.width * 0.02),
                             Icon(Icons.location_on, size: screen.width * 0.035, color: Colors.grey),
                             Flexible(
                               child: Text(
-                                "${widget.doctor.location ?? 'Unknown'}",
+                                widget.doctor.clinicAddress,
                                 style: TextStyle(fontSize: screen.width * 0.035),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -198,7 +363,6 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
             ),
             SizedBox(height: screen.height * 0.025),
 
-            // Date and Time
             Row(
               children: [
                 Icon(Icons.calendar_today_outlined, size: screen.width * 0.035, color: Color(0xFF199A8E)),
@@ -218,7 +382,6 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
             ),
             Divider(height: screen.height * 0.05),
 
-            // Reason
             Text("Reason", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
             SizedBox(height: screen.height * 0.02),
             TextField(
@@ -237,7 +400,6 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
             ),
             SizedBox(height: screen.height * 0.025),
 
-            // Payment Detail
             Text("Payment Detail", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
             SizedBox(height: screen.height * 0.02),
             _paymentRow("Consultation", "₨ ${consultationFee.toInt()}", isBold: true),
@@ -247,52 +409,11 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
             _paymentRow("Total", "₨ ${total.toInt()}", isBold: true),
             SizedBox(height: screen.height * 0.025),
 
-            // Card Number Field
-            Text("Enter Payment Method", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
+            _buildPaymentMethodSelector(screen),
             SizedBox(height: screen.height * 0.02),
-            TextField(
-              controller: paymentController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(19),
-                CardNumberInputFormatter(),
-              ],
-              decoration: InputDecoration(
-                hintText: "1234 5678 9012 3456",
-                hintStyle: TextStyle(fontSize: screen.width * 0.032),
-                prefixIcon: Padding(
-                  padding: EdgeInsets.all(screen.width * 0.03),
-                  child: Image.asset(
-                    cardType == CardType.Visa
-                        ? 'assets/images/Vise.png'
-                        : 'assets/images/mastercard.png',
-                    height: screen.width * 0.05,
-                    width: screen.width * 0.05,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(Icons.credit_card, size: screen.width * 0.05);
-                    },
-                  ),
-                ),
-                fillColor: Colors.white,
-                filled: true,
-                contentPadding: EdgeInsets.symmetric(
-                    horizontal: screen.width * 0.03,
-                    vertical: screen.height * 0.02
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(screen.width * 0.03),
-                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(screen.width * 0.03),
-                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
-                ),
-              ),
-            ),
+            _buildPaymentInputFields(screen),
             SizedBox(height: screen.height * 0.025),
 
-            // Booking Button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -315,13 +436,14 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                     ),
                   ),
                   onPressed: () {
-                    final cardNumber = paymentController.text.replaceAll(' ', '');
                     if (reasonController.text.isEmpty) {
                       Get.snackbar("Missing Info", "Please enter reason for the appointment");
                       return;
                     }
-                    if (cardNumber.length != 16) {
-                      Get.snackbar("Invalid Card", "Card number must be exactly 16 digits");
+
+                    String paymentValidation = _validatePaymentInput();
+                    if (paymentValidation.isNotEmpty) {
+                      Get.snackbar("Invalid Payment Info", paymentValidation);
                       return;
                     }
 
@@ -341,6 +463,29 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
         ),
       ),
     );
+  }
+
+  String _validatePaymentInput() {
+    switch (selectedPaymentMethod) {
+      case PaymentMethod.CreditCard:
+        final cardNumber = paymentController.text.replaceAll(' ', '');
+        if (cardNumber.length != 16) {
+          return "Card number must be exactly 16 digits";
+        }
+        break;
+      case PaymentMethod.EasyPaisa:
+      case PaymentMethod.JazzCash:
+        if (phoneNumberController.text.isEmpty || phoneNumberController.text.length < 11) {
+          return "Please enter a valid phone number";
+        }
+        break;
+      case PaymentMethod.BankAccount:
+        if (accountNumberController.text.isEmpty) {
+          return "Please enter account number";
+        }
+        break;
+    }
+    return "";
   }
 
   void _showSuccessDialog(BuildContext context, Size screen) {

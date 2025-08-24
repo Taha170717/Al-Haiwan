@@ -49,10 +49,10 @@ class _DoctorProfileState extends State<DoctorProfile> {
 
   Future<void> _logout() async {
     try {
-      await FirebaseAuth.instance.signOut(); // Sign out Firebase user
+      await FirebaseAuth.instance.signOut(); 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => Loginpage()), // Navigate to login screen
+        MaterialPageRoute(builder: (_) => Loginpage()), 
             (route) => false,
       );
     } catch (e) {
@@ -216,28 +216,97 @@ class _DoctorProfileState extends State<DoctorProfile> {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Logout Confirmation"),
-          content: const Text("Are you sure you want to log out?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-              },
-              child: const Text("Cancel"),
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width * 0.06,
+                vertical: MediaQuery.of(context).size.height * 0.035),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.red.shade100,
+                  radius: MediaQuery.of(context).size.width * 0.09,
+                  child: Icon(Icons.warning_rounded,
+                      color: Colors.red.shade700,
+                      size: MediaQuery.of(context).size.width * 0.09),
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+                Text(
+                  "Logout Confirmation",
+                  style: TextStyle(
+                    fontSize: MediaQuery.of(context).size.width * 0.052,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                Text(
+                  "Are you sure you want to log out?",
+                  style: TextStyle(
+                    fontSize: MediaQuery.of(context).size.width * 0.041,
+                    color: Colors.black54,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.teal,
+                          side: BorderSide(color: Colors.teal, width: 2),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          padding: EdgeInsets.symmetric(
+                              vertical:
+                                  MediaQuery.of(context).size.height * 0.015),
+                        ),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                          await _logout();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              vertical:
+                                  MediaQuery.of(context).size.height * 0.015),
+                        ),
+                        child: const Text(
+                          "Logout",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop(); // Close dialog
-                await _logout(); // Sign out and navigate
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text("Logout"),
-            ),
-          ],
+          ),
         );
       },
     );

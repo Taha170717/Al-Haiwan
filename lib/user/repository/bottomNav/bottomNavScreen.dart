@@ -18,6 +18,7 @@ class BottomNavScreen extends StatelessWidget {
   final List<Widget> pages = [
     HomeScreen(),
     VerifiedDoctorsScreen(),
+    MyAppointmentScreen(),
     Categoryscreen(),
     CartScreen(),
   ];
@@ -49,6 +50,10 @@ class BottomNavScreen extends StatelessWidget {
               BottomNavigationBarItem(
                 icon: _buildNavIcon('assets/icons/consult.png', 1),
                 label: 'Doctors',
+              ),
+              BottomNavigationBarItem(
+                icon: _buildNavIcon('assets/icons/schedule.png', 2),
+                label: 'Appointments',
               ),
               BottomNavigationBarItem(
                 icon: _buildNavIcon('assets/icons/category.png', 2),

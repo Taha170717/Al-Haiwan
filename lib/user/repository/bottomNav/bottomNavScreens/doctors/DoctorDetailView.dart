@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'Appointment.dart';
 import 'doctor_detail_viewmodel.dart';
 import 'doctor_list_viewmodel.dart';
 
-
 class DoctorDetailView extends StatelessWidget {
   final Doctor doctor;
+  final String doctorId;
 
-  const DoctorDetailView({Key? key, required this.doctor, required doctorId}) : super(key: key);
+  const DoctorDetailView({Key? key, required this.doctor, required this.doctorId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +28,7 @@ class DoctorDetailView extends StatelessWidget {
         centerTitle: true,
         iconTheme: IconThemeData(color: Color(0xFF199A8E)),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(screen.width * 0.05),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,15 +77,20 @@ class DoctorDetailView extends StatelessWidget {
                       SizedBox(height: screen.height * 0.005),
                       Row(
                         children: [
-                          Icon(Icons.star, size: screen.width * (isTablet ? 0.03 : 0.04), color: Color(0xFF199A8E)),
+                          Icon(Icons.work_outline, size: screen.width * (isTablet ? 0.03 : 0.04), color: Colors.grey),
                           SizedBox(width: screen.width * 0.01),
-                          Text("${doctor.rating}", style: TextStyle(
+                          Text("${doctor.experience}", style: TextStyle(
                               fontSize: screen.width * (isTablet ? 0.025 : 0.035)
                           )),
-                          SizedBox(width: screen.width * 0.025),
+                        ],
+                      ),
+                      SizedBox(height: screen.height * 0.005),
+                      Row(
+                        children: [
                           Icon(Icons.location_on, size: screen.width * (isTablet ? 0.03 : 0.04), color: Colors.grey),
+                          SizedBox(width: screen.width * 0.01),
                           Flexible(
-                            child: Text("${doctor.clinicName}", style: TextStyle(
+                            child: Text("${doctor.clinicAddress}", style: TextStyle(
                                 fontSize: screen.width * (isTablet ? 0.025 : 0.035)
                             )),
                           ),
@@ -98,6 +102,65 @@ class DoctorDetailView extends StatelessWidget {
               ],
             ),
             SizedBox(height: screen.height * 0.03),
+
+            Container(
+              padding: EdgeInsets.all(screen.width * 0.04),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(screen.width * 0.03),
+                border: Border.all(color: Color(0xFF199A8E).withOpacity(0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Clinic Information", style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF199A8E),
+                    fontSize: screen.width * (isTablet ? 0.03 : 0.04),
+                  )),
+                  SizedBox(height: screen.height * 0.01),
+                  Row(
+                    children: [
+                      Icon(Icons.local_hospital, size: screen.width * 0.04, color: Colors.grey[600]),
+                      SizedBox(width: screen.width * 0.02),
+                      Expanded(
+                        child: Text(doctor.clinicName, style: TextStyle(
+                          fontSize: screen.width * (isTablet ? 0.025 : 0.035),
+                          fontWeight: FontWeight.w500,
+                        )),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screen.height * 0.01),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, size: screen.width * 0.04, color: Colors.grey[600]),
+                      SizedBox(width: screen.width * 0.02),
+                      Expanded(
+                        child: Text(doctor.clinicAddress, style: TextStyle(
+                          fontSize: screen.width * (isTablet ? 0.025 : 0.035),
+                          color: Colors.grey[700],
+                        )),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screen.height * 0.01),
+                  Row(
+                    children: [
+                      Icon(Icons.attach_money, size: screen.width * 0.04, color: Colors.grey[600]),
+                      SizedBox(width: screen.width * 0.02),
+                      Text("Consultation Fee: ₨${doctor.consultationFee.toInt()}", style: TextStyle(
+                        fontSize: screen.width * (isTablet ? 0.025 : 0.035),
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF199A8E),
+                      )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: screen.height * 0.03),
+
             Text("About", style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Color(0xFF199A8E),
@@ -111,57 +174,89 @@ class DoctorDetailView extends StatelessWidget {
                 fontSize: screen.width * (isTablet ? 0.025 : 0.035),
               ),
             ),
+            SizedBox(height: screen.height * 0.02),
+
+            Text("Bio", style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF199A8E),
+              fontSize: screen.width * (isTablet ? 0.03 : 0.04),
+            )),
+            SizedBox(height: screen.height * 0.005),
+            Text(
+              doctor.id,
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: screen.width * (isTablet ? 0.025 : 0.035),
+              ),
+            ),
             SizedBox(height: screen.height * 0.03),
 
-            // Date Selector
+            Text("Available Days", style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF199A8E),
+              fontSize: screen.width * (isTablet ? 0.03 : 0.04),
+            )),
+            SizedBox(height: screen.height * 0.01),
+
             SizedBox(
               height: screen.height * (isTablet ? 0.08 : 0.075),
-              child: ListView(
+              child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                children: controller.days
-                    .map((day) => Obx(() => GestureDetector(
-                  onTap: () => controller.selectedDay.value = day,
-                  child: Container(
-                    width: screen.width * (isTablet ? 0.12 : 0.15),
-                    margin: EdgeInsets.only(right: screen.width * 0.025),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(screen.width * 0.025),
-                      color: controller.selectedDay.value == day
-                          ? Color(0xFF199A8E)
-                          : Colors.grey[200],
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(day.day, style: TextStyle(
-                            color: controller.selectedDay.value == day
-                                ? Colors.white
-                                : Colors.black,
-                            fontSize: screen.width * (isTablet ? 0.025 : 0.03),
-                          )),
-                          Text(day.date.toString(), style: TextStyle(
-                            color: controller.selectedDay.value == day
-                                ? Colors.white
-                                : Colors.black,
-                            fontSize: screen.width * (isTablet ? 0.03 : 0.035),
-                          )),
-                        ],
+                itemCount: doctor.availableDays.length,
+                itemBuilder: (context, index) {
+                  final dayName = doctor.availableDays[index];
+                  final dayDate = 21 + index; // Simple date calculation
+                  final day = Day(day: dayName, date: dayDate);
+
+                  return Obx(() => GestureDetector(
+                        onTap: () => controller.selectedDay.value = day,
+                        child: Container(
+                      width: screen.width * (isTablet ? 0.12 : 0.15),
+                      margin: EdgeInsets.only(right: screen.width * 0.025),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(screen.width * 0.025),
+                        color: controller.selectedDay.value.day == day.day
+                            ? Color(0xFF199A8E)
+                            : Colors.grey[200],
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(day.day, style: TextStyle(
+                              color: controller.selectedDay.value.day == day.day
+                                  ? Colors.white
+                                  : Colors.black,
+                              fontSize: screen.width * (isTablet ? 0.025 : 0.03),
+                            )),
+                            Text(day.date.toString(), style: TextStyle(
+                              color: controller.selectedDay.value.day == day.day
+                                  ? Colors.white
+                                  : Colors.black,
+                              fontSize: screen.width * (isTablet ? 0.03 : 0.035),
+                            )),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                )))
-                    .toList(),
+                  ));
+                },
               ),
             ),
 
             SizedBox(height: screen.height * 0.03),
 
-            // Time Slots
+            Text("Available Time Slots", style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF199A8E),
+              fontSize: screen.width * (isTablet ? 0.03 : 0.04),
+            )),
+            SizedBox(height: screen.height * 0.01),
+
             Wrap(
               spacing: screen.width * 0.025,
               runSpacing: screen.height * 0.012,
-              children: controller.timeSlots
+              children: doctor.availableTimeSlots
                   .map((time) => Obx(() => GestureDetector(
                 onTap: () => controller.selectedTime.value = time,
                 child: Container(
@@ -188,9 +283,8 @@ class DoctorDetailView extends StatelessWidget {
               )))
                   .toList(),
             ),
-            Spacer(),
+            SizedBox(height: screen.height * 0.03),
 
-            // Book Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
