@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/verified_doctor_controller.dart';
 import 'DoctorDetailView.dart';
-import 'doctor_list_viewmodel.dart';
+import '../../../../models/doctor_list_viewmodel.dart';
 
 class VerifiedDoctorsScreen extends StatelessWidget {
   final VerifiedDoctorsController controller = Get.put(VerifiedDoctorsController());

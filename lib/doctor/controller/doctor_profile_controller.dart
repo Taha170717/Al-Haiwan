@@ -23,7 +23,8 @@ class DoctorProfileController extends GetxController {
   var isCurrentlyAvailable = true.obs;
   var weeklyAvailability = <DayAvailability>[].obs;
 
-  var easypaisaJazzcash = ''.obs;
+  var easypaisaNumber = ''.obs;
+  var jazzcashNumber = ''.obs;
   var bankName = ''.obs;
   var bankAccountNumber = ''.obs;
   var bankHolderName = ''.obs;
@@ -117,7 +118,8 @@ class DoctorProfileController extends GetxController {
         isCurrentlyAvailable: true,
         weeklyAvailability: weeklyAvailability.value,
         lastUpdated: DateTime.now(),
-        easypaisaJazzcash: professionalDetails['easypaisaJazzcash'] ?? '',
+        easypaisaNumber: professionalDetails['easypaisaNumber'] ?? '',
+        jazzcashNumber: professionalDetails['jazzcashNumber'] ?? '',
         bankName: professionalDetails['bankName'] ?? '',
         bankAccountNumber: professionalDetails['bankAccountNumber'] ?? '',
         bankHolderName: professionalDetails['bankHolderName'] ?? '',
@@ -156,7 +158,8 @@ class DoctorProfileController extends GetxController {
       isOnlineOnly.value = doctorProfile.value!.isOnlineOnly;
       isCurrentlyAvailable.value = doctorProfile.value!.isCurrentlyAvailable;
       weeklyAvailability.value = doctorProfile.value!.weeklyAvailability;
-      easypaisaJazzcash.value = doctorProfile.value!.easypaisaJazzcash;
+      easypaisaNumber.value = doctorProfile.value!.easypaisaNumber;
+      jazzcashNumber.value = doctorProfile.value!.jazzcashNumber;
       bankName.value = doctorProfile.value!.bankName;
       bankAccountNumber.value = doctorProfile.value!.bankAccountNumber;
       bankHolderName.value = doctorProfile.value!.bankHolderName;
@@ -184,7 +187,8 @@ class DoctorProfileController extends GetxController {
         isCurrentlyAvailable: isCurrentlyAvailable.value,
         weeklyAvailability: weeklyAvailability.value,
         lastUpdated: DateTime.now(),
-        easypaisaJazzcash: easypaisaJazzcash.value,
+        easypaisaNumber: easypaisaNumber.value,
+        jazzcashNumber: jazzcashNumber.value,
         bankName: bankName.value,
         bankAccountNumber: bankAccountNumber.value,
         bankHolderName: bankHolderName.value,
@@ -215,28 +219,6 @@ class DoctorProfileController extends GetxController {
         duration: Duration(seconds: 2),
         icon: Icon(Icons.check_circle, color: Colors.white, size: 28),
       );
-      Future.delayed(Duration(milliseconds: 900), () {
-        Get.offAll(() => DoctorProfile(
-              doctorId: '',
-              consultationFee: 0.0,
-              profileImageUrl: '',
-              bio: '',
-              clinicAddress: '',
-              clinicContact: '',
-              clinicName: '',
-              about: '',
-              registrationNumber: '',
-              specialization: '',
-              isOnlineOnly: false,
-              isCurrentlyAvailable: true,
-              weeklyAvailability: [],
-              lastUpdated: DateTime.now(),
-              easypaisaJazzcash: '',
-              bankName: '',
-              bankAccountNumber: '',
-              bankHolderName: '',
-            ));
-      });
     } catch (e) {
       Get.snackbar('Error', 'Failed to update profile: $e');
     } finally {

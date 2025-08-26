@@ -1,0 +1,99 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class Appointment {
+  final String id;
+  final String doctorId;
+  final String userId;
+  final String ownerName;
+  final String petName;
+  final String animalType;
+  final String selectedDate;
+  final String selectedTime;
+  final String selectedDay;
+  final double consultationFee;
+  final String paymentMethod;
+  final String? paymentScreenshotUrl;
+  final AppointmentStatus status;
+  final DateTime createdAt;
+  final DateTime? confirmedAt;
+  final String? doctorNotes;
+
+  Appointment({
+    required this.id,
+    required this.doctorId,
+    required this.userId,
+    required this.ownerName,
+    required this.petName,
+    required this.animalType,
+    required this.selectedDate,
+    required this.selectedTime,
+    required this.selectedDay,
+    required this.consultationFee,
+    required this.paymentMethod,
+    this.paymentScreenshotUrl,
+    required this.status,
+    required this.createdAt,
+    this.confirmedAt,
+    this.doctorNotes,
+  });
+
+  factory Appointment.fromFirestore(Map<String, dynamic> data, String id) {
+    return Appointment(
+      id: id,
+      doctorId: data['doctorId']?.toString() ?? '',
+      userId: data['userId']?.toString() ?? '',
+      ownerName: data['ownerName']?.toString() ?? '',
+      petName: data['petName']?.toString() ?? '',
+      animalType: data['animalType']?.toString() ?? '',
+      selectedDate: data['selectedDate']?.toString() ?? '',
+      selectedTime: data['selectedTime']?.toString() ?? '',
+      selectedDay: data['selectedDay']?.toString() ?? '',
+      consultationFee: _parseDouble(data['consultationFee']),
+      paymentMethod: data['paymentMethod']?.toString() ?? '',
+      paymentScreenshotUrl: data['paymentScreenshotUrl']?.toString(),
+      status: AppointmentStatus.values.firstWhere(
+            (e) => e.toString().split('.').last == data['status'],
+        orElse: () => AppointmentStatus.pending,
+      ),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      confirmedAt: (data['confirmedAt'] as Timestamp?)?.toDate(),
+      doctorNotes: data['doctorNotes']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'doctorId': doctorId,
+      'userId': userId,
+      'ownerName': ownerName,
+      'petName': petName,
+      'animalType': animalType,
+      'selectedDate': selectedDate,
+      'selectedTime': selectedTime,
+      'selectedDay': selectedDay,
+      'consultationFee': consultationFee,
+      'paymentMethod': paymentMethod,
+      'paymentScreenshotUrl': paymentScreenshotUrl,
+      'status': status.toString().split('.').last,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'confirmedAt': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null,
+      'doctorNotes': doctorNotes,
+    };
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+}
+
+enum AppointmentStatus {
+  pending,
+  paymentVerified,
+  confirmed,
+  cancelled,
+  completed
+}

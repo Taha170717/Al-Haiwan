@@ -1,16 +1,16 @@
 // File: android/build.gradle
-
 buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://maven.pkg.jetbrains.space/public/p/kotlinx/maven' }
     }
-    ext.kotlin_version = '2.1.0'
+    ext.kotlin_version = '2.2.10'
 
     dependencies {
         classpath 'com.android.tools.build:gradle:8.4.0' // ⬅️ Upgrade this line
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.gms:google-services:4.4.1' // ✅ Required for Firebase
+        classpath 'com.google.gms:google-services:4.4.3' // ✅ Required for Firebase
 
 
     }
@@ -20,6 +20,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://maven.pkg.jetbrains.space/public/p/kotlinx/maven' }
     }
 }
 

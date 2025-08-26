@@ -310,11 +310,20 @@ class DoctorProfileManagementScreen extends StatelessWidget {
             SizedBox(height: screenHeight * 0.03),
             _buildProfileTextField(
               context,
-              initialValue: controller.easypaisaJazzcash.value,
-              label: 'Easypaisa/Jazzcash Number',
+              initialValue: controller.easypaisaNumber.value,
+              label: 'Easypaisa Number',
               icon: Icons.phone_android,
               keyboardType: TextInputType.phone,
-              onChanged: (v) => controller.easypaisaJazzcash.value = v,
+              onChanged: (v) => controller.easypaisaNumber.value = v,
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            _buildProfileTextField(
+              context,
+              initialValue: controller.jazzcashNumber.value,
+              label: 'Jazzcash Number',
+              icon: Icons.phone_android,
+              keyboardType: TextInputType.phone,
+              onChanged: (v) => controller.jazzcashNumber.value = v,
             ),
             SizedBox(height: screenHeight * 0.02),
             _buildProfileTextField(

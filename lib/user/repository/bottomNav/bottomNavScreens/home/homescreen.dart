@@ -114,10 +114,10 @@ class HomeScreen extends StatelessWidget {
               SizedBox(height: screen.height * 0.025),
 
               // Top Doctor Section
-              _buildSectionHeader("Top Doctor", screen),
+              _buildSectionHeader("Doctor", screen),
               SizedBox(height: screen.height * 0.018),
               SizedBox(
-                height: screen.height * 0.22,
+                height: screen.height * 0.26,
                 child: Obx(() {
                   if (doctorController.isLoading.value) {
                     return const Center(child: CircularProgressIndicator());

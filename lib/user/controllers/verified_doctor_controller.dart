@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import '../repository/bottomNav/bottomNavScreens/doctors/doctor_list_viewmodel.dart';
+import '../models/doctor_list_viewmodel.dart';
 
 class VerifiedDoctorsController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -37,7 +37,7 @@ class VerifiedDoctorsController extends GetxController {
       verifiedDoctors.value = doctors;
     } catch (e) {
       hasError.value = true;
-      errorMessage.value = 'Failed to load doctors: ${e.toString()}';
+      errorMessage.value = 'Error fetching verified doctors: ${e.toString()}';
       print('Error fetching verified doctors: $e');
     } finally {
       isLoading.value = false;
@@ -50,14 +50,46 @@ class VerifiedDoctorsController extends GetxController {
 
   Future<Doctor?> getDoctorById(String doctorId) async {
     try {
-      final DocumentSnapshot doc = await _firestore
-          .collection('doctor_verification_requests')
+      final DocumentSnapshot profileDoc = await _firestore
+          .collection('doctor_profiles')
           .doc(doctorId)
           .get();
 
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
-        return Doctor.fromFirestore(data, doctorId);
+      if (profileDoc.exists) {
+        final profileData = profileDoc.data() as Map<String, dynamic>;
+
+        Map<String, dynamic>? verificationData;
+        try {
+          final verificationDoc = await _firestore
+              .collection('doctor_verification_requests')
+              .doc(doctorId)
+              .get();
+          if (verificationDoc.exists) {
+            verificationData = verificationDoc.data() as Map<String, dynamic>;
+          }
+        } catch (e) {
+          print('Error fetching verification data: $e');
+        }
+
+        Map<String, dynamic>? availabilityData;
+        try {
+          final availabilityDoc = await _firestore
+              .collection('doctor_availability')
+              .doc(doctorId)
+              .get();
+          if (availabilityDoc.exists) {
+            availabilityData = availabilityDoc.data() as Map<String, dynamic>;
+          }
+        } catch (e) {
+          print('Error fetching availability data: $e');
+        }
+
+        return Doctor.fromFirestoreProfile(
+            profileData,
+            doctorId,
+            verificationData,
+            availabilityData
+        );
       }
       return null;
     } catch (e) {

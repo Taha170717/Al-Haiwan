@@ -79,7 +79,8 @@ class DoctorProfile {
   final bool isCurrentlyAvailable;
   final List<DayAvailability> weeklyAvailability;
   final DateTime lastUpdated;
-  final String easypaisaJazzcash;
+  final String easypaisaNumber;
+  final String jazzcashNumber;
   final String bankName;
   final String bankAccountNumber;
   final String bankHolderName;
@@ -99,7 +100,8 @@ class DoctorProfile {
     required this.isCurrentlyAvailable,
     required this.weeklyAvailability,
     required this.lastUpdated,
-    required this.easypaisaJazzcash,
+    required this.easypaisaNumber,
+    required this.jazzcashNumber,
     required this.bankName,
     required this.bankAccountNumber,
     required this.bankHolderName,
@@ -121,7 +123,8 @@ class DoctorProfile {
       'isCurrentlyAvailable': isCurrentlyAvailable,
       'weeklyAvailability': weeklyAvailability.map((day) => day.toMap()).toList(),
       'lastUpdated': lastUpdated.toIso8601String(),
-      'easypaisaJazzcash': easypaisaJazzcash,
+      'easypaisaNumber': easypaisaNumber,
+      'jazzcashNumber': jazzcashNumber,
       'bankName': bankName,
       'bankAccountNumber': bankAccountNumber,
       'bankHolderName': bankHolderName,
@@ -146,7 +149,8 @@ class DoctorProfile {
         map['weeklyAvailability']?.map((day) => DayAvailability.fromMap(day)) ?? [],
       ),
       lastUpdated: DateTime.parse(map['lastUpdated'] ?? DateTime.now().toIso8601String()),
-      easypaisaJazzcash: map['easypaisaJazzcash'] ?? '',
+      easypaisaNumber: map['easypaisaNumber'] ?? '',
+      jazzcashNumber: map['jazzcashNumber'] ?? '',
       bankName: map['bankName'] ?? '',
       bankAccountNumber: map['bankAccountNumber'] ?? '',
       bankHolderName: map['bankHolderName'] ?? '',

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../doctors/doctor_list_viewmodel.dart';
+import '../../../../models/doctor_list_viewmodel.dart';
 
 class MyOrdersPage extends StatelessWidget {
   final List<Order> orders = [

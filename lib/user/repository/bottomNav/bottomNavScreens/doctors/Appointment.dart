@@ -1,36 +1,22 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../../../../../doctor/models/doctor_availability_model.dart';
+import '../../../../controllers/appointment_controller.dart';
+import '../../../../models/doctor_detail_viewmodel.dart' hide DoctorProfile;
+import '../../../../models/doctor_list_viewmodel.dart';
 import '../../bottomNavScreen.dart';
-import 'doctor_detail_viewmodel.dart';
-import 'doctor_list_viewmodel.dart';
 
-enum PaymentMethod { CreditCard, EasyPaisa, JazzCash, BankAccount }
-
-class CardNumberInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    final digitsOnly = newValue.text.replaceAll(RegExp(r'\D'), '');
-    final buffer = StringBuffer();
-    for (int i = 0; i < digitsOnly.length; i++) {
-      buffer.write(digitsOnly[i]);
-      if ((i + 1) % 4 == 0 && i != digitsOnly.length - 1) {
-        buffer.write(' ');
-      }
-    }
-
-    final newText = buffer.toString();
-    return TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: newText.length),
-    );
-  }
-}
+enum PaymentMethod { EasyPaisa, JazzCash, BankAccount }
 
 class AppointmentSummaryView extends StatefulWidget {
   final Doctor doctor;
+  final DoctorProfile? doctorProfile;
 
-  AppointmentSummaryView({required this.doctor});
+  AppointmentSummaryView({required this.doctor, this.doctorProfile});
 
   @override
   _AppointmentSummaryViewState createState() => _AppointmentSummaryViewState();
@@ -38,26 +24,46 @@ class AppointmentSummaryView extends StatefulWidget {
 
 class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
   final reasonController = TextEditingController();
-  final paymentController = TextEditingController();
-  final accountNumberController = TextEditingController();
-  final phoneNumberController = TextEditingController();
+  final ownerNameController = TextEditingController();
+  final petNameController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  File? _paymentScreenshot;
 
-  PaymentMethod selectedPaymentMethod = PaymentMethod.CreditCard;
+  Rx<PaymentMethod> selectedPaymentMethod = PaymentMethod.EasyPaisa.obs;
   double consultationFee = 800;
   final double adminFee = 100;
+
+  late AppointmentController appointmentController;
+  late DoctorDetailViewModel detailVM;
+  final List<String> animalTypes = [
+    'Dog',
+    'Cat',
+    'Cow',
+    'Goat',
+    'Bird',
+    'Horse',
+    'Buffalo',
+    'Other',
+  ];
+  RxString selectedAnimalType = 'Dog'.obs;
 
   @override
   void initState() {
     super.initState();
-    consultationFee = widget.doctor.consultationFee;
+    consultationFee = widget.doctorProfile?.consultationFee ?? widget.doctor.consultationFee;
+    appointmentController = Get.put(AppointmentController());
+    detailVM = Get.find<DoctorDetailViewModel>();
+
+    if (widget.doctorProfile == null) {
+      detailVM.fetchDoctorProfile(widget.doctor.id);
+    }
   }
 
   @override
   void dispose() {
     reasonController.dispose();
-    paymentController.dispose();
-    accountNumberController.dispose();
-    phoneNumberController.dispose();
+    ownerNameController.dispose();
+    petNameController.dispose();
     super.dispose();
   }
 
@@ -87,6 +93,72 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
     );
   }
 
+  Widget _buildOwnerPetFields(Size screen) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Owner & Pet Information", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
+        SizedBox(height: screen.height * 0.02),
+
+        TextField(
+          controller: ownerNameController,
+          decoration: InputDecoration(
+            labelText: "Owner Name *",
+            hintText: "Enter owner's full name",
+            hintStyle: TextStyle(fontSize: screen.width * 0.032),
+            fillColor: Colors.grey[100],
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(screen.width * 0.03),
+              borderSide: BorderSide.none,
+            ),
+            prefixIcon: Icon(Icons.person, color: Color(0xFF199A8E)),
+          ),
+        ),
+        SizedBox(height: screen.height * 0.015),
+        Obx(() => DropdownButtonFormField<String>(
+              value: selectedAnimalType.value,
+              items: animalTypes
+                  .map((type) => DropdownMenuItem(
+                        value: type,
+                        child: Text(type,
+                            style: TextStyle(fontSize: screen.width * 0.032)),
+                      ))
+                  .toList(),
+              onChanged: (val) {
+                if (val != null) selectedAnimalType.value = val;
+              },
+              decoration: InputDecoration(
+                labelText: "Animal Type *",
+                fillColor: Colors.grey[100],
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: Icon(Icons.pets, color: Color(0xFF199A8E)),
+              ),
+            )),
+        SizedBox(height: screen.height * 0.015),
+        TextField(
+          controller: petNameController,
+          decoration: InputDecoration(
+            labelText: "Pet Name *",
+            hintText: "Enter pet's name",
+            hintStyle: TextStyle(fontSize: screen.width * 0.032),
+            fillColor: Colors.grey[100],
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(screen.width * 0.03),
+              borderSide: BorderSide.none,
+            ),
+            prefixIcon: Icon(Icons.pets, color: Color(0xFF199A8E)),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildPaymentMethodSelector(Size screen) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,13 +166,6 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
         Text("Select Payment Method", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
         SizedBox(height: screen.height * 0.02),
 
-        _buildPaymentOption(
-          screen,
-          PaymentMethod.CreditCard,
-          "Credit/Debit Card",
-          Icons.credit_card,
-          Colors.blue,
-        ),
         _buildPaymentOption(
           screen,
           PaymentMethod.EasyPaisa,
@@ -131,24 +196,25 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
       margin: EdgeInsets.only(bottom: screen.height * 0.01),
       decoration: BoxDecoration(
         border: Border.all(
-          color: selectedPaymentMethod == method ? Color(0xFF199A8E) : Colors.grey[300]!,
-          width: selectedPaymentMethod == method ? 2 : 1,
+          color: selectedPaymentMethod.value == method
+              ? Color(0xFF199A8E)
+              : Colors.grey[300]!,
+          width: selectedPaymentMethod.value == method ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(screen.width * 0.03),
       ),
       child: CheckboxListTile(
-        value: selectedPaymentMethod == method,
+        value: selectedPaymentMethod.value == method,
         onChanged: (bool? value) {
           if (value == true) {
-            setState(() {
-              selectedPaymentMethod = method;
-            });
+            selectedPaymentMethod.value = method;
           }
         },
         title: Row(
           children: [
             Icon(icon, color: color, size: screen.width * 0.05),
             SizedBox(width: screen.width * 0.03),
+            Text(title, style: TextStyle(fontSize: screen.width * 0.035)),
             Text(title, style: TextStyle(fontSize: screen.width * 0.035)),
           ],
         ),
@@ -159,115 +225,258 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
   }
 
   Widget _buildPaymentInputFields(Size screen) {
-    switch (selectedPaymentMethod) {
-      case PaymentMethod.CreditCard:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Card Number", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
-            SizedBox(height: screen.height * 0.01),
-            TextField(
-              controller: paymentController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(19),
-                CardNumberInputFormatter(),
-              ],
-              decoration: InputDecoration(
-                hintText: "1234 5678 9012 3456",
-                hintStyle: TextStyle(fontSize: screen.width * 0.032),
-                prefixIcon: Icon(Icons.credit_card, size: screen.width * 0.05),
-                fillColor: Colors.white,
-                filled: true,
-                contentPadding: EdgeInsets.symmetric(
-                    horizontal: screen.width * 0.03,
-                    vertical: screen.height * 0.02
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(screen.width * 0.03),
-                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(screen.width * 0.03),
-                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
-                ),
-              ),
-            ),
-          ],
+    switch (selectedPaymentMethod.value) {
+      case PaymentMethod.EasyPaisa:
+        String easyPaisaNumber = _getPaymentDetail('easyPaisa');
+        return _buildDoctorPaymentDetails(
+          screen,
+          "EasyPaisa Number",
+          easyPaisaNumber,
+          Icons.phone_android,
+          Colors.green,
         );
 
-      case PaymentMethod.EasyPaisa:
       case PaymentMethod.JazzCash:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Phone Number", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
-            SizedBox(height: screen.height * 0.01),
-            TextField(
-              controller: phoneNumberController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                hintText: "03XX XXXXXXX",
-                hintStyle: TextStyle(fontSize: screen.width * 0.032),
-                prefixIcon: Icon(Icons.phone, size: screen.width * 0.05),
-                fillColor: Colors.white,
-                filled: true,
-                contentPadding: EdgeInsets.symmetric(
-                    horizontal: screen.width * 0.03,
-                    vertical: screen.height * 0.02
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(screen.width * 0.03),
-                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(screen.width * 0.03),
-                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
-                ),
-              ),
-            ),
-          ],
+        String jazzCashNumber = _getPaymentDetail('jazzCash');
+        return _buildDoctorPaymentDetails(
+          screen,
+          "JazzCash Number",
+          jazzCashNumber,
+          Icons.phone_android,
+          Colors.red,
         );
 
       case PaymentMethod.BankAccount:
+        String bankName = _getPaymentDetail('bankName');
+        String bankAccount = _getPaymentDetail('bankAccount');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Account Number", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
-            SizedBox(height: screen.height * 0.01),
-            TextField(
-              controller: accountNumberController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                hintText: "Enter account number",
-                hintStyle: TextStyle(fontSize: screen.width * 0.032),
-                prefixIcon: Icon(Icons.account_balance, size: screen.width * 0.05),
-                fillColor: Colors.white,
-                filled: true,
-                contentPadding: EdgeInsets.symmetric(
-                    horizontal: screen.width * 0.03,
-                    vertical: screen.height * 0.02
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(screen.width * 0.03),
-                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(screen.width * 0.03),
-                  borderSide: BorderSide(color: Color(0xFF199A8E), width: 1.5),
-                ),
-              ),
+            _buildDoctorPaymentDetails(
+              screen,
+              "Bank Name",
+              bankName,
+              Icons.account_balance,
+              Colors.purple,
+            ),
+            SizedBox(height: screen.height * 0.02),
+            _buildDoctorPaymentDetails(
+              screen,
+              "Account Number",
+              bankAccount,
+              Icons.account_balance_wallet,
+              Colors.purple,
             ),
           ],
         );
     }
   }
 
+  String _getPaymentDetail(String type) {
+    String value = "Not Available";
+
+    // First try to get from doctorProfile (from doctor_profiles collection)
+    if (widget.doctorProfile != null) {
+      switch (type) {
+        case 'easyPaisa':
+          value = widget.doctorProfile!.easypaisaNumber ?? value;
+          break;
+        case 'jazzCash':
+          value = widget.doctorProfile!.jazzcashNumber ?? value;
+          break;
+        case 'bankName':
+          value = widget.doctorProfile!.bankName ?? value;
+          break;
+        case 'bankAccount':
+          value = widget.doctorProfile!.bankAccountNumber ?? value;
+          break;
+      }
+    }
+
+    // If still not available, try from doctor (from doctor_verification_requests)
+    if (value == "Not Available") {
+      switch (type) {
+        case 'easyPaisa':
+          value = widget.doctor.easyPaisaNumber ?? value;
+          break;
+        case 'jazzCash':
+          value = widget.doctor.jazzCashNumber ?? value;
+          break;
+        case 'bankName':
+          value = widget.doctor.bankName ?? value;
+          break;
+        case 'bankAccount':
+          value = widget.doctor.bankAccountNumber ?? value;
+          break;
+      }
+    }
+
+    // If still not available, try from reactive doctorProfile
+    if (value == "Not Available" && detailVM.doctorProfile.value != null) {
+      switch (type) {
+        case 'easyPaisa':
+          value = detailVM.doctorProfile.value!.easypaisaNumber ?? value;
+          break;
+        case 'jazzCash':
+          value = detailVM.doctorProfile.value!.jazzcashNumber ?? value;
+          break;
+        case 'bankName':
+          value = detailVM.doctorProfile.value!.bankName ?? value;
+          break;
+        case 'bankAccount':
+          value = detailVM.doctorProfile.value!.bankAccountNumber ?? value;
+          break;
+      }
+    }
+
+    return value;
+  }
+
+  Widget _buildDoctorPaymentDetails(Size screen, String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: EdgeInsets.all(screen.width * 0.04),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(screen.width * 0.03),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: screen.width * 0.035,
+            color: color,
+          )),
+          SizedBox(height: screen.height * 0.01),
+          Row(
+            children: [
+              Icon(icon, color: color, size: screen.width * 0.05),
+              SizedBox(width: screen.width * 0.03),
+              Expanded(
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: screen.width * 0.04,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: value));
+                  Get.snackbar("Copied", "$title copied to clipboard");
+                },
+                icon: Icon(Icons.copy, color: color),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScreenshotUpload(Size screen) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Payment Screenshot", style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: screen.width * 0.035
+        )),
+        SizedBox(height: screen.height * 0.01),
+        Container(
+          width: double.infinity,
+          height: screen.height * 0.15,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(screen.width * 0.03),
+          ),
+          child: _paymentScreenshot != null
+              ? Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(screen.width * 0.03),
+                      child: kIsWeb
+                          ? Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              color: Colors.grey[300],
+                              child: Center(
+                                child: Text(
+                                  "Screenshot preview not available on Web",
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.grey),
+                                ),
+                              ),
+                            )
+                          : Image.file(
+                              _paymentScreenshot!,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _paymentScreenshot = null),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child:
+                              Icon(Icons.close, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : GestureDetector(
+                  onTap: _pickPaymentScreenshot,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.camera_alt,
+                          size: screen.width * 0.08, color: Colors.grey),
+                      SizedBox(height: screen.height * 0.01),
+                      Text("Upload Payment Screenshot",
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: screen.width * 0.035,
+                          )),
+                    ],
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickPaymentScreenshot() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
+          _paymentScreenshot = File(image.path);
+        });
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to pick image: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
-    final detailVM = Get.find<DoctorDetailViewModel>();
     final total = consultationFee + adminFee;
 
     return Scaffold(
@@ -348,7 +557,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                             Icon(Icons.location_on, size: screen.width * 0.035, color: Colors.grey),
                             Flexible(
                               child: Text(
-                                widget.doctor.clinicAddress,
+                                widget.doctorProfile?.clinicAddress ?? widget.doctor.clinicAddress,
                                 style: TextStyle(fontSize: screen.width * 0.035),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -368,7 +577,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                 Icon(Icons.calendar_today_outlined, size: screen.width * 0.035, color: Color(0xFF199A8E)),
                 SizedBox(width: screen.width * 0.03),
                 Obx(() => Text(
-                  "${detailVM.selectedDay.value.day}, ${detailVM.selectedDay.value.date} | ${detailVM.selectedTime.value}",
+                  "${detailVM.selectedDay.value?.day ?? ''}, ${detailVM.selectedDay.value?.date ?? ''} | ${detailVM.selectedTime.value}",
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: screen.width * 0.035),
                 )),
                 Spacer(),
@@ -381,6 +590,9 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
               ],
             ),
             Divider(height: screen.height * 0.05),
+
+            _buildOwnerPetFields(screen),
+            SizedBox(height: screen.height * 0.025),
 
             Text("Reason", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
             SizedBox(height: screen.height * 0.02),
@@ -408,10 +620,12 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
             Divider(),
             _paymentRow("Total", "₨ ${total.toInt()}", isBold: true),
             SizedBox(height: screen.height * 0.025),
-
-            _buildPaymentMethodSelector(screen),
+            Obx(() => _buildPaymentMethodSelector(screen)),
             SizedBox(height: screen.height * 0.02),
-            _buildPaymentInputFields(screen),
+            Obx(() => _buildPaymentInputFields(screen)),
+            SizedBox(height: screen.height * 0.025),
+
+            _buildScreenshotUpload(screen),
             SizedBox(height: screen.height * 0.025),
 
             Row(
@@ -424,7 +638,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                         fontSize: screen.width * 0.04
                     )
                 ),
-                ElevatedButton(
+                Obx(() => ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF199A8E),
                     padding: EdgeInsets.symmetric(
@@ -435,28 +649,71 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                         borderRadius: BorderRadius.circular(screen.width * 0.05)
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: appointmentController.isBookingAppointment.value ? null : () async {
+                    if (ownerNameController.text.trim().isEmpty) {
+                      Get.snackbar("Missing Info", "Please enter owner name");
+                      return;
+                    }
+
+                    if (petNameController.text.trim().isEmpty) {
+                      Get.snackbar("Missing Info", "Please enter pet name");
+                      return;
+                    }
+
                     if (reasonController.text.isEmpty) {
                       Get.snackbar("Missing Info", "Please enter reason for the appointment");
                       return;
                     }
 
-                    String paymentValidation = _validatePaymentInput();
-                    if (paymentValidation.isNotEmpty) {
-                      Get.snackbar("Invalid Payment Info", paymentValidation);
+                    if (_paymentScreenshot == null) {
+                      Get.snackbar("Missing Screenshot", "Please upload payment screenshot");
                       return;
                     }
 
-                    _showSuccessDialog(context, screen);
+                    // Set appointment controller values
+                    appointmentController.ownerName.value = ownerNameController.text.trim();
+                    appointmentController.petName.value = petNameController.text.trim();
+                              appointmentController.selectedAnimalType.value =
+                                  selectedAnimalType.value;
+                              appointmentController
+                                      .selectedPaymentMethod.value =
+                                  selectedPaymentMethod.value
+                                      .toString()
+                                      .split('.')
+                                      .last;
+                              appointmentController.paymentScreenshotPath
+                                  .value = _paymentScreenshot!.path;
+
+                              // Book appointment
+                    final success = await appointmentController.bookAppointment(
+                      doctorId: widget.doctor.id,
+                      selectedDate: detailVM.selectedDate.value?.toString() ?? '',
+                      selectedTime: detailVM.selectedTime.value,
+                      selectedDay: detailVM.selectedDay.value?.day ?? '',
+                      consultationFee: consultationFee,
+                    );
+
+                    if (success) {
+                      _showPendingDialog(context, screen);
+                    }
                   },
-                  child: Text(
-                      "Booking",
+                  child: appointmentController.isBookingAppointment.value
+                      ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : Text(
+                      "Submit Appointment",
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: screen.width * 0.035
                       )
                   ),
-                ),
+                )),
               ],
             ),
           ],
@@ -465,32 +722,10 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
     );
   }
 
-  String _validatePaymentInput() {
-    switch (selectedPaymentMethod) {
-      case PaymentMethod.CreditCard:
-        final cardNumber = paymentController.text.replaceAll(' ', '');
-        if (cardNumber.length != 16) {
-          return "Card number must be exactly 16 digits";
-        }
-        break;
-      case PaymentMethod.EasyPaisa:
-      case PaymentMethod.JazzCash:
-        if (phoneNumberController.text.isEmpty || phoneNumberController.text.length < 11) {
-          return "Please enter a valid phone number";
-        }
-        break;
-      case PaymentMethod.BankAccount:
-        if (accountNumberController.text.isEmpty) {
-          return "Please enter account number";
-        }
-        break;
-    }
-    return "";
-  }
-
-  void _showSuccessDialog(BuildContext context, Size screen) {
+  void _showPendingDialog(BuildContext context, Size screen) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
@@ -505,18 +740,18 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0XFFF5F8FF),
+                    color: Colors.orange.withOpacity(0.1),
                   ),
                   padding: EdgeInsets.all(screen.width * 0.03),
                   child: Icon(
-                      Icons.check,
+                      Icons.schedule,
                       size: screen.width * 0.1,
-                      color: Color(0xFF199A8E)
+                      color: Colors.orange
                   ),
                 ),
                 SizedBox(height: screen.height * 0.02),
                 Text(
-                  "Payment Success",
+                  "Appointment Submitted",
                   style: TextStyle(
                       fontSize: screen.width * 0.045,
                       fontWeight: FontWeight.bold
@@ -525,7 +760,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                 ),
                 SizedBox(height: screen.height * 0.01),
                 Text(
-                  "Your payment has been successful, you can have a consultation session with your trusted doctor",
+                  "Your appointment request has been submitted. Please wait for the doctor to confirm your payment and appointment.",
                   style: TextStyle(
                       fontSize: screen.width * 0.035,
                       color: Colors.grey
