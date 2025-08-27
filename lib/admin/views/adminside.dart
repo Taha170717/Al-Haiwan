@@ -22,7 +22,7 @@ class _AdminScreenState extends State<AdminScreen> {
   final AdminBottomNavController controller = Get.put(AdminBottomNavController());
   final List<Widget> pages = [
     AdminDashboard(),
-    AdminAppointment(),
+    AdminAppointmentsScreen(),
     AdminProducts(),
     AdminOrders(),
     AdminProfile(),
@@ -150,7 +150,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 icon: "assets/adminicons/appointment.png",
                 label: "Appointments",
                 onTap: () {
-                  Get.to(() => AdminAppointment());
+                  Get.to(() => AdminAppointmentsScreen());
                 },
               ),
               _buildDivider(),

@@ -10,7 +10,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../adminside.dart'; // Import AdminScreen
+import '../views/adminside.dart'; // Import AdminScreen
 
 class AddProductController extends GetxController {
   var isLoading = false.obs;

@@ -1,17 +1,17 @@
-import 'dart:async';
-
 import 'package:al_haiwan/doctor/controller/doctor_bottom_nav_Controller.dart';
 import 'package:al_haiwan/doctor/views/bottom_nav_pages/chat/chatpage.dart';
 import 'package:al_haiwan/doctor/views/bottom_nav_pages/dashboard/dashboardpage.dart';
 import 'package:al_haiwan/doctor/views/bottom_nav_pages/medicalrecords/medicalrecordpage.dart';
 import 'package:al_haiwan/doctor/views/bottom_nav_pages/profile/profilepage.dart';
-import 'package:al_haiwan/doctor/views/bottom_nav_pages/appointments/appoinmentspage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../../user/repository/screens/login/loginpage.dart';
+import 'bottom_nav_pages/appointments/appoinmentspage.dart';
 import 'dart:ui';
+
+import 'notifications/doctor_notifications_Screen.dart';
 
 class DoctorScreen extends StatefulWidget {
   const DoctorScreen({super.key});
@@ -35,122 +35,59 @@ class _DoctorScreenState extends State<DoctorScreen> {
   String? email;
   bool isDoctor = false;
   bool isVerified = false;
-  String? profileImageUrl;
   bool isLoading = true;
-  StreamSubscription<DocumentSnapshot>? _userSubscription;
-  StreamSubscription<DocumentSnapshot>? _verificationSubscription;
 
   @override
   void initState() {
     super.initState();
-    _setupUserListener();
-    _setupVerificationListener();
-    ever(controller.currentIndex, (index) => _checkVerificationForNavigation(index));
+    _fetchUserDetails();
   }
 
-  @override
-  void dispose() {
-    _userSubscription?.cancel();
-    _verificationSubscription?.cancel();
-    super.dispose();
-  }
-
-  void _setupUserListener() {
-    user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _userSubscription = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.uid)
-          .snapshots()
-          .listen((snapshot) {
+  Future<void> _fetchUserDetails() async {
+    try {
+      user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final snapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .get();
         if (snapshot.exists) {
-          final data = snapshot.data()!;
-          if (mounted) {
-            setState(() {
-              username = data['username'] ?? "Unknown";
-              email = data['email'] ?? user!.email;
-              isDoctor = data['isDoctor'] ?? false;
-              isVerified = data['isVerified'] ?? false;
-              isLoading = false;
-            });
-          }
-        } else {
-          _createUserDocument();
-        }
-      }, onError: (error) {
-        print("Error listening to user details: $error");
-        if (mounted) {
           setState(() {
+            username = snapshot.data()?['username'] ?? "Unknown";
+            email = snapshot.data()?['email'] ?? user!.email;
+            isDoctor = snapshot.data()?['isDoctor'] ?? false;
+            isVerified = snapshot.data()?['isVerified'] ?? false;
+            isLoading = false;
+          });
+        } else {
+          await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+            'username': user!.displayName ?? "Doctor",
+            'email': user!.email,
+            'isDoctor': true,
+            'isVerified': false,
+            'verificationStatus': 'pending',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          setState(() {
+            username = user!.displayName ?? "Doctor";
+            email = user!.email;
+            isDoctor = true;
+            isVerified = false;
             isLoading = false;
           });
         }
-      });
-    } else {
+      }
+    } catch (e) {
+      print("Error fetching user details: $e");
       setState(() {
         isLoading = false;
       });
     }
   }
 
-  void _setupVerificationListener() {
-    user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _verificationSubscription = FirebaseFirestore.instance
-          .collection('doctor_verification_requests')
-          .doc(user!.uid)
-          .snapshots()
-          .listen((snapshot) {
-        if (snapshot.exists && mounted) {
-          final data = snapshot.data()!;
-
-          String? imageUrl;
-
-          if (data['documents'] != null) {
-            final documents = data['documents'] as Map<String, dynamic>;
-            imageUrl = documents['profilePicture'] ??
-                documents['profileImageUrl'] ??
-                documents['profile_picture'] ??
-                documents['image_url'];
-          }
-
-          if (imageUrl == null) {
-            imageUrl = data['profilePicture'] ??
-                data['profileImageUrl'] ??
-                data['profile_picture'] ??
-                data['image_url'];
-          }
-
-          setState(() {
-            profileImageUrl = imageUrl;
-          });
-        }
-      }, onError: (error) {
-        print("Error listening to verification details: $error");
-      });
-    }
-  }
-
-  Future<void> _createUserDocument() async {
-    try {
-      await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
-        'username': user!.displayName ?? "Doctor",
-        'email': user!.email,
-        'isDoctor': true,
-        'isVerified': false,
-        'verificationStatus': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print("Error creating user document: $e");
-    }
-  }
-
   void _checkVerificationForNavigation(int targetIndex) {
     if (!isVerified && targetIndex != 4) {
-      Future.delayed(Duration.zero, () {
-        controller.changeIndex(4);
-        _showVerificationDialog();
-      });
+      _showVerificationDialog();
     }
   }
 
@@ -275,20 +212,77 @@ class _DoctorScreenState extends State<DoctorScreen> {
     if (isLoading) {
       return Scaffold(
         backgroundColor: Colors.white,
-        body: Center(
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF199A8E).withOpacity(0.1),
+                Colors.white,
+                Color(0xFF199A8E).withOpacity(0.05),
+              ],
+            ),
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(
-                color: const Color(0xFF199A8E),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "Loading your profile...",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF199A8E).withOpacity(0.2),
+                      blurRadius: 20,
+                      offset: Offset(0, 10),
+                    ),
+                  ],
                 ),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              Text(
+                "Verifying Doctor Status",
+                style: TextStyle(
+                  color: Color(0xFF199A8E),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Please wait while we load your profile...",
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(3, (index) {
+                  return AnimatedContainer(
+                    duration: Duration(milliseconds: 600 + (index * 200)),
+                    margin: EdgeInsets.symmetric(horizontal: 4),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF199A8E).withOpacity(0.7),
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                }),
               ),
             ],
           ),
@@ -309,6 +303,16 @@ class _DoctorScreenState extends State<DoctorScreen> {
         ),
         iconTheme: const IconThemeData(color: Color(0XFF199A8E)),
         actions: [
+          IconButton(
+            icon: Icon(Icons.notifications_outlined, color: Color(0xFF199A8E)),
+            onPressed: () {
+              if (!isVerified) {
+                _showVerificationDialog();
+              } else {
+                Get.to(() => DoctorNotificationsScreen());
+              }
+            },
+          ),
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -449,8 +453,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            Container(
-              height: 200,
+            UserAccountsDrawerHeader(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
@@ -459,150 +462,38 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 ),
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                          border: Border.all(color: Colors.white, width: 3),
-                        ),
-                        child: CircleAvatar(
-                          radius: 35,
-                          backgroundColor: Colors.white,
-                          child: ClipOval(
-                            child: profileImageUrl != null && profileImageUrl!.isNotEmpty
-                                ? Image.network(
-                              profileImageUrl!,
-                              width: 70,
-                              height: 70,
-                              fit: BoxFit.cover,
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) {
-                                  return child;
-                                }
-                                return Container(
-                                  width: 70,
-                                  height: 70,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      color: const Color(0xFF199A8E),
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 70,
-                                  height: 70,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[300],
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.person,
-                                    size: 40,
-                                    color: Colors.grey,
-                                  ),
-                                );
-                              },
-                            )
-                                : Container(
-                              width: 70,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        isDoctor
-                            ? "Dr. ${username ?? "Doctor"}"
-                            : "Not a Doctor",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(0, 1),
-                              blurRadius: 2,
-                              color: Colors.black26,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isDoctor ? (email ?? "No Email") : "Not Authorized",
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isVerified
-                              ? Colors.green.withOpacity(0.9)
-                              : Colors.orange.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isVerified ? Icons.verified : Icons.pending_outlined,
-                              color: Colors.white,
-                              size: 12,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              isVerified ? "Admin Verified" : "Pending Approval",
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+              currentAccountPicture: const CircleAvatar(
+                radius: 35,
+                backgroundImage: AssetImage("assets/images/user.png"),
+              ),
+              accountName: Text(
+                isDoctor ? (username ?? "Doctor") : "Not a Doctor",
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              accountEmail: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isDoctor ? (email ?? "No Email") : "Not Authorized",
+                    style: const TextStyle(fontSize: 14),
                   ),
-                ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isVerified ? Colors.green : Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isVerified ? "Admin Verified" : "Pending Approval",
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             _buildDrawerTile(
@@ -629,7 +520,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                   Get.back();
                   _showVerificationDialog();
                 } else {
-                  Get.to(() => AppointmentPage());
+                  controller.changeIndex(1);
+                  Get.back();
                 }
               },
             ),
@@ -655,7 +547,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
                   Get.back();
                   _showVerificationDialog();
                 } else {
-                  controller.changeIndex(1);
+                  controller.changeIndex(3);
                   Get.back();
                 }
               },
@@ -684,6 +576,20 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 } else {
                   controller.changeIndex(2);
                   Get.back();
+                }
+              },
+            ),
+            _buildDivider(),
+            _buildDrawerTile(
+              icon: "assets/doctor_icons/notifications.png",
+              label: "Notifications",
+              isLocked: !isVerified,
+              onTap: () {
+                if (!isVerified) {
+                  Get.back();
+                  _showVerificationDialog();
+                } else {
+                  Get.to(() => DoctorNotificationsScreen());
                 }
               },
             ),
@@ -830,13 +736,23 @@ class _DoctorScreenState extends State<DoctorScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(15),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFEFF9F8),
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFF199A8E).withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.logout,
-                      color: Color(0xFF199A8E), size: 32),
+                  child: Center(
+                    child: Icon(Icons.logout,
+                        color: Color(0xFF199A8E), size: 32),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 const Text(

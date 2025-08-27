@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'dart:io' if (dart.library.html) 'dart:io';
-import 'package:al_haiwan/admin/views/bottom_nav_pages/products/add_product_controller.dart';
+import 'package:al_haiwan/admin/controllers/add_product_controller.dart';
 import 'package:al_haiwan/admin/views/bottom_nav_pages/products/product_model.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';

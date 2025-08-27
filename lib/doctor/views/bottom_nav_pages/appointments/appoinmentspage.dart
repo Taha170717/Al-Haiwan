@@ -1,22 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class AppointmentPage extends StatefulWidget {
-  const AppointmentPage({super.key});
+import 'doctor_appointment_management_screen.dart';
 
-  @override
-  State<AppointmentPage> createState() => _AppointmentPageState();
-}
-
-class _AppointmentPageState extends State<AppointmentPage> {
+class AppointmentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.blue,
-      body: Container(child: Center(
-        child: Text("Appointment Page"),
-      ),
-      ),
-    );
+    return DoctorAppointmentsScreen();
   }
 }

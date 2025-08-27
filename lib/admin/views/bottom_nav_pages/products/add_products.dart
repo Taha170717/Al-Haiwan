@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'add_product_controller.dart';
+import '../../../controllers/add_product_controller.dart';
 
 class AddProducts extends StatelessWidget {
   AddProducts({super.key, required String productId, required Map<String, dynamic> existingData});
