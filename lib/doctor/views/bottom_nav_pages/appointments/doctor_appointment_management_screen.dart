@@ -1,19 +1,20 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 import '../../../controller/doctor_appointment_controller.dart';
 
 class DoctorAppointmentsScreen extends StatelessWidget {
   final DoctorAppointmentsController controller = Get.put(DoctorAppointmentsController());
 
+   DoctorAppointmentsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('Appointments', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Center(child: Text('Appointments', style: TextStyle(fontWeight: FontWeight.w600,fontFamily: 'bolditalic', color: Color(0xFF199A8E)))),
         backgroundColor: Colors.white,
         foregroundColor: Colors.grey[800],
         elevation: 0,
@@ -79,6 +80,34 @@ class DoctorAppointmentsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => controller.selectedTab.value = 2,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: controller.selectedTab.value == 2
+                                ? Colors.purple[600]!
+                                : Colors.transparent,
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        'Completed (${controller.completedAppointments.length})',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: controller.selectedTab.value == 2
+                              ? Colors.purple[600]
+                              : Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             )),
           ),
@@ -100,7 +129,9 @@ class DoctorAppointmentsScreen extends StatelessWidget {
 
         final appointments = controller.selectedTab.value == 0
             ? controller.pendingAppointments
-            : controller.confirmedAppointments;
+            : controller.selectedTab.value == 1
+            ? controller.confirmedAppointments
+            : controller.completedAppointments;
 
         if (appointments.isEmpty) {
           return Center(
@@ -116,7 +147,9 @@ class DoctorAppointmentsScreen extends StatelessWidget {
                   child: Icon(
                     controller.selectedTab.value == 0
                         ? Icons.pending_actions
-                        : Icons.check_circle_outline,
+                        : controller.selectedTab.value == 1
+                        ? Icons.check_circle_outline
+                        : Icons.task_alt,
                     size: 64,
                     color: Colors.grey[400],
                   ),
@@ -125,14 +158,18 @@ class DoctorAppointmentsScreen extends StatelessWidget {
                 Text(
                   controller.selectedTab.value == 0
                       ? 'No pending appointments'
-                      : 'No confirmed appointments',
+                      : controller.selectedTab.value == 1
+                      ? 'No confirmed appointments'
+                      : 'No completed appointments',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.grey[600]),
                 ),
                 SizedBox(height: 8),
                 Text(
                   controller.selectedTab.value == 0
                       ? 'New appointment requests will appear here'
-                      : 'Confirmed appointments will appear here',
+                      : controller.selectedTab.value == 1
+                      ? 'Confirmed appointments will appear here'
+                      : 'Completed appointments will appear here',
                   style: TextStyle(color: Colors.grey[500]),
                 ),
               ],
@@ -158,23 +195,26 @@ class DoctorAppointmentsScreen extends StatelessWidget {
 
   Widget _buildAppointmentCard(BuildContext context, Map<String, dynamic> appointment) {
     final isPending = appointment['status'] == 'pending';
-    final statusColor = isPending ? Colors.orange : Colors.green;
+    final isConfirmed = appointment['status'] == 'confirmed';
+    final isCompleted = appointment['status'] == 'completed';
+
+    final statusColor = isPending ? Colors.orange : isConfirmed ? Colors.green : Colors.purple;
 
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: Offset(0, 1),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -224,14 +264,12 @@ class DoctorAppointmentsScreen extends StatelessWidget {
                 ),
               ],
             ),
-
-            SizedBox(height: 20),
-
+            SizedBox(height: 10),
             Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
                 children: [
@@ -240,12 +278,14 @@ class DoctorAppointmentsScreen extends StatelessWidget {
                   _buildDetailRow(Icons.access_time, 'Time', appointment['selectedTime']),
                   _buildDetailRow(Icons.attach_money, 'Fee', 'Rs. ${appointment['consultationFee']}'),
                   _buildDetailRow(Icons.payment, 'Payment', appointment['paymentMethod']),
+                  if (appointment['reason'] != null &&
+                      appointment['reason'].toString().trim().isNotEmpty)
+                    _buildDetailRow(
+                        Icons.info_outline, 'Reason', appointment['reason']),
                 ],
               ),
             ),
-
-            SizedBox(height: 16),
-
+            SizedBox(height: 10),
             if (appointment['paymentScreenshotUrl'] != null) ...[
               Text(
                 'Payment Screenshot',
@@ -333,7 +373,7 @@ class DoctorAppointmentsScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ] else ...[
+            ] else if (isConfirmed) ...[
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -347,6 +387,30 @@ class DoctorAppointmentsScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
+                ),
+              ),
+            ] else if (isCompleted) ...[
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.purple[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.purple[200]!),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.purple[600], size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Appointment Completed',
+                      style: TextStyle(
+                        color: Colors.purple[700],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

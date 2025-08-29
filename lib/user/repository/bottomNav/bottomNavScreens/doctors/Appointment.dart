@@ -31,7 +31,8 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
 
   Rx<PaymentMethod> selectedPaymentMethod = PaymentMethod.EasyPaisa.obs;
   double consultationFee = 800;
-  final double adminFee = 100;
+
+  // final double adminFee = 100; // REMOVE
 
   late AppointmentController appointmentController;
   late DoctorDetailViewModel detailVM;
@@ -477,7 +478,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
-    final total = consultationFee + adminFee;
+    final total = consultationFee; // REMOVE adminFee addition
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -615,7 +616,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
             Text("Payment Detail", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
             SizedBox(height: screen.height * 0.02),
             _paymentRow("Consultation", "₨ ${consultationFee.toInt()}", isBold: true),
-            _paymentRow("Admin Fee", "₨ ${adminFee.toInt()}", isBold: true),
+            // _paymentRow("Admin Fee", "₨ ${adminFee.toInt()}", isBold: true), // REMOVE
             _paymentRow("Discount", "-"),
             Divider(),
             _paymentRow("Total", "₨ ${total.toInt()}", isBold: true),
@@ -683,6 +684,8 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                                       .last;
                               appointmentController.paymentScreenshotPath
                                   .value = _paymentScreenshot!.path;
+                              appointmentController.reason.value =
+                                  reasonController.text.trim();
 
                               // Book appointment
                     final success = await appointmentController.bookAppointment(

@@ -43,13 +43,23 @@ class AppointmentModel {
 
   factory AppointmentModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    Timestamp selectedDateTs;
+    var rawSelectedDate = data['selectedDate'];
+    if (rawSelectedDate is Timestamp) {
+      selectedDateTs = rawSelectedDate;
+    } else if (rawSelectedDate is String && rawSelectedDate.isNotEmpty) {
+      // Parse string to DateTime, then to Timestamp
+      selectedDateTs = Timestamp.fromDate(DateTime.parse(rawSelectedDate));
+    } else {
+      selectedDateTs = Timestamp.now();
+    }
     return AppointmentModel(
       id: doc.id,
       doctorId: data['doctorId']?.toString() ?? '',
       userId: data['userId']?.toString() ?? '',
       ownerName: data['ownerName']?.toString() ?? '',
       petName: data['petName']?.toString() ?? '',
-      selectedDate: data['selectedDate'] as Timestamp? ?? Timestamp.now(),
+      selectedDate: selectedDateTs,
       selectedTime: data['selectedTime']?.toString() ?? '',
       selectedDay: data['selectedDay']?.toString() ?? '',
       consultationFee: _parseDouble(data['consultationFee']),

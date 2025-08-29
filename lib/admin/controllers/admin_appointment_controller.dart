@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:al_haiwan/doctor/models/appointment_model.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-import '../../doctor/models/appointment_model.dart';
 
 class AdminAppointmentController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -24,34 +23,30 @@ class AdminAppointmentController extends GetxController {
 
       QuerySnapshot snapshot = await _firestore
           .collection('appointments')
-          .where('status', whereIn: ['confirmed', 'completed', 'paymentVerified'])
           .get();
 
       List<AppointmentModel> appointments = [];
 
       for (var doc in snapshot.docs) {
         try {
-          AppointmentModel appointment = AppointmentModel.fromFirestore(doc);
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-          // Fetch doctor details
-          DocumentSnapshot doctorDoc = await _firestore
-              .collection('doctor_profiles')
-              .doc(appointment.doctorId)
-              .get();
+          if (data['status'] == 'confirmed' || data['status'] == 'completed' || data['status'] == 'paymentVerified') {
+            AppointmentModel appointment =
+            AppointmentModel.fromFirestore(doc).copyWith(
+              doctorName: data['doctorName']?.toString(),
+              doctorSpecialty: data['doctorSpecialty']?.toString(),
+            );
 
-          if (doctorDoc.exists) {
-            appointment.doctorName = (doctorDoc.data() as String??['name'] ?? 'Unknown Doctor') as String?;
-            appointment.doctorSpecialty = (doctorDoc.data() as String??['specialty'] ?? '') as String?;
+            appointments.add(appointment);
           }
-
-          appointments.add(appointment);
         } catch (e) {
           print('Error processing appointment: $e');
         }
       }
 
       appointments = _filterAppointmentsByDate(appointments);
-      appointments.sort((a, b) => b.selectedDate.compareTo(a.selectedDate));
+      appointments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       confirmedAppointments.value = appointments;
     } catch (e) {

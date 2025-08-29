@@ -19,15 +19,17 @@ class AdminAppointmentsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(
-          'Confirmed Appointments',
-          style: TextStyle(
-            fontSize: isTablet ? 24 : 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        title: Center(
+          child: Text(
+            'Confirmed Appointments',
+            style: TextStyle(
+              fontSize: isTablet ? 24 : 20,
+              fontFamily: 'bolditalic',
+              color: Colors.white,
+            ),
           ),
         ),
-        backgroundColor: Colors.teal[700],
+        backgroundColor: Color(0xFF199A8E),
         elevation: 0,
         actions: [
           IconButton(
@@ -75,7 +77,7 @@ class AdminAppointmentsScreen extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: TextField(
                     onChanged: controller.updateSearchQuery,
                     decoration: InputDecoration(

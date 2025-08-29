@@ -56,11 +56,11 @@ class BottomNavScreen extends StatelessWidget {
                 label: 'Appointments',
               ),
               BottomNavigationBarItem(
-                icon: _buildNavIcon('assets/icons/category.png', 2),
+                icon: _buildNavIcon('assets/icons/category.png', 3),
                 label: 'Categories',
               ),
               BottomNavigationBarItem(
-                icon: _buildNavIcon('assets/icons/cart.png', 3),
+                icon: _buildNavIcon('assets/icons/cart.png', 4),
                 label: 'Cart',
               ),
             ],

@@ -29,8 +29,10 @@ class VerifiedDoctorsScreen extends StatelessWidget {
           'Verified Doctors',
           style: TextStyle(
             color: const Color(0xFF199A8E),
-            fontSize: titleFontSize,
+            fontSize: screenWidth * 0.055,
             fontWeight: FontWeight.bold,
+            fontFamily: 'bolditalic',
+
           ),
         ),
         centerTitle: true,

@@ -1,50 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class Appointment {
-  final String id;
-  final String doctorId;
-  final String doctorName;
-  final String doctorSpecialty;
-  final String doctorProfileImage;
-  final String petName;
-  final String date;
-  final String time;
-  final String reason;
-  final String status;
-  final DateTime createdAt;
-
-  Appointment({
-    required this.id,
-    required this.doctorId,
-    required this.doctorName,
-    required this.doctorSpecialty,
-    required this.doctorProfileImage,
-    required this.petName,
-    required this.date,
-    required this.time,
-    required this.reason,
-    required this.status,
-    required this.createdAt,
-  });
-
-  factory Appointment.fromFirestore(Map<String, dynamic> data, String id) {
-    return Appointment(
-      id: id,
-      doctorId: data['doctorId'] ?? '',
-      doctorName: data['doctorName'] ?? 'Unknown Doctor',
-      doctorSpecialty: data['doctorSpecialty'] ?? 'Veterinarian',
-      doctorProfileImage: data['doctorProfileImage'] ?? '',
-      petName: data['petName'] ?? '',
-      date: data['appointmentDate'] ?? '',
-      time: data['appointmentTime'] ?? '',
-      reason: data['reason'] ?? '',
-      status: data['status'] ?? 'pending',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-    );
-  }
-}
+import '../../../../models/appointment_model.dart';
+import 'package:intl/intl.dart';
 
 class MyAppointmentScreen extends StatelessWidget {
   @override
@@ -71,8 +31,8 @@ class MyAppointmentScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('appointments')
-            .where('userId', isEqualTo: 'current_user_id') // Replace with actual user ID
-            .orderBy('createdAt', descending: true)
+            .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid) // Replace with actual user ID
+            .where('status', whereIn: ['confirmed', 'completed'])
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -107,7 +67,7 @@ class MyAppointmentScreen extends StatelessWidget {
                   Icon(Icons.calendar_today, size: screen.width * 0.2, color: Colors.grey[300]),
                   SizedBox(height: screen.height * 0.02),
                   Text(
-                    'No appointments found.',
+                    'No confirmed appointments found.',
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: screen.width * (isTablet ? 0.03 : 0.04),
@@ -148,18 +108,7 @@ class MyAppointmentScreen extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(screen.width * 0.025),
-                        child: appointment.doctorProfileImage.isNotEmpty
-                            ? Image.network(
-                          appointment.doctorProfileImage,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: Icon(Icons.person, color: Colors.grey),
-                            );
-                          },
-                        )
-                            : Container(
+                        child: Container(
                           color: Colors.grey[200],
                           child: Icon(Icons.person, color: Colors.grey),
                         ),
@@ -178,7 +127,7 @@ class MyAppointmentScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            appointment.doctorSpecialty,
+                            'Veterinarian', // Placeholder for specialty
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: screen.width * (isTablet ? 0.025 : 0.035),
@@ -190,7 +139,9 @@ class MyAppointmentScreen extends StatelessWidget {
                               Icon(Icons.calendar_today, size: screen.width * (isTablet ? 0.03 : 0.035), color: Color(0xFF199A8E)),
                               SizedBox(width: screen.width * 0.01),
                               Text(
-                                '${appointment.date}, ${appointment.time}',
+                                _formattedDate(appointment.selectedDate) +
+                                    ', ' +
+                                    appointment.selectedTime,
                                 style: TextStyle(fontSize: screen.width * (isTablet ? 0.025 : 0.03)),
                               ),
                             ],
@@ -234,13 +185,14 @@ class MyAppointmentScreen extends StatelessWidget {
                         vertical: screen.height * 0.005,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(appointment.status).withOpacity(0.1),
+                        color: _getStatusColor(appointment.status.name)
+                            .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(screen.width * 0.02),
                       ),
                       child: Text(
-                        appointment.status.toUpperCase(),
+                        appointment.status.name.toUpperCase(),
                         style: TextStyle(
-                          color: _getStatusColor(appointment.status),
+                          color: _getStatusColor(appointment.status.name),
                           fontSize: screen.width * (isTablet ? 0.02 : 0.025),
                           fontWeight: FontWeight.bold,
                         ),
@@ -260,12 +212,26 @@ class MyAppointmentScreen extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'confirmed':
         return Colors.green;
+      case 'completed':
+        return Colors.blue;
       case 'pending':
         return Colors.orange;
       case 'cancelled':
         return Colors.red;
       default:
         return Colors.grey;
+    }
+  }
+
+  String _formattedDate(String dateStr) {
+    try {
+      final date = DateTime.tryParse(dateStr);
+      if (date != null) {
+        return DateFormat('yyyy-MM-dd').format(date);
+      }
+      return dateStr.split(' ').first;
+    } catch (_) {
+      return dateStr;
     }
   }
 }

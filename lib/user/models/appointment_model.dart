@@ -17,6 +17,8 @@ class Appointment {
   final DateTime createdAt;
   final DateTime? confirmedAt;
   final String? doctorNotes;
+  final String doctorName;
+  final String reason;
 
   Appointment({
     required this.id,
@@ -35,6 +37,8 @@ class Appointment {
     required this.createdAt,
     this.confirmedAt,
     this.doctorNotes,
+    required this.doctorName,
+    required this.reason,
   });
 
   factory Appointment.fromFirestore(Map<String, dynamic> data, String id) {
@@ -58,6 +62,8 @@ class Appointment {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       confirmedAt: (data['confirmedAt'] as Timestamp?)?.toDate(),
       doctorNotes: data['doctorNotes']?.toString(),
+      doctorName: data['doctorName']?.toString() ?? '',
+      reason: data['reason']?.toString() ?? '',
     );
   }
 
@@ -78,6 +84,8 @@ class Appointment {
       'createdAt': Timestamp.fromDate(createdAt),
       'confirmedAt': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null,
       'doctorNotes': doctorNotes,
+      'doctorName': doctorName,
+      'reason': reason,
     };
   }
 

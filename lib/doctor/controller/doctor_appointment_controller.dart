@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 
 class DoctorAppointmentsController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -10,6 +10,7 @@ class DoctorAppointmentsController extends GetxController {
 
   var pendingAppointments = <Map<String, dynamic>>[].obs;
   var confirmedAppointments = <Map<String, dynamic>>[].obs;
+  var completedAppointments = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
   var selectedTab = 0.obs;
 
@@ -36,8 +37,15 @@ class DoctorAppointmentsController extends GetxController {
             .where('status', isEqualTo: 'confirmed')
             .get();
 
+        final completedSnapshot = await _firestore
+            .collection('appointments')
+            .where('doctorId', isEqualTo: user.uid)
+            .where('status', isEqualTo: 'completed')
+            .get();
+
         var pendingDocs = pendingSnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
         var confirmedDocs = confirmedSnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+        var completedDocs = completedSnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
 
         pendingDocs.sort((a, b) {
           final aTime = a['createdAt'] as Timestamp?;
@@ -53,8 +61,16 @@ class DoctorAppointmentsController extends GetxController {
           return bTime.compareTo(aTime);
         });
 
+        completedDocs.sort((a, b) {
+          final aTime = a['completedAt'] as Timestamp? ?? a['createdAt'] as Timestamp?;
+          final bTime = b['completedAt'] as Timestamp? ?? b['createdAt'] as Timestamp?;
+          if (aTime == null || bTime == null) return 0;
+          return bTime.compareTo(aTime);
+        });
+
         pendingAppointments.value = pendingDocs;
         confirmedAppointments.value = confirmedDocs;
+        completedAppointments.value = completedDocs;
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch appointments: $e',
@@ -162,5 +178,3 @@ class DoctorAppointmentsController extends GetxController {
     }
   }
 }
-
-

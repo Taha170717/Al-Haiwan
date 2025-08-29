@@ -16,6 +16,7 @@ class AppointmentController extends GetxController {
   var isBookingAppointment = false.obs;
   var currentAppointment = Rx<Appointment?>(null);
   var selectedAnimalType = ''.obs;
+  var reason = ''.obs;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -91,6 +92,11 @@ class AppointmentController extends GetxController {
       return false;
     }
 
+    if (reason.value.isEmpty) {
+      Get.snackbar('Error', 'Please enter reason for the appointment');
+      return false;
+    }
+
     try {
       isBookingAppointment.value = true;
 
@@ -108,6 +114,13 @@ class AppointmentController extends GetxController {
       // Upload payment screenshot
       final screenshotUrl = await _uploadPaymentScreenshot(appointmentRef.id);
 
+      // Fetch doctor full name
+      final doctorDoc = await FirebaseFirestore.instance
+          .collection('doctor_verification_requests')
+          .doc(doctorId)
+          .get();
+      final doctorName = doctorDoc.data()?['basicInfo']?['fullName'] ?? '';
+
       final appointment = Appointment(
         id: appointmentRef.id,
         doctorId: doctorId,
@@ -123,6 +136,8 @@ class AppointmentController extends GetxController {
         status: AppointmentStatus.pending,
         createdAt: DateTime.now(),
         animalType: selectedAnimalType.value,
+        doctorName: doctorName,
+        reason: reason.value,
       );
 
       await appointmentRef.set(appointment.toFirestore());
@@ -169,6 +184,7 @@ class AppointmentController extends GetxController {
     paymentScreenshotPath.value = '';
     currentAppointment.value = null;
     selectedAnimalType.value = '';
+    reason.value = '';
   }
 
   @override
@@ -181,6 +197,7 @@ class AppointmentController extends GetxController {
     isBookingAppointment.close();
     currentAppointment.close();
     selectedAnimalType.close();
+    reason.close();
     super.onClose();
   }
 }
