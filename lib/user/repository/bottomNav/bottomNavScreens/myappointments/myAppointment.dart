@@ -139,9 +139,7 @@ class MyAppointmentScreen extends StatelessWidget {
                               Icon(Icons.calendar_today, size: screen.width * (isTablet ? 0.03 : 0.035), color: Color(0xFF199A8E)),
                               SizedBox(width: screen.width * 0.01),
                               Text(
-                                _formattedDate(appointment.selectedDate) +
-                                    ', ' +
-                                    appointment.selectedTime,
+                                _formattedDate(appointment.selectedDate) + ', ' + appointment.selectedTime,
                                 style: TextStyle(fontSize: screen.width * (isTablet ? 0.025 : 0.03)),
                               ),
                             ],

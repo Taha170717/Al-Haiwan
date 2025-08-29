@@ -34,9 +34,13 @@ class _LoginpageState extends State<Loginpage> {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
               child: Column(
+
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(height: screenHeight * 0.02),
+
+                  Image.asset('assets/images/logo3.png',width: 200,height: 200,),
+                  SizedBox(height: screenHeight * 0.01),
                   Text(
                     "Welcome Back!",
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0XFF199A8E)),
@@ -44,7 +48,7 @@ class _LoginpageState extends State<Loginpage> {
                   SizedBox(height: screenHeight * 0.01),
                   Text(
                     "Login to your account",
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: TextStyle(fontSize: 16, color: Color(0XFF199A8E), fontFamily: 'bolditalic'),
                   ),
                   SizedBox(height: screenHeight * 0.06),
                   buildTextField(emailController, "Email", Icons.email_outlined),

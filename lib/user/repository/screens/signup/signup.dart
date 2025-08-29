@@ -74,7 +74,14 @@ class _SignupState extends State<Signup> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(height: screenHeight * 0.05),
+                      SizedBox(height: screenHeight * 0.03),
+
+                      Image.asset(
+                        'assets/images/logo3.png',
+                        width: screenWidth * 0.4,
+                        height: screenWidth * 0.4,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
                       buildTextField(
                         username,
                         "Username",
