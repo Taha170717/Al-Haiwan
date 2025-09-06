@@ -5,8 +5,10 @@ class Appointment {
   final String doctorId;
   final String userId;
   final String ownerName;
-  final String petName;
-  final String animalType;
+  final String? petName; // Optional for pets only
+  final String? petType; // Optional for pets only (Dog, Cat, etc.)
+  final int? numberOfPatients; // Optional for livestock/poultry
+  final ConsultationType consultationType; // Pet, Livestock, or Poultry
   final String selectedDate;
   final String selectedTime;
   final String selectedDay;
@@ -15,6 +17,7 @@ class Appointment {
   final String? paymentScreenshotUrl;
   final AppointmentStatus status;
   final DateTime createdAt;
+  final String? doctorprofilepic;
   final DateTime? confirmedAt;
   final String? doctorNotes;
   final String doctorName;
@@ -25,10 +28,13 @@ class Appointment {
     required this.doctorId,
     required this.userId,
     required this.ownerName,
-    required this.petName,
-    required this.animalType,
+    this.petName,
+    this.petType,
+    this.numberOfPatients,
+    required this.consultationType,
     required this.selectedDate,
     required this.selectedTime,
+    this.doctorprofilepic,
     required this.selectedDay,
     required this.consultationFee,
     required this.paymentMethod,
@@ -47,8 +53,13 @@ class Appointment {
       doctorId: data['doctorId']?.toString() ?? '',
       userId: data['userId']?.toString() ?? '',
       ownerName: data['ownerName']?.toString() ?? '',
-      petName: data['petName']?.toString() ?? '',
-      animalType: data['animalType']?.toString() ?? '',
+      petName: data['petName']?.toString(),
+      petType: data['petType']?.toString(),
+      numberOfPatients: data['numberOfPatients'] as int?,
+      consultationType: ConsultationType.values.firstWhere(
+            (e) => e.toString().split('.').last == data['consultationType'],
+        orElse: () => ConsultationType.pet,
+      ),
       selectedDate: data['selectedDate']?.toString() ?? '',
       selectedTime: data['selectedTime']?.toString() ?? '',
       selectedDay: data['selectedDay']?.toString() ?? '',
@@ -64,6 +75,7 @@ class Appointment {
       doctorNotes: data['doctorNotes']?.toString(),
       doctorName: data['doctorName']?.toString() ?? '',
       reason: data['reason']?.toString() ?? '',
+      doctorprofilepic: data['doctorprofilepic']?.toString(),
     );
   }
 
@@ -73,7 +85,9 @@ class Appointment {
       'userId': userId,
       'ownerName': ownerName,
       'petName': petName,
-      'animalType': animalType,
+      'petType': petType,
+      'numberOfPatients': numberOfPatients,
+      'consultationType': consultationType.toString().split('.').last,
       'selectedDate': selectedDate,
       'selectedTime': selectedTime,
       'selectedDay': selectedDay,
@@ -86,6 +100,7 @@ class Appointment {
       'doctorNotes': doctorNotes,
       'doctorName': doctorName,
       'reason': reason,
+      'doctorprofilepic': doctorprofilepic,
     };
   }
 
@@ -96,6 +111,12 @@ class Appointment {
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
   }
+}
+
+enum ConsultationType {
+  pet,
+  livestock,
+  poultry
 }
 
 enum AppointmentStatus {

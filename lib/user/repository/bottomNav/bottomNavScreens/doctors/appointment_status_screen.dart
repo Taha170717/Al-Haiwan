@@ -158,8 +158,49 @@ class _AppointmentStatusScreenState extends State<AppointmentStatusScreen> {
           ),
           SizedBox(height: screen.height * 0.015),
 
+          // Doctor Profile Picture and Name
+          Row(
+            children: [
+              CircleAvatar(
+                radius: screen.width * 0.06,
+                backgroundImage: appointment.doctorprofilepic != null && appointment.doctorprofilepic!.isNotEmpty
+                    ? NetworkImage(appointment.doctorprofilepic!)
+                    : null,
+                child: appointment.doctorprofilepic == null || appointment.doctorprofilepic!.isEmpty
+                    ? Icon(Icons.person, size: screen.width * 0.06, color: Colors.grey)
+                    : null,
+              ),
+              SizedBox(width: screen.width * 0.03),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dr. ${appointment.doctorName}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: screen.width * 0.04,
+                      ),
+                    ),
+                    Text(
+                      'Veterinarian',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: screen.width * 0.035,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: screen.height * 0.015),
+
           _buildInfoRow(screen, Icons.person, 'Owner', appointment.ownerName),
-          _buildInfoRow(screen, Icons.pets, 'Pet', appointment.petName),
+
+          // Dynamic consultation type display
+          _buildConsultationTypeInfo(screen, appointment),
+
           _buildInfoRow(screen, Icons.calendar_today, 'Date', '${appointment.selectedDay}, ${appointment.selectedDate}'),
           _buildInfoRow(screen, Icons.access_time, 'Time', appointment.selectedTime),
           _buildInfoRow(screen, Icons.payment, 'Payment', appointment.paymentMethod),
@@ -221,6 +262,32 @@ class _AppointmentStatusScreenState extends State<AppointmentStatusScreen> {
       ),
     );
   }
+
+  Widget _buildConsultationTypeInfo(Size screen, Appointment appointment) {
+    // Handle backward compatibility - if consultationType is not available, use petName to determine type
+    ConsultationType consultationType;
+    try {
+      consultationType = appointment.consultationType;
+    } catch (e) {
+      // For backward compatibility with old appointments that might not have consultationType
+      consultationType = appointment.petName != null ? ConsultationType.pet : ConsultationType.livestock;
+    }
+
+    switch (consultationType) {
+      case ConsultationType.pet:
+        return Column(
+          children: [
+            _buildInfoRow(screen, Icons.pets, 'Pet Type', appointment.petType ?? 'Not specified'),
+            _buildInfoRow(screen, Icons.favorite, 'Pet Name', appointment.petName ?? 'Not specified'),
+          ],
+        );
+      case ConsultationType.livestock:
+        return _buildInfoRow(screen, Icons.agriculture, 'Livestock Count', '${appointment.numberOfPatients ?? 1} animals');
+      case ConsultationType.poultry:
+        return _buildInfoRow(screen, Icons.egg, 'Poultry Count', '${appointment.numberOfPatients ?? 1} birds');
+    }
+  }
+
 
   Widget _buildInfoRow(Size screen, IconData icon, String label, String value) {
     return Padding(

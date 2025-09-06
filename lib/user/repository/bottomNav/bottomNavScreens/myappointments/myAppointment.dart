@@ -108,7 +108,30 @@ class MyAppointmentScreen extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(screen.width * 0.025),
-                        child: Container(
+                        child: appointment.doctorprofilepic != null && appointment.doctorprofilepic!.isNotEmpty
+                            ? Image.network(
+                          appointment.doctorprofilepic!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: Icon(Icons.person, color: Colors.grey),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey[200],
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                            : Container(
                           color: Colors.grey[200],
                           child: Icon(Icons.person, color: Colors.grey),
                         ),
@@ -127,7 +150,7 @@ class MyAppointmentScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'Veterinarian', // Placeholder for specialty
+                            'Veterinarian',
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: screen.width * (isTablet ? 0.025 : 0.035),
@@ -145,19 +168,10 @@ class MyAppointmentScreen extends StatelessWidget {
                             ],
                           ),
                           SizedBox(height: screen.height * 0.005),
-                          Row(
-                            children: [
-                              Icon(Icons.pets, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
-                              SizedBox(width: screen.width * 0.01),
-                              Text(
-                                appointment.petName,
-                                style: TextStyle(
-                                  fontSize: screen.width * (isTablet ? 0.025 : 0.03),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+
+                          // Dynamic consultation type display
+                          _buildConsultationInfo(appointment, screen, isTablet),
+
                           SizedBox(height: screen.height * 0.005),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,6 +191,7 @@ class MyAppointmentScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+
                     Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: screen.width * 0.02,
@@ -205,6 +220,82 @@ class MyAppointmentScreen extends StatelessWidget {
       ),
     );
   }
+  Widget _buildConsultationInfo(Appointment appointment, Size screen, bool isTablet) {
+    // Handle backward compatibility - if consultationType is not available, use petName to determine type
+    ConsultationType consultationType;
+    try {
+      consultationType = appointment.consultationType;
+    } catch (e) {
+      // For backward compatibility with old appointments
+      consultationType = appointment.petName != null ? ConsultationType.pet : ConsultationType.livestock;
+    }
+
+    switch (consultationType) {
+      case ConsultationType.pet:
+        return Column(
+          children: [
+            if (appointment.petType != null) ...[
+              Row(
+                children: [
+                  Icon(Icons.category, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
+                  SizedBox(width: screen.width * 0.01),
+                  Text(
+                    appointment.petType!,
+                    style: TextStyle(
+                      fontSize: screen.width * (isTablet ? 0.025 : 0.03),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: screen.height * 0.005),
+            ],
+            Row(
+              children: [
+                Icon(Icons.pets, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
+                SizedBox(width: screen.width * 0.01),
+                Text(
+                  appointment.petName ?? 'Pet',
+                  style: TextStyle(
+                    fontSize: screen.width * (isTablet ? 0.025 : 0.03),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      case ConsultationType.livestock:
+        return Row(
+          children: [
+            Icon(Icons.agriculture, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
+            SizedBox(width: screen.width * 0.01),
+            Text(
+              '${appointment.numberOfPatients ?? 1} Livestock Animals',
+              style: TextStyle(
+                fontSize: screen.width * (isTablet ? 0.025 : 0.03),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        );
+      case ConsultationType.poultry:
+        return Row(
+          children: [
+            Icon(Icons.egg, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
+            SizedBox(width: screen.width * 0.01),
+            Text(
+              '${appointment.numberOfPatients ?? 1} Poultry Birds',
+              style: TextStyle(
+                fontSize: screen.width * (isTablet ? 0.025 : 0.03),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        );
+    }
+  }
+
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {

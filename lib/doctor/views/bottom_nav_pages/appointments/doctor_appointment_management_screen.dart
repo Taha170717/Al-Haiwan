@@ -273,7 +273,7 @@ class DoctorAppointmentsScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildDetailRow(Icons.pets, 'Animal Type', appointment['animalType']),
+                  _buildDetailRow(Icons.pets, 'Consultation Type', appointment['consultationType']),
                   _buildDetailRow(Icons.calendar_today, 'Date', '${appointment['selectedDay']}, ${appointment['selectedDate']?.toString().split(' ')[0]}'),
                   _buildDetailRow(Icons.access_time, 'Time', appointment['selectedTime']),
                   _buildDetailRow(Icons.attach_money, 'Fee', 'Rs. ${appointment['consultationFee']}'),

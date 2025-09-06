@@ -20,7 +20,83 @@ class AuthController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _verificationId = "";
 
-  /// Send OTP to phone
+  // Helper method for beautiful snackbars
+  void _showSnackbar({
+    required String title,
+    required String message,
+    required SnackbarType type,
+    Duration? duration,
+  }) {
+    Color backgroundColor;
+    Color iconColor;
+    IconData icon;
+
+    switch (type) {
+      case SnackbarType.success:
+        backgroundColor = Color(0xFF4CAF50);
+        iconColor = Colors.white;
+        icon = Icons.check_circle_rounded;
+        break;
+      case SnackbarType.error:
+        backgroundColor = Color(0xFFE53E3E);
+        iconColor = Colors.white;
+        icon = Icons.error_rounded;
+        break;
+      case SnackbarType.warning:
+        backgroundColor = Color(0xFFFF9800);
+        iconColor = Colors.white;
+        icon = Icons.warning_rounded;
+        break;
+      case SnackbarType.info:
+        backgroundColor = Color(0xFF199A8E);
+        iconColor = Colors.white;
+        icon = Icons.info_rounded;
+        break;
+    }
+
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: backgroundColor,
+      colorText: Colors.white,
+      icon: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          color: iconColor,
+          size: 24,
+        ),
+      ),
+      snackPosition: SnackPosition.TOP,
+      margin: EdgeInsets.all(16),
+      borderRadius: 16,
+      duration: duration ?? Duration(seconds: 4),
+      animationDuration: Duration(milliseconds: 800),
+      forwardAnimationCurve: Curves.elasticOut,
+      reverseAnimationCurve: Curves.fastOutSlowIn,
+      boxShadows: [
+        BoxShadow(
+          color: backgroundColor.withOpacity(0.3),
+          spreadRadius: 2,
+          blurRadius: 12,
+          offset: Offset(0, 4),
+        ),
+      ],
+      mainButton: TextButton(
+        onPressed: () => Get.closeCurrentSnackbar(),
+        child: Icon(
+          Icons.close_rounded,
+          color: Colors.white.withOpacity(0.8),
+          size: 20,
+        ),
+      ),
+    );
+  }
+
   /// Send OTP to phone and link to associated email
   Future<void> sendResetCodeToPhone({required String phoneNumber}) async {
     try {
@@ -35,7 +111,11 @@ class AuthController extends GetxController {
 
       if (userDoc.docs.isEmpty) {
         print("No user found with this phone number: $phoneNumber");
-        Get.snackbar("Error", "No account found with this phone number");
+        _showSnackbar(
+          title: "Account Not Found",
+          message: "No account found with this phone number",
+          type: SnackbarType.error,
+        );
         return;
       }
 
@@ -50,15 +130,29 @@ class AuthController extends GetxController {
         timeout: const Duration(seconds: 60),
         verificationCompleted: (PhoneAuthCredential credential) async {
           print("Auto-verification completed for phone: $phoneNumber"); // Debugging Log
-          Get.snackbar("Info", "Auto-verification completed.");
+          _showSnackbar(
+            title: "Auto-Verification Complete",
+            message: "Phone number verified automatically",
+            type: SnackbarType.success,
+          );
         },
         verificationFailed: (FirebaseAuthException e) {
           print("Phone verification failed: ${e.message}"); // Debugging Log
-          Get.snackbar("Error", "Failed to send OTP: ${e.message}");
+          _showSnackbar(
+            title: "Verification Failed",
+            message: "Failed to send OTP: ${e.message}",
+            type: SnackbarType.error,
+          );
         },
         codeSent: (String verificationId, int? resendToken) {
           _verificationId = verificationId;
           print("OTP successfully sent to phone: $phoneNumber"); // Debugging Log
+
+          _showSnackbar(
+            title: "OTP Sent Successfully",
+            message: "Please check your phone for the verification code",
+            type: SnackbarType.success,
+          );
 
           Get.to(() => Verification(
             contactInfo: phoneNumber,
@@ -73,7 +167,11 @@ class AuthController extends GetxController {
       );
     } catch (e) {
       print("Error sending reset code to phone: $e"); // Debugging Log
-      Get.snackbar("Error", "Failed to send OTP: $e");
+      _showSnackbar(
+        title: "Network Error",
+        message: "Failed to send OTP. Please check your connection",
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -103,13 +201,23 @@ class AuthController extends GetxController {
         'verifiedAt': FieldValue.serverTimestamp()
       });
 
+      _showSnackbar(
+        title: "Verification Successful",
+        message: "Phone number verified! You can now reset your password",
+        type: SnackbarType.success,
+      );
+
       // Navigate to password reset screen with Email linked
       Get.to(() => CreateNewPass(
         email: emailLinked,
         isEmail: true, resetCode: '', destination: '', // To show old password if needed
       ));
     } catch (e) {
-      Get.snackbar("Error", "Failed to verify OTP: $e");
+      _showSnackbar(
+        title: "Verification Failed",
+        message: "Invalid OTP. Please try again",
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -134,16 +242,16 @@ class AuthController extends GetxController {
       final otp = _generateOTP();
       final otpRef = _firestore.collection('otp_verifications').doc(email);
 
-      // ✅ Delete old OTP if it exists
+      // Delete old OTP if it exists
       final existingDoc = await otpRef.get();
       if (existingDoc.exists) {
         await otpRef.delete();
       }
 
-      // ✅ Email setup
+      // Email setup
       final smtpServer = gmail(
         'tahazafar112@gmail.com',
-        'fyua tkso jhpq ncmv', // ⚠️ Store in env/secure vault in production
+        'fyua tkso jhpq ncmv', // Store in env/secure vault in production
       );
 
       final message = Message()
@@ -152,10 +260,10 @@ class AuthController extends GetxController {
         ..subject = 'Your OTP Code for Password Reset'
         ..text = 'Your OTP code is: $otp.\n\nThis code is valid for 5 minutes.';
 
-      // ✅ Send the email
+      // Send the email
       await send(message, smtpServer);
 
-      // ✅ Save OTP to Firestore
+      // Save OTP to Firestore
       await otpRef.set({
         'otp': otp,
         'createdAt': FieldValue.serverTimestamp(),
@@ -163,10 +271,19 @@ class AuthController extends GetxController {
         'used': false,
       });
 
-      Get.snackbar("Success", "OTP sent to your email.");
+      _showSnackbar(
+        title: "OTP Sent Successfully",
+        message: "Please check your email for the verification code",
+        type: SnackbarType.success,
+      );
+
       Get.to(() => Verification(contactInfo: email, isEmail: true, emailLinked: '',));
     } catch (e) {
-      Get.snackbar("Error", "Failed to send OTP: ${e.toString()}");
+      _showSnackbar(
+        title: "Email Send Failed",
+        message: "Failed to send OTP. Please try again",
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -182,7 +299,11 @@ class AuthController extends GetxController {
       final doc = await _firestore.collection('otp_verifications').doc(contactInfo).get();
 
       if (!doc.exists) {
-        Get.snackbar("Error", "No OTP found. Please request a new one.");
+        _showSnackbar(
+          title: "OTP Not Found",
+          message: "No OTP found. Please request a new one",
+          type: SnackbarType.warning,
+        );
         return;
       }
 
@@ -193,17 +314,30 @@ class AuthController extends GetxController {
       final used = data?['used'] ?? false;
 
       if (used == true) {
-        Get.snackbar("Error", "OTP has already been used.");
+        _showSnackbar(
+          title: "OTP Already Used",
+          message: "This OTP has already been used. Please request a new one",
+          type: SnackbarType.warning,
+        );
         return;
       }
 
       if (storedOtp != userOtp) {
-        Get.snackbar("Error", "Incorrect OTP.");
+        _showSnackbar(
+          title: "Incorrect OTP",
+          message: "The OTP you entered is incorrect. Please try again",
+          type: SnackbarType.error,
+        );
         return;
       }
+
       if (createdAt == null ||
           DateTime.now().difference(createdAt.toDate()).inMinutes > 5) {
-        Get.snackbar("Error", "OTP has expired.");
+        _showSnackbar(
+          title: "OTP Expired",
+          message: "Your OTP has expired. Please request a new one",
+          type: SnackbarType.warning,
+        );
         // 🟢 ADD THIS LINE TO AUTO DELETE
         await _firestore.collection('otp_verifications').doc(contactInfo).delete().catchError((_) {});
         return;
@@ -218,9 +352,19 @@ class AuthController extends GetxController {
 
       await _firestore.collection('otp_verifications').doc(contactInfo).update({'used': true});
 
+      _showSnackbar(
+        title: "OTP Verified Successfully",
+        message: "You can now create a new password",
+        type: SnackbarType.success,
+      );
+
       Get.to(() => CreateNewPass(email: contactInfo, resetCode: '', destination: '', isEmail: true,));
     } catch (e) {
-      Get.snackbar("Error", "Failed to verify OTP: $e");
+      _showSnackbar(
+        title: "Verification Error",
+        message: "Failed to verify OTP. Please try again",
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -242,13 +386,26 @@ class AuthController extends GetxController {
           await _firestore.collection('otp_verifications').doc(email).delete().catchError((_) {});
         }
 
-        Get.snackbar("Success", "Password has been reset successfully.");
+        _showSnackbar(
+          title: "Password Reset Successful",
+          message: "Your password has been updated successfully",
+          type: SnackbarType.success,
+        );
+
         Get.offAll(() => Loginpage());
       } else {
-        Get.snackbar("Error", "No user is logged in.");
+        _showSnackbar(
+          title: "Session Expired",
+          message: "Please restart the password reset process",
+          type: SnackbarType.warning,
+        );
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to reset password: $e");
+      _showSnackbar(
+        title: "Password Reset Failed",
+        message: "Failed to reset password. Please try again",
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -271,10 +428,20 @@ class AuthController extends GetxController {
 
       await userCredential.user?.updatePassword(newPassword);
 
-      Get.snackbar("Success", "Password reset successfully.");
+      _showSnackbar(
+        title: "Password Updated",
+        message: "Your password has been changed successfully",
+        type: SnackbarType.success,
+      );
+
       Get.offAll(() => Loginpage());
     } catch (e) {
-      Get.snackbar("Error", "Reset failed: $e");
+      _showSnackbar(
+        title: "Password Change Failed",
+        message:
+            "Failed to change password. Please check your current password",
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -344,10 +511,29 @@ class AuthController extends GetxController {
       await batch.commit();
 
       // 5) Navigate based on user type
-      Get.snackbar('Success', 'Account created successfully');
+      _showSnackbar(
+        title: "Registration Successful",
+        message: "Welcome to Al-Haiwan! Your account has been created",
+        type: SnackbarType.success,
+        duration: Duration(seconds: 3),
+      );
+
       showSuccessDialog();
     } on FirebaseAuthException catch (e) {
-      Get.snackbar('Error', e.message ?? 'Registration failed');
+      String errorMessage = "Registration failed";
+      if (e.code == 'email-already-in-use') {
+        errorMessage = "This email is already registered";
+      } else if (e.code == 'weak-password') {
+        errorMessage = "Password is too weak";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "Invalid email address";
+      }
+
+      _showSnackbar(
+        title: "Registration Failed",
+        message: errorMessage,
+        type: SnackbarType.error,
+      );
     } catch (e) {
       // If Firestore write failed after auth creation, try to rollback the auth user
       try {
@@ -355,7 +541,11 @@ class AuthController extends GetxController {
       } catch (_) {
         // ignore cleanup errors
       }
-      Get.snackbar('Error', 'Failed to register: $e');
+      _showSnackbar(
+        title: "Registration Error",
+        message: "Something went wrong. Please try again",
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -375,15 +565,10 @@ class AuthController extends GetxController {
 
       // Admin Check
       if (email == "tahazafar112@gmail.com") {
-        Get.snackbar(
-          "Success",
-          "Admin login successful!",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          icon: const Icon(Icons.admin_panel_settings, color: Colors.white),
-          snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(10),
-          borderRadius: 10,
+        _showSnackbar(
+          title: "Admin Access Granted",
+          message: "Welcome back, Administrator!",
+          type: SnackbarType.success,
         );
         Get.offAll(() => AdminScreen());
         return;
@@ -393,16 +578,40 @@ class AuthController extends GetxController {
       final userDoc = await _firestore.collection('users').doc(uid).get();
 
       if (!userDoc.exists) {
-        Get.snackbar("Error", "User record not found in database.");
+        _showSnackbar(
+          title: "Account Error",
+          message: "User record not found. Please contact support",
+          type: SnackbarType.error,
+        );
         return;
       }
 
       final isDoctor = userDoc['isDoctor'] ?? false;
 
-      Get.snackbar("Success", "Logged in successfully!");
+      _showSnackbar(
+        title: "Login Successful",
+        message: "Welcome back! Redirecting to your dashboard",
+        type: SnackbarType.success,
+      );
+
       showLoginSuccessDialog(isDoctor: isDoctor, email: '');
     } on FirebaseAuthException catch (e) {
-      Get.snackbar("Login Error", e.message ?? "Unknown error.");
+      String errorMessage = "Login failed";
+      if (e.code == 'user-not-found') {
+        errorMessage = "No account found with this email";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Incorrect password";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "Invalid email address";
+      } else if (e.code == 'user-disabled') {
+        errorMessage = "This account has been disabled";
+      }
+
+      _showSnackbar(
+        title: "Login Failed",
+        message: errorMessage,
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -415,7 +624,14 @@ class AuthController extends GetxController {
       isLoading.value = true;
 
       final googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+      if (googleUser == null) {
+        _showSnackbar(
+          title: "Sign-in Cancelled",
+          message: "Google sign-in was cancelled",
+          type: SnackbarType.info,
+        );
+        return;
+      }
 
       final googleAuth = await googleUser.authentication;
 
@@ -434,12 +650,27 @@ class AuthController extends GetxController {
           'isDoctor': false,
           'createdAt': Timestamp.now(),
         });
+
+        _showSnackbar(
+          title: "Account Created",
+          message: "Welcome to Al-Haiwan! Your Google account has been linked",
+          type: SnackbarType.success,
+        );
+      } else {
+        _showSnackbar(
+          title: "Welcome Back",
+          message: "Successfully signed in with Google",
+          type: SnackbarType.success,
+        );
       }
 
-      Get.snackbar("Success", "Google Sign-In successful.");
       showLoginSuccessDialog(isDoctor: false, email: '');
     } catch (e) {
-      Get.snackbar("Error", "Google Sign-In failed: $e");
+      _showSnackbar(
+        title: "Google Sign-in Failed",
+        message: "Failed to sign in with Google. Please try again",
+        type: SnackbarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -540,3 +771,5 @@ class AuthController extends GetxController {
   }
 
 }
+
+enum SnackbarType { success, error, warning, info }

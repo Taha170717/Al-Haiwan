@@ -6,9 +6,11 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../../doctor/models/doctor_availability_model.dart';
 import '../../../../controllers/appointment_controller.dart';
+import '../../../../models/appointment_model.dart';
 import '../../../../models/doctor_detail_viewmodel.dart' hide DoctorProfile;
 import '../../../../models/doctor_list_viewmodel.dart';
 import '../../bottomNavScreen.dart';
+import '../../../../../utils/snackbar_utils.dart';
 
 enum PaymentMethod { EasyPaisa, JazzCash, BankAccount }
 
@@ -36,16 +38,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
 
   late AppointmentController appointmentController;
   late DoctorDetailViewModel detailVM;
-  final List<String> animalTypes = [
-    'Dog',
-    'Cat',
-    'Cow',
-    'Goat',
-    'Bird',
-    'Horse',
-    'Buffalo',
-    'Other',
-  ];
+
   RxString selectedAnimalType = 'Dog'.obs;
 
   @override
@@ -98,9 +91,21 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Owner & Pet Information", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
+        Text("Consultation Type", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
         SizedBox(height: screen.height * 0.02),
 
+        // Consultation Type Selector
+        Obx(() => Column(
+          children: [
+            _buildConsultationOption(screen, ConsultationType.pet, "Pet", Icons.pets),
+            _buildConsultationOption(screen, ConsultationType.livestock, "Livestock", Icons.agriculture),
+            _buildConsultationOption(screen, ConsultationType.poultry, "Poultry", Icons.egg),
+          ],
+        )),
+
+        SizedBox(height: screen.height * 0.02),
+
+        // Owner Name (always shown)
         TextField(
           controller: ownerNameController,
           decoration: InputDecoration(
@@ -116,21 +121,66 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
             prefixIcon: Icon(Icons.person, color: Color(0xFF199A8E)),
           ),
         ),
+
         SizedBox(height: screen.height * 0.015),
-        Obx(() => DropdownButtonFormField<String>(
-              value: selectedAnimalType.value,
-              items: animalTypes
+
+        // Dynamic fields based on consultation type
+        Obx(() => _buildDynamicFields(screen)),
+      ],
+    );
+  }
+
+  Widget _buildConsultationOption(Size screen, ConsultationType type, String title, IconData icon) {
+    return Container(
+      margin: EdgeInsets.only(bottom: screen.height * 0.01),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: appointmentController.consultationType.value == type
+              ? Color(0xFF199A8E)
+              : Colors.grey[300]!,
+          width: appointmentController.consultationType.value == type ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(screen.width * 0.03),
+      ),
+      child: RadioListTile<ConsultationType>(
+        value: type,
+        groupValue: appointmentController.consultationType.value,
+        onChanged: (ConsultationType? value) {
+          if (value != null) {
+            appointmentController.consultationType.value = value;
+          }
+        },
+        title: Row(
+          children: [
+            Icon(icon, color: Color(0xFF199A8E), size: screen.width * 0.05),
+            SizedBox(width: screen.width * 0.03),
+            Text(title, style: TextStyle(fontSize: screen.width * 0.035)),
+          ],
+        ),
+        activeColor: Color(0xFF199A8E),
+      ),
+    );
+  }
+
+  Widget _buildDynamicFields(Size screen) {
+    switch (appointmentController.consultationType.value) {
+      case ConsultationType.pet:
+        return Column(
+          children: [
+            // Pet Type Dropdown
+            DropdownButtonFormField<String>(
+              value: appointmentController.petType.value.isEmpty ? null : appointmentController.petType.value,
+              items: appointmentController.petTypes
                   .map((type) => DropdownMenuItem(
-                        value: type,
-                        child: Text(type,
-                            style: TextStyle(fontSize: screen.width * 0.032)),
-                      ))
+                value: type,
+                child: Text(type, style: TextStyle(fontSize: screen.width * 0.032)),
+              ))
                   .toList(),
               onChanged: (val) {
-                if (val != null) selectedAnimalType.value = val;
+                if (val != null) appointmentController.petType.value = val;
               },
               decoration: InputDecoration(
-                labelText: "Animal Type *",
+                labelText: "Pet Type *",
                 fillColor: Colors.grey[100],
                 filled: true,
                 border: OutlineInputBorder(
@@ -139,26 +189,54 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                 ),
                 prefixIcon: Icon(Icons.pets, color: Color(0xFF199A8E)),
               ),
-            )),
-        SizedBox(height: screen.height * 0.015),
-        TextField(
-          controller: petNameController,
-          decoration: InputDecoration(
-            labelText: "Pet Name *",
-            hintText: "Enter pet's name",
-            hintStyle: TextStyle(fontSize: screen.width * 0.032),
-            fillColor: Colors.grey[100],
-            filled: true,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(screen.width * 0.03),
-              borderSide: BorderSide.none,
             ),
-            prefixIcon: Icon(Icons.pets, color: Color(0xFF199A8E)),
-          ),
-        ),
-      ],
-    );
+            SizedBox(height: screen.height * 0.015),
+            // Pet Name
+            TextField(
+              controller: petNameController,
+              decoration: InputDecoration(
+                labelText: "Pet Name *",
+                hintText: "Enter pet's name",
+                hintStyle: TextStyle(fontSize: screen.width * 0.032),
+                fillColor: Colors.grey[100],
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: Icon(Icons.pets, color: Color(0xFF199A8E)),
+              ),
+            ),
+          ],
+        );
+
+      case ConsultationType.livestock:
+      case ConsultationType.poultry:
+        return Column(
+          children: [
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: "Number of ${appointmentController.consultationType.value.name.capitalize} *",
+                hintText: "Enter number of animals",
+                hintStyle: TextStyle(fontSize: screen.width * 0.032),
+                fillColor: Colors.grey[100],
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screen.width * 0.03),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: Icon(Icons.numbers, color: Color(0xFF199A8E)),
+              ),
+              onChanged: (value) {
+                appointmentController.numberOfPatients.value = int.tryParse(value) ?? 1;
+              },
+            ),
+          ],
+        );
+    }
   }
+
 
   Widget _buildPaymentMethodSelector(Size screen) {
     return Column(
@@ -366,7 +444,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
               IconButton(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: value));
-                  Get.snackbar("Copied", "$title copied to clipboard");
+                  SnackbarUtils.showCopied(title);
                 },
                 icon: Icon(Icons.copy, color: color),
               ),
@@ -471,7 +549,7 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
         });
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to pick image: $e");
+      SnackbarUtils.showError("Error", "Failed to pick image: $e");
     }
   }
 
@@ -652,42 +730,60 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                   ),
                   onPressed: appointmentController.isBookingAppointment.value ? null : () async {
                     if (ownerNameController.text.trim().isEmpty) {
-                      Get.snackbar("Missing Info", "Please enter owner name");
-                      return;
-                    }
+                                SnackbarUtils.showError(
+                                    "Missing Info", "Please enter owner name");
+                                return;
+                              }
 
-                    if (petNameController.text.trim().isEmpty) {
-                      Get.snackbar("Missing Info", "Please enter pet name");
-                      return;
-                    }
+                              // Validation based on consultation type
+                              if (appointmentController
+                                      .consultationType.value ==
+                                  ConsultationType.pet) {
+                                if (petNameController.text.trim().isEmpty) {
+                                  SnackbarUtils.showError(
+                                      "Missing Info", "Please enter pet name");
+                                  return;
+                                }
+                                if (appointmentController
+                                    .petType.value.isEmpty) {
+                                  SnackbarUtils.showError(
+                                      "Missing Info", "Please select pet type");
+                                  return;
+                                }
+                              } else {
+                                // For livestock and poultry
+                                if (appointmentController
+                                        .numberOfPatients.value <=
+                                    0) {
+                                  SnackbarUtils.showError("Missing Info",
+                                      "Please enter number of patients");
+                                  return;
+                                }
+                              }
 
-                    if (reasonController.text.isEmpty) {
-                      Get.snackbar("Missing Info", "Please enter reason for the appointment");
-                      return;
-                    }
+                              if (reasonController.text.isEmpty) {
+                                SnackbarUtils.showError("Missing Info",
+                                    "Please enter reason for the appointment");
+                                return;
+                              }
 
                     if (_paymentScreenshot == null) {
-                      Get.snackbar("Missing Screenshot", "Please upload payment screenshot");
-                      return;
-                    }
+                                SnackbarUtils.showError("Missing Screenshot",
+                                    "Please upload payment screenshot");
+                                return;
+                              }
 
                     // Set appointment controller values
                     appointmentController.ownerName.value = ownerNameController.text.trim();
-                    appointmentController.petName.value = petNameController.text.trim();
-                              appointmentController.selectedAnimalType.value =
-                                  selectedAnimalType.value;
-                              appointmentController
-                                      .selectedPaymentMethod.value =
-                                  selectedPaymentMethod.value
-                                      .toString()
-                                      .split('.')
-                                      .last;
-                              appointmentController.paymentScreenshotPath
-                                  .value = _paymentScreenshot!.path;
-                              appointmentController.reason.value =
-                                  reasonController.text.trim();
+                    if (appointmentController.consultationType.value == ConsultationType.pet) {
+                      appointmentController.petName.value = petNameController.text.trim();
+                    }
+                    appointmentController.selectedPaymentMethod.value = selectedPaymentMethod.value.toString().split('.').last;
+                    appointmentController.paymentScreenshotPath.value = _paymentScreenshot!.path;
+                    appointmentController.reason.value = reasonController.text.trim();
 
-                              // Book appointment
+
+                    // Book appointment
                     final success = await appointmentController.bookAppointment(
                       doctorId: widget.doctor.id,
                       selectedDate: detailVM.selectedDate.value?.toString() ?? '',

@@ -212,7 +212,7 @@ class HomeScreen extends StatelessWidget {
                   onPressed: () {
 
                       final controller = Get.find<BottomNavController>();
-                      controller.changeIndex(2);
+                      controller.changeIndex(3);
 
                   },
                   style: ElevatedButton.styleFrom(

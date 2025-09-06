@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../models/appointment_model.dart';
+import '../../utils/snackbar_utils.dart';
 
 class AppointmentController extends GetxController {
   var ownerName = ''.obs;
@@ -14,8 +15,17 @@ class AppointmentController extends GetxController {
   var paymentScreenshotPath = ''.obs;
   var isLoading = false.obs;
   var isBookingAppointment = false.obs;
+  var petType = ''.obs;
+  var numberOfPatients = 1.obs;
+  var consultationType = ConsultationType.pet.obs;
   var currentAppointment = Rx<Appointment?>(null);
-  var selectedAnimalType = ''.obs;
+  final List<String> petTypes = [
+    'Dog',
+    'Cat',
+    'Bird',
+    'Horse',
+    'Other',
+  ];
   var reason = ''.obs;
 
   final ImagePicker _picker = ImagePicker();
@@ -33,7 +43,8 @@ class AppointmentController extends GetxController {
         paymentScreenshotPath.value = image.path;
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to pick image: $e');
+      SnackbarUtils.showError(
+          'Image Selection Failed', 'Failed to pick image: $e');
     }
   }
 
@@ -72,29 +83,44 @@ class AppointmentController extends GetxController {
     required String selectedDay,
     required double consultationFee,
   }) async {
+    // Basic required field validations FIRST
     if (ownerName.value.trim().isEmpty) {
-      Get.snackbar('Error', 'Please enter owner name');
-      return false;
-    }
-
-    if (petName.value.trim().isEmpty) {
-      Get.snackbar('Error', 'Please enter pet name');
+      SnackbarUtils.showError('Error', 'Please enter owner name');
       return false;
     }
 
     if (selectedPaymentMethod.value.isEmpty) {
-      Get.snackbar('Error', 'Please select a payment method');
+      SnackbarUtils.showError('Error', 'Please select a payment method');
       return false;
     }
 
     if (paymentScreenshotPath.value.isEmpty) {
-      Get.snackbar('Error', 'Please upload payment screenshot');
+      SnackbarUtils.showError('Error', 'Please upload payment screenshot');
       return false;
     }
 
     if (reason.value.isEmpty) {
-      Get.snackbar('Error', 'Please enter reason for the appointment');
+      SnackbarUtils.showError(
+          'Error', 'Please enter reason for the appointment');
       return false;
+    }
+
+    // Consultation type specific validations
+    if (consultationType.value == ConsultationType.pet) {
+      if (petName.value.trim().isEmpty) {
+        SnackbarUtils.showError('Error', 'Please enter pet name');
+        return false;
+      }
+      if (petType.value.isEmpty) {
+        SnackbarUtils.showError('Error', 'Please select pet type');
+        return false;
+      }
+    } else {
+      // For livestock and poultry
+      if (numberOfPatients.value <= 0) {
+        SnackbarUtils.showError('Error', 'Please enter number of patients');
+        return false;
+      }
     }
 
     try {
@@ -102,7 +128,7 @@ class AppointmentController extends GetxController {
 
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        Get.snackbar('Error', 'Please login to book appointment');
+        SnackbarUtils.showError('Error', 'Please login to book appointment');
         return false;
       }
 
@@ -114,29 +140,33 @@ class AppointmentController extends GetxController {
       // Upload payment screenshot
       final screenshotUrl = await _uploadPaymentScreenshot(appointmentRef.id);
 
-      // Fetch doctor full name
+      // Fetch doctor full name and profile picture
       final doctorDoc = await FirebaseFirestore.instance
           .collection('doctor_verification_requests')
           .doc(doctorId)
           .get();
       final doctorName = doctorDoc.data()?['basicInfo']?['fullName'] ?? '';
+      final doctorprofilepic = doctorDoc.data()?['documents']?['profilePicture'] ?? '';
 
       final appointment = Appointment(
         id: appointmentRef.id,
         doctorId: doctorId,
         userId: user.uid,
         ownerName: ownerName.value.trim(),
-        petName: petName.value.trim(),
         selectedDate: selectedDate,
         selectedTime: selectedTime,
         selectedDay: selectedDay,
         consultationFee: consultationFee,
         paymentMethod: selectedPaymentMethod.value,
+        petName: consultationType.value == ConsultationType.pet ? petName.value.trim() : null,
+        petType: consultationType.value == ConsultationType.pet ? petType.value : null,
+        numberOfPatients: consultationType.value != ConsultationType.pet ? numberOfPatients.value : null,
+        consultationType: consultationType.value,
         paymentScreenshotUrl: screenshotUrl,
         status: AppointmentStatus.pending,
         createdAt: DateTime.now(),
-        animalType: selectedAnimalType.value,
         doctorName: doctorName,
+        doctorprofilepic: doctorprofilepic,
         reason: reason.value,
       );
 
@@ -144,15 +174,12 @@ class AppointmentController extends GetxController {
 
       currentAppointment.value = appointment;
 
-      Get.snackbar(
-        'Success',
-        'Appointment booked successfully! Please wait for doctor verification.',
-        duration: const Duration(seconds: 3),
-      );
-
+      SnackbarUtils.showSuccess('Success',
+          'Appointment booked successfully! Please wait for doctor verification.',
+          duration: const Duration(seconds: 3));
       return true;
     } catch (e) {
-      Get.snackbar('Error', 'Failed to book appointment: $e');
+      SnackbarUtils.showError('Error', 'Failed to book appointment: $e');
       return false;
     } finally {
       isBookingAppointment.value = false;
@@ -180,10 +207,12 @@ class AppointmentController extends GetxController {
   void resetForm() {
     ownerName.value = '';
     petName.value = '';
+    petType.value = '';
+    numberOfPatients.value = 1;
+    consultationType.value = ConsultationType.pet;
     selectedPaymentMethod.value = '';
     paymentScreenshotPath.value = '';
     currentAppointment.value = null;
-    selectedAnimalType.value = '';
     reason.value = '';
   }
 
@@ -196,7 +225,6 @@ class AppointmentController extends GetxController {
     isLoading.close();
     isBookingAppointment.close();
     currentAppointment.close();
-    selectedAnimalType.close();
     reason.close();
     super.onClose();
   }
