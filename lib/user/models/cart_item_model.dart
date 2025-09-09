@@ -1,5 +1,6 @@
 class CartItemModel {
-  final String id; // Added unique ID for Firestore document
+  final String id; // Cart item unique ID for Firestore document
+  final String productId; // Original product ID from products collection
   final String name;
   final String image;
   final String quantityLabel;
@@ -10,6 +11,7 @@ class CartItemModel {
 
   CartItemModel({
     String? id,
+    required this.productId, // Now required
     required this.name,
     required this.image,
     required this.quantityLabel,
@@ -23,6 +25,7 @@ class CartItemModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'productId': productId,
       'name': name,
       'image': image,
       'quantityLabel': quantityLabel,
@@ -36,6 +39,8 @@ class CartItemModel {
   factory CartItemModel.fromMap(Map<String, dynamic> map) {
     return CartItemModel(
       id: map['id'] ?? '',
+      productId: map['productId'] ?? '',
+      // Include productId
       name: map['name'] ?? '',
       image: map['image'] ?? '',
       quantityLabel: map['quantityLabel'] ?? '',

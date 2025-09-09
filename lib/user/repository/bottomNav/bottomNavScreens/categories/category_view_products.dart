@@ -533,6 +533,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                               final imageUrl = imageUrls.isNotEmpty ? imageUrls.first.toString() : '';
 
                               await cartVM.addToCart(
+                                productId,
                                 data['name']?.toString() ?? 'Unknown Product',
                                 imageUrl,
                                 '1 unit',
@@ -568,6 +569,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                               final imageUrl = imageUrls.isNotEmpty ? imageUrls.first.toString() : '';
 
                               await cartVM.addToCart(
+                                productId,
                                 data['name']?.toString() ?? 'Unknown Product',
                                 imageUrl,
                                 '1 unit',

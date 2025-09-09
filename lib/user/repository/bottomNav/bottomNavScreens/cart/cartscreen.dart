@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../user_service.dart';
+import '../checkout/checkout_screen.dart';
 import 'cart_item_tile.dart';
 import 'cart_viewmodel.dart';
 
@@ -28,10 +29,10 @@ class CartScreen extends StatelessWidget {
         title: Text(
           'Shopping Cart',
           style: TextStyle(
-            color: const Color(0xFF199A8E),
-            fontSize: screenWidth * 0.055,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'bolditalic'
+              color: const Color(0xFF199A8E),
+              fontSize: screenWidth * 0.055,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'bolditalic'
           ),
         ),
         centerTitle: true,
@@ -228,7 +229,7 @@ class CartScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Tax (2%)',
+                        'Delivery Fee',
                         style: TextStyle(
                           fontSize: screenWidth * 0.04,
                           color: Colors.grey[600],
@@ -287,13 +288,17 @@ class CartScreen extends StatelessWidget {
                     ),
                     child: ElevatedButton(
                       onPressed: () {
-                        Get.snackbar(
-                          'Checkout',
-                          'Proceeding to checkout with ${cartVM.itemCount} items',
-                          backgroundColor: const Color(0xFF199A8E),
-                          colorText: Colors.white,
-                          duration: const Duration(seconds: 3),
-                        );
+                        if (userService.isLoggedIn) {
+                          Get.to(() => CheckoutScreen());
+                        } else {
+                          Get.snackbar(
+                            'Login Required',
+                            'Please login to proceed with checkout',
+                            backgroundColor: const Color(0xFFF44336),
+                            colorText: Colors.white,
+                            duration: const Duration(seconds: 3),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
@@ -315,10 +320,10 @@ class CartScreen extends StatelessWidget {
                           Text(
                             'Proceed to Checkout',
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: screenWidth * 0.04,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'bolditalic'
+                                color: Colors.white,
+                                fontSize: screenWidth * 0.04,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'bolditalic'
                             ),
                           ),
                         ],

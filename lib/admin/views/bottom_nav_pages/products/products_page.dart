@@ -2,6 +2,7 @@ import 'package:al_haiwan/admin/views/bottom_nav_pages/products/update_products.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../controllers/stock_controller.dart';
 import 'add_products.dart';
 
 class AdminProducts extends StatefulWidget {
@@ -15,6 +16,7 @@ class _AdminProductsState extends State<AdminProducts> {
   String searchQuery = '';
   String selectedFilter = 'All';
   String selectedCategory = 'All';
+  final StockController stockController = Get.put(StockController());
 
   static const Color primary = Color(0xFF199A8E);
 
@@ -54,9 +56,9 @@ class _AdminProductsState extends State<AdminProducts> {
       final name = (doc['name'] ?? '').toString().toLowerCase();
       final brand = (doc['brand'] ?? '').toString().toLowerCase();
       final category = (doc['category'] ?? '').toString();
-      final int stockQty = (doc['stockQuantity'] ?? 0) is int
-          ? (doc['stockQuantity'] ?? 0) as int
-          : int.tryParse((doc['stockQuantity'] ?? '0').toString()) ?? 0;
+      final int stockQty = (doc['stock'] ?? 0) is int
+          ? (doc['stock'] ?? 0) as int
+          : int.tryParse((doc['stock'] ?? '0').toString()) ?? 0;
 
       // Search filter
       bool matchesSearch = name.contains(searchQuery) || brand.contains(searchQuery);
@@ -238,7 +240,7 @@ class _AdminProductsState extends State<AdminProducts> {
         title: Padding(
           padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
           child: Text(
-            'Products',
+            'Products & Stock',
             style: TextStyle(
               fontWeight: FontWeight.w800,
               color: primary,
@@ -249,6 +251,53 @@ class _AdminProductsState extends State<AdminProducts> {
           ),
         ),
         centerTitle: false,
+        actions: [
+          // Low Stock Alert Badge
+          Obx(() => stockController.lowStockProducts.isNotEmpty
+              ? Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.warning_amber_rounded,
+                    color: Colors.orange.shade700,
+                    size: screenWidth * 0.06),
+                onPressed: () => _showLowStockAlert(context),
+              ),
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: EdgeInsets.all(screenWidth * 0.01),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade600,
+                    borderRadius: BorderRadius.circular(screenWidth * 0.02),
+                  ),
+                  constraints: BoxConstraints(
+                    minWidth: screenWidth * 0.04,
+                    minHeight: screenWidth * 0.04,
+                  ),
+                  child: Text(
+                    '${stockController.lowStockProducts.length}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenWidth * 0.025,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          )
+              : const SizedBox()),
+          // Stock History Button
+          IconButton(
+            icon: Icon(Icons.history,
+                color: primary,
+                size: screenWidth * 0.06),
+            onPressed: () => _showStockHistory(context),
+          ),
+          SizedBox(width: screenWidth * 0.02),
+        ],
       ),
       backgroundColor: Colors.white,
       body: Column(
@@ -440,9 +489,11 @@ class _AdminProductsState extends State<AdminProducts> {
                           final brand = (product['brand'] ?? '').toString();
                           final num rawPrice = product['price'] ?? 0;
                           final double price = rawPrice.toDouble();
-                          final int stockQty = (product['stockQuantity'] ?? 0) is int
-                              ? (product['stockQuantity'] ?? 0) as int
-                              : int.tryParse((product['stockQuantity'] ?? '0').toString()) ?? 0;
+                          final int stockQty = (product['stock'] ?? 0) is int
+                              ? (product['stock'] ?? 0) as int
+                              : int.tryParse(
+                                      (product['stock'] ?? '0').toString()) ??
+                                  0;
 
                           final imageUrls = product.data() is Map<String, dynamic>
                               ? (product['imageUrls'] as List<dynamic>?)
@@ -717,25 +768,74 @@ class _AdminProductsState extends State<AdminProducts> {
                                               ),
                                               SizedBox(height: screenHeight * 0.01),
 
-                                              // Stock badge
-                                              Container(
-                                                padding: EdgeInsets.symmetric(
-                                                    horizontal: screenWidth * 0.02,
-                                                    vertical: screenHeight * 0.005
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: _stockColor(stockQty).withOpacity(0.12),
-                                                  borderRadius: BorderRadius.circular(screenWidth * 0.02),
-                                                  border: Border.all(color: _stockColor(stockQty).withOpacity(0.3)),
-                                                ),
-                                                child: Text(
-                                                  '${_stockLabel(stockQty)} • $stockQty',
-                                                  style: TextStyle(
-                                                    fontSize: screenWidth * 0.029,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: _stockColor(stockQty),
+                                              // Stock badge with quick adjustment buttons
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: EdgeInsets.symmetric(
+                                                        horizontal: screenWidth * 0.02,
+                                                        vertical: screenHeight * 0.005
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: _stockColor(stockQty).withOpacity(0.12),
+                                                      borderRadius: BorderRadius.circular(screenWidth * 0.02),
+                                                      border: Border.all(color: _stockColor(stockQty).withOpacity(0.3)),
+                                                    ),
+                                                    child: Text(
+                                                      '${_stockLabel(stockQty)} • $stockQty',
+                                                      style: TextStyle(
+                                                        fontSize: screenWidth * 0.029,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: _stockColor(stockQty),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
+                                                  SizedBox(width: screenWidth * 0.02),
+                                                  Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      // Decrease stock button
+                                                      GestureDetector(
+                                                        onTap: stockQty > 0 ? () => _adjustStock(productId, name, -1) : null,
+                                                        child: Container(
+                                                          width: screenWidth * 0.06,
+                                                          height: screenWidth * 0.06,
+                                                          decoration: BoxDecoration(
+                                                            color: stockQty > 0 ? Colors.red.shade100 : Colors.grey.shade200,
+                                                            borderRadius: BorderRadius.circular(screenWidth * 0.015),
+                                                            border: Border.all(
+                                                              color: stockQty > 0 ? Colors.red.shade300 : Colors.grey.shade400,
+                                                            ),
+                                                          ),
+                                                          child: Icon(
+                                                            Icons.remove,
+                                                            size: screenWidth * 0.035,
+                                                            color: stockQty > 0 ? Colors.red.shade700 : Colors.grey.shade500,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      SizedBox(width: screenWidth * 0.015),
+                                                      // Increase stock button
+                                                      GestureDetector(
+                                                        onTap: () => _adjustStock(productId, name, 1),
+                                                        child: Container(
+                                                          width: screenWidth * 0.06,
+                                                          height: screenWidth * 0.06,
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.green.shade100,
+                                                            borderRadius: BorderRadius.circular(screenWidth * 0.015),
+                                                            border: Border.all(color: Colors.green.shade300),
+                                                          ),
+                                                          child: Icon(
+                                                            Icons.add,
+                                                            size: screenWidth * 0.035,
+                                                            color: Colors.green.shade700,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
@@ -743,28 +843,53 @@ class _AdminProductsState extends State<AdminProducts> {
 
                                         SizedBox(width: screenWidth * 0.015),
 
-                                        // Edit button
-                                        Tooltip(
-                                          message: 'Edit',
-                                          child: Ink(
-                                            decoration: BoxDecoration(
-                                              color: primary.withOpacity(0.08),
-                                              borderRadius: BorderRadius.circular(screenWidth * 0.025),
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(Icons.edit,
-                                                  color: primary,
-                                                  size: screenWidth * 0.05
+                                        // Edit and Stock Management buttons
+                                        Column(
+                                          children: [
+                                            // Edit button
+                                            Tooltip(
+                                              message: 'Edit',
+                                              child: Ink(
+                                                decoration: BoxDecoration(
+                                                  color: primary.withOpacity(0.08),
+                                                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                                                ),
+                                                child: IconButton(
+                                                  icon: Icon(Icons.edit,
+                                                      color: primary,
+                                                      size: screenWidth * 0.045
+                                                  ),
+                                                  splashRadius: screenWidth * 0.055,
+                                                  onPressed: () {
+                                                    Get.to(() => UpdateProducts(
+                                                      productId: productId,
+                                                      existingData: product.data() as Map<String, dynamic>,
+                                                    ));
+                                                  },
+                                                ),
                                               ),
-                                              splashRadius: screenWidth * 0.055,
-                                              onPressed: () {
-                                                Get.to(() => UpdateProducts(
-                                                  productId: productId,
-                                                  existingData: product.data() as Map<String, dynamic>,
-                                                ));
-                                              },
                                             ),
-                                          ),
+                                            SizedBox(height: screenHeight * 0.005),
+                                            Tooltip(
+                                              message: 'Manage Stock',
+                                              child: Ink(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.orange.shade100,
+                                                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                                                ),
+                                                child: IconButton(
+                                                  icon: Icon(Icons.inventory,
+                                                      color: Colors.orange.shade700,
+                                                      size: screenWidth * 0.045
+                                                  ),
+                                                  splashRadius: screenWidth * 0.055,
+                                                  onPressed: () => _showStockManagementDialog(
+                                                      context, productId, name, stockQty
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -794,6 +919,164 @@ class _AdminProductsState extends State<AdminProducts> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(screenWidth * 0.035),
         ),
+      ),
+    );
+  }
+
+  void _adjustStock(String productId, String productName, int adjustment) async {
+    // Get current stock first
+    final docSnapshot = await FirebaseFirestore.instance
+        .collection('products')
+        .doc(productId)
+        .get();
+
+    if (docSnapshot.exists) {
+      final currentStock = (docSnapshot.data()?['stock'] ?? 0) is int
+          ? (docSnapshot.data()?['stock'] ?? 0) as int
+          : int.tryParse((docSnapshot.data()?['stock'] ?? '0').toString()) ?? 0;
+
+      final newStock = currentStock + adjustment;
+      if (newStock >= 0) {
+        // Update the stock directly in Firestore since we're working with stockQuantity field
+        await FirebaseFirestore.instance
+            .collection('products')
+            .doc(productId)
+            .update({'stock': newStock});
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Stock ${adjustment > 0 ? 'increased' : 'decreased'} for $productName'),
+              backgroundColor: adjustment > 0
+                  ? Colors.green.shade600
+                  : Colors.orange.shade600,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showStockManagementDialog(BuildContext context, String productId, String productName, int currentStock) {
+    final TextEditingController stockTextController = TextEditingController();
+    final TextEditingController reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Manage Stock - $productName'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Current Stock: $currentStock'),
+            SizedBox(height: 16),
+            TextField(
+              controller: stockTextController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'New Stock Quantity',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: 'Reason (optional)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newStock = int.tryParse(stockTextController.text);
+              if (newStock != null) {
+                await stockController.updateProductStock(
+                    productId,
+                    newStock,
+                    reason: reasonController.text.isEmpty
+                        ? 'Manual stock update'
+                        : reasonController.text);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Stock updated for $productName')),
+                );
+              }
+            },
+            child: Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLowStockAlert(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+            SizedBox(width: 8),
+            Text('Low Stock Alert'),
+          ],
+        ),
+        content: Obx(() => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: stockController.lowStockProducts.map((product) =>
+              ListTile(
+                        title: Text(product.name),
+                        subtitle: Text('Stock: ${product.stock}'),
+                        trailing:
+                            Icon(Icons.warning, color: Colors.orange.shade700),
+                      )).toList(),
+        )),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showStockHistory(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Stock History'),
+        content: Container(
+          width: double.maxFinite,
+          height: 400,
+          child: Obx(() => ListView.builder(
+                itemCount: stockController.stockLogs.length,
+                itemBuilder: (context, index) {
+                  final history = stockController.stockLogs[index];
+                  return ListTile(
+                    title: Text(history.productName),
+                    subtitle: Text('${history.action} - ${history.reason}'),
+                    trailing: Text(
+                      '${history.previousStock} → ${history.newStock}',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  );
+                },
+              )),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'cart_item_model.dart';
+import '../../../../models/cart_item_model.dart';
 
 class CartItemTile extends StatelessWidget {
   final CartItemModel item;
@@ -86,7 +86,7 @@ class CartItemTile extends StatelessWidget {
                       child: Text(
                         item.name,
                         style: TextStyle(
-                          fontSize: screenWidth * 0.045,
+                          fontSize: screenWidth * 0.035,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),

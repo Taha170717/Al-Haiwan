@@ -104,7 +104,7 @@ class BottomNavScreen extends StatelessWidget {
                 icon: "assets/icons/profile.png",
                 label: "Profile",
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => Profilescreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen()));
                 },
               ),
               _buildDivider(),
@@ -133,7 +133,8 @@ class BottomNavScreen extends StatelessWidget {
                 icon: "assets/icons/schedule.png",
                 label: "Appointments",
                 onTap: () {
-                  Get.to(() => MyAppointmentScreen());
+                  controller.changeIndex(2);
+                  Get.back();
                 },
               ),
               _buildDivider(),
@@ -151,7 +152,7 @@ class BottomNavScreen extends StatelessWidget {
                 icon: "assets/icons/category.png",
                 label: "Categories",
                 onTap: () {
-                  controller.changeIndex(2);
+                  controller.changeIndex(3);
                   Get.back();
                 },
               ),
@@ -161,7 +162,7 @@ class BottomNavScreen extends StatelessWidget {
                 icon: "assets/icons/cart.png",
                 label: "Cart",
                 onTap: () {
-                  controller.changeIndex(3);
+                  controller.changeIndex(4);
                   Get.back();
                 },
               ),

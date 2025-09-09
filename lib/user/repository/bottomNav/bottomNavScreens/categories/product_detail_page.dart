@@ -615,11 +615,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   onPressed: () {
                     final imageUrl = imageUrls.isNotEmpty ? imageUrls[0] : '';
                     cartVM.addToCart(
-                      name,
-                      imageUrl,
-                      '${quantity} pcs', // You can customize this based on your product data
-                      price,
-                      quantity,
+                            widget.productId,
+                            name,
+                            imageUrl,
+                            '${quantity} pcs',
+                            price,
+                            quantity,
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -668,9 +669,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     final imageUrl = imageUrls.isNotEmpty ? imageUrls[0] : '';
-                    cartVM.addToCart(name, imageUrl, '${quantity} pcs', price, quantity);
-                    Get.to(() => CartScreen()); // Navigate to cart screen
-                  },
+                          cartVM.addToCart(
+                            widget.productId,
+                            name,
+                            imageUrl,
+                            '${quantity} pcs',
+                            price,
+                            quantity,
+                          );
+                          Get.to(() => CartScreen()); // Navigate to cart screen
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     foregroundColor: Colors.white,

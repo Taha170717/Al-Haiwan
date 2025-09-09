@@ -24,7 +24,7 @@ class _AdminScreenState extends State<AdminScreen> {
     AdminDashboard(),
     AdminAppointmentsScreen(),
     AdminProducts(),
-    AdminOrders(),
+    AdminOrderManagementScreen(),
     AdminProfile(),
   ];
 
@@ -158,7 +158,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 icon: "assets/adminicons/report.png",
                 label: "Report & Analytics",
                 onTap: () {
-                  Get.to(() => AdminOrders());
+                  Get.to(() => AdminOrderManagementScreen());
                 },
               ),
               _buildDivider(),

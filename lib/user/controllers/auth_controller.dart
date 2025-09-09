@@ -439,7 +439,7 @@ class AuthController extends GetxController {
       _showSnackbar(
         title: "Password Change Failed",
         message:
-            "Failed to change password. Please check your current password",
+        "Failed to change password. Please check your current password",
         type: SnackbarType.error,
       );
     } finally {

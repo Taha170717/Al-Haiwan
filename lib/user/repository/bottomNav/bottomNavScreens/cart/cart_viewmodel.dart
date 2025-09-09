@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import '../../../user_service.dart';
-import 'cart_item_model.dart';
+import '../../../../models/cart_item_model.dart';
 
 class CartViewModel extends GetxController {
   var cartItems = <CartItemModel>[].obs;
@@ -43,13 +43,31 @@ class CartViewModel extends GetxController {
         .collection('items')
         .snapshots()
         .listen((snapshot) {
-      final items = snapshot.docs
-          .map((doc) => CartItemModel.fromMap(doc.data()))
-          .where((item) => !item.isExpired) // Filter expired items
-          .toList();
+      final items = <CartItemModel>[];
+
+      for (final doc in snapshot.docs) {
+        try {
+          final data = doc.data();
+
+          // Check if productId exists, if not skip this item (old format)
+          if (data['productId'] == null ||
+              data['productId'].toString().isEmpty) {
+            // Remove old format items
+            doc.reference.delete();
+            continue;
+          }
+
+          final item = CartItemModel.fromMap(data);
+          if (!item.isExpired) {
+            items.add(item);
+          }
+        } catch (e) {
+          // If there's an error parsing the item, remove it
+          doc.reference.delete();
+        }
+      }
 
       cartItems.assignAll(items);
-
       _removeExpiredItems(userId);
     });
   }
@@ -99,16 +117,35 @@ class CartViewModel extends GetxController {
   }
 
   double get subtotal => cartItems.fold(0, (sum, item) => sum + (item.price * item.quantity));
-  double get tax => subtotal * 0.02; // 10% tax
+  double get tax => 150; // 10% tax
   double get total => subtotal + tax;
 
-  Future<void> addToCart(String name, String image, String quantityLabel, double price, int quantity) async {
+  Future<void> addToCart(String productId, String name, String image,
+      String quantityLabel, double price, int quantity) async {
+    print('=== ADD TO CART DEBUG ===');
+    print('ProductID: "$productId"');
+    print('Name: "$name"');
+    print('ProductID isEmpty: ${productId.isEmpty}');
+    print('ProductID trimmed isEmpty: ${productId.trim().isEmpty}');
+
     final userId = await _userService.ensureUserAuthenticated();
     if (userId.isEmpty) return;
 
+    // Validate productId
+    if (productId.isEmpty || productId.trim().isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Invalid product. Please try again.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
     // Check if item already exists in cart
     final existingIndex = cartItems.indexWhere((item) =>
-    item.name == name && item.quantityLabel == quantityLabel);
+        item.productId == productId && item.quantityLabel == quantityLabel);
 
     if (existingIndex != -1) {
       // Update existing item quantity
@@ -127,6 +164,8 @@ class CartViewModel extends GetxController {
     } else {
       // Add new item to cart
       final newItem = CartItemModel(
+        productId: productId.trim(),
+        // Ensure it's trimmed
         name: name,
         image: image,
         quantityLabel: quantityLabel,
@@ -134,6 +173,8 @@ class CartViewModel extends GetxController {
         quantity: quantity,
         userId: userId,
       );
+
+      print('Creating new cart item with ProductID: "${newItem.productId}"');
 
       await _addItemToFirestore(userId, newItem);
 
