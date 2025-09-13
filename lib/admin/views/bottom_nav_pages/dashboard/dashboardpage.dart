@@ -36,6 +36,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     // Queries
     final Query usersQuery = FirebaseFirestore.instance.collection('users');
+    final Query ordersQuery = FirebaseFirestore.instance.collection('orders');
+    final Query appointmentsQuery = FirebaseFirestore.instance.collection('appointments');
+
     // If doctors are in the same "users" collection with a boolean "isDoctor":
     final Query doctorsQuery = FirebaseFirestore.instance
         .collection('users')
@@ -182,6 +185,78 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ],
               ),
+              SizedBox(height: gapBetweenCards),
+
+
+              Row(
+                children: [
+                  // Total Users
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: ordersQuery.snapshots(),
+                      builder: (context, snapshot) {
+                        final loading =
+                            snapshot.connectionState == ConnectionState.waiting;
+                        final value =
+                        snapshot.hasData ? snapshot.data!.size : 0;
+
+                        if (snapshot.hasError) {
+                          _setErrorOnce(
+                            'Failed to load Orders: ${snapshot.error}',
+                          );
+                        }
+
+                        return _StatCard(
+                          title: 'Total Orders',
+                          value: value,
+                          loading: loading,
+                          icon: Icons.group_rounded,
+                          gradient: const [
+                            Color(0xFF199A8E),
+                            Color(0xFF3DCF71),
+                          ],
+                          accent: const Color(0xFF3D5AFE),
+                          height: cardHeight,
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(width: gapBetweenCards),
+                  // Total Doctors
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: appointmentsQuery.snapshots(),
+                      builder: (context, snapshot) {
+                        final loading =
+                            snapshot.connectionState == ConnectionState.waiting;
+                        final value =
+                        snapshot.hasData ? snapshot.data!.size : 0;
+
+                        if (snapshot.hasError) {
+                          _setErrorOnce(
+                            'Failed to load Appointments: ${snapshot.error}',
+                          );
+                        }
+
+                        return _StatCard(
+                          title: 'Total Appointments',
+                          value: value,
+                          loading: loading,
+                          icon: Icons.local_hospital_rounded,
+                          gradient: const [
+                            Color(0xFF8EC5FC), // light blue
+                            Color(0xFFE0C3FC), // soft purple
+                          ],
+                          accent: const Color(0xFF6A82FB),
+                          height: cardHeight,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: gapBetweenCards),
 
               if (_error != null) ...[
                 SizedBox(height: topSpacing),

@@ -1,10 +1,10 @@
 import 'package:al_haiwan/user/controllers/auth_controller.dart';
 import 'package:al_haiwan/user/repository/user_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get_storage/get_storage.dart';
-////mhdjaa
 import 'firebase_options.dart';
 import 'package:al_haiwan/user/repository/screens/splash/splashscreen.dart';
 
@@ -19,6 +19,8 @@ void main() async {
 
   Get.put(AuthController());
   Get.put(UserService());
+
+
 
   runApp(const MyApp());
 }

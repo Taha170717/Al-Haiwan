@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/product_model.dart';
+import '../models/product_order_model.dart';
 
 class StockController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -79,7 +79,7 @@ class StockController extends GetxController {
 
       // Update product stock
       await _firestore.collection('products').doc(productId).update({
-        'stock': newStock,
+        'stockQuantity': newStock,
         'updatedAt': DateTime.now().toIso8601String(),
       });
 
@@ -131,7 +131,7 @@ class StockController extends GetxController {
 
       // Update product stock
       await _firestore.collection('products').doc(productId).update({
-        'stock': newStock,
+        'stockQuantity': newStock,
         'updatedAt': DateTime.now().toIso8601String(),
       });
 

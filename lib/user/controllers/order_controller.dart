@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../admin/models/product_model.dart';
+import '../../admin/models/product_order_model.dart';
 import '../models/order_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

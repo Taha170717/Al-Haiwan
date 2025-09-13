@@ -61,7 +61,11 @@ class ProductModel {
         price: (map['price'] ?? 0).toDouble(),
         imageUrl: (map['imageUrl'] ?? '').toString(),
         category: (map['category'] ?? '').toString(),
-        stock: (map['stockQuantity'] ?? map['stock'] ?? 0).toInt(),
+        stock: map.containsKey('stockQuantity')
+            ? (map['stockQuantity'] ?? 0).toInt()
+            : map.containsKey('stock')
+                ? (map['stock'] ?? 0).toInt()
+                : 0,
         soldCount: (map['soldCount'] ?? 0).toInt(),
         minStockLevel: (map['minStockLevel'] ?? 5).toInt(),
         isActive: map['isActive'] ?? true,

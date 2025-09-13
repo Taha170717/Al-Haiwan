@@ -1,4 +1,4 @@
-// models/product_model.dart
+// models/product_order_model.dart
 class Product {
   final String name;
   final String price;

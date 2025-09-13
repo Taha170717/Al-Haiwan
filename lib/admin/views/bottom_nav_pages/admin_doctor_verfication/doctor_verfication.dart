@@ -21,6 +21,11 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isTablet = screenWidth > 600;
+    final isDesktop = screenWidth > 1024;
+    final isLargeDesktop = screenWidth > 1440;
+
+    final maxContentWidth = isLargeDesktop ? 1200.0 : (isDesktop ? 900.0 : screenWidth);
+    final horizontalPadding = isDesktop ? screenWidth * 0.1 : screenWidth * 0.05;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -39,283 +44,308 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: isTablet ? 22 : 18,
+            fontSize: isDesktop ? 24 : (isTablet ? 22 : 18),
           ),
         ),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
+        toolbarHeight: isDesktop ? 70 : (isTablet ? 65 : 56),
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.fromLTRB(
-                screenWidth * 0.05,
-                screenHeight * 0.025,
-                screenWidth * 0.05,
-                screenHeight * 0.04
-            ),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 20,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxContentWidth),
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    screenHeight * 0.025,
+                    horizontalPadding,
+                    screenHeight * 0.04
+                ),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: TextField(
-                    controller: searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        searchQuery = value.toLowerCase();
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Search doctors by name...',
-                      hintStyle: TextStyle(color: Colors.grey[500]),
-                      prefixIcon: Container(
-                        padding: const EdgeInsets.all(12),
-                        child: Icon(
-                            Icons.search,
-                            color: const Color(0xFF199A8E),
-                            size: isTablet ? 26 : 24
-                        ),
-                      ),
-                      suffixIcon: searchQuery.isNotEmpty
-                          ? IconButton(
-                        onPressed: () {
-                          searchController.clear();
-                          setState(() {
-                            searchQuery = '';
-                          });
-                        },
-                        icon: Icon(
-                          Icons.clear,
-                          color: Colors.grey,
-                          size: isTablet ? 24 : 22,
-                        ),
-                      )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.05,
-                          vertical: screenHeight * 0.022
-                      ),
-                    ),
-                    style: TextStyle(fontSize: isTablet ? 18 : 16),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.025),
-                isTablet
-                    ? Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Column(
                   children: [
-                    _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet),
-                    _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet),
-                    _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet),
-                  ],
-                )
-                    : Wrap(
-                  alignment: WrapAlignment.spaceEvenly,
-                  spacing: screenWidth * 0.02,
-                  children: [
-                    _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet),
-                    _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet),
-                    _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('doctor_verification_requests')
-                  .orderBy('submittedAt', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(screenWidth * 0.05),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF199A8E).withOpacity(0.2),
-                                blurRadius: 20,
-                                spreadRadius: 5,
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isDesktop ? 600 : double.infinity,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 20,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              searchQuery = value.toLowerCase();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Search doctors by name...',
+                            hintStyle: TextStyle(color: Colors.grey[500]),
+                            prefixIcon: Container(
+                              padding: const EdgeInsets.all(12),
+                              child: Icon(
+                                  Icons.search,
+                                  color: const Color(0xFF199A8E),
+                                  size: isDesktop ? 28 : (isTablet ? 26 : 24)
                               ),
-                            ],
+                            ),
+                            suffixIcon: searchQuery.isNotEmpty
+                                ? IconButton(
+                              onPressed: () {
+                                searchController.clear();
+                                setState(() {
+                                  searchQuery = '';
+                                });
+                              },
+                              icon: Icon(
+                                Icons.clear,
+                                color: Colors.grey,
+                                size: isDesktop ? 26 : (isTablet ? 24 : 22),
+                              ),
+                            )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.05,
+                                vertical: isDesktop ? 20 : screenHeight * 0.022
+                            ),
                           ),
-                          child: CircularProgressIndicator(
-                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
-                            strokeWidth: isTablet ? 4 : 3,
-                          ),
+                          style: TextStyle(fontSize: isDesktop ? 20 : (isTablet ? 18 : 16)),
                         ),
-                        SizedBox(height: screenHeight * 0.025),
-                        Text(
-                          'Loading doctors...',
-                          style: TextStyle(
-                            fontSize: isTablet ? 18 : 16,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Column(
+                    SizedBox(height: screenHeight * 0.025),
+                    isDesktop
+                        ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading doctors',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Please try again later',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                        ),
+                        _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet, isDesktop),
+                        SizedBox(width: screenWidth * 0.03),
+                        _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet, isDesktop),
+                        SizedBox(width: screenWidth * 0.03),
+                        _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet, isDesktop),
                       ],
-                    ),
-                  );
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    )
+                        : isTablet
+                        ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No doctors found',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'No verification requests yet',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                        ),
+                        _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet, isDesktop),
+                        _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet, isDesktop),
+                        _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet, isDesktop),
                       ],
-                    ),
-                  );
-                }
-
-                // Filter doctors based on selected filter and search query
-                final filteredDocs = snapshot.data!.docs.where((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final isVerified = data['isVerified'] ?? false;
-                  final fullName = data['basicInfo']?['fullName']?.toString().toLowerCase() ?? '';
-
-                  // Apply search filter
-                  if (searchQuery.isNotEmpty && !fullName.contains(searchQuery)) {
-                    return false;
-                  }
-
-                  // Apply status filter
-                  switch (selectedFilter) {
-                    case 'verified':
-                      return isVerified;
-                    case 'pending':
-                      return !isVerified;
-                    default:
-                      return true;
-                  }
-                }).toList();
-
-                if (filteredDocs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    )
+                        : Wrap(
+                      alignment: WrapAlignment.spaceEvenly,
+                      spacing: screenWidth * 0.02,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No doctors match your criteria',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Try adjusting your search or filters',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                        ),
+                        _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet, isDesktop),
+                        _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet, isDesktop),
+                        _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet, isDesktop),
                       ],
                     ),
-                  );
-                }
+                  ],
+                ),
+              ),
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('doctor_verification_requests')
+                      .orderBy('submittedAt', descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(screenWidth * 0.05),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF199A8E).withOpacity(0.2),
+                                    blurRadius: 20,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: CircularProgressIndicator(
+                                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                                strokeWidth: isTablet ? 4 : 3,
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.025),
+                            Text(
+                              'Loading doctors...',
+                              style: TextStyle(
+                                fontSize: isTablet ? 18 : 16,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
 
-                return ListView.builder(
-                  padding: EdgeInsets.all(screenWidth * 0.05),
-                  itemCount: filteredDocs.length,
-                  itemBuilder: (context, index) {
-                    final doc = filteredDocs[index];
-                    final data = doc.data() as Map<String, dynamic>;
-                    return _buildDoctorCard(data, doc.id, screenWidth, screenHeight, isTablet);
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error loading doctors',
+                              style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Please try again later',
+                              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No doctors found',
+                              style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No verification requests yet',
+                              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    // Filter doctors based on selected filter and search query
+                    final filteredDocs = snapshot.data!.docs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final isVerified = data['isVerified'] ?? false;
+                      final fullName = data['basicInfo']?['fullName']?.toString().toLowerCase() ?? '';
+
+                      // Apply search filter
+                      if (searchQuery.isNotEmpty && !fullName.contains(searchQuery)) {
+                        return false;
+                      }
+
+                      // Apply status filter
+                      switch (selectedFilter) {
+                        case 'verified':
+                          return isVerified;
+                        case 'pending':
+                          return !isVerified;
+                        default:
+                          return true;
+                      }
+                    }).toList();
+
+                    if (filteredDocs.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No doctors match your criteria',
+                              style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Try adjusting your search or filters',
+                              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: screenWidth * 0.05,
+                      ),
+                      itemCount: filteredDocs.length,
+                      itemBuilder: (context, index) {
+                        final doc = filteredDocs[index];
+                        final data = doc.data() as Map<String, dynamic>;
+                        return _buildDoctorCard(data, doc.id, screenWidth, screenHeight, isTablet, isDesktop);
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, String value, IconData icon, Color? statusColor, double screenWidth, bool isTablet) {
+  Widget _buildFilterChip(String label, String value, IconData icon, Color? statusColor, double screenWidth, bool isTablet, bool isDesktop) {
     final isSelected = selectedFilter == value;
     return GestureDetector(
       onTap: () {
@@ -326,8 +356,8 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
-            horizontal: screenWidth * 0.04,
-            vertical: isTablet ? 12 : 10
+            horizontal: isDesktop ? screenWidth * 0.025 : screenWidth * 0.04,
+            vertical: isDesktop ? 16 : (isTablet ? 12 : 10)
         ),
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
@@ -349,7 +379,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
           children: [
             Icon(
               icon,
-              size: isTablet ? 20 : 18,
+              size: isDesktop ? 22 : (isTablet ? 20 : 18),
               color: isSelected
                   ? (statusColor ?? const Color(0xFF199A8E))
                   : Colors.white,
@@ -362,7 +392,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                     ? (statusColor ?? const Color(0xFF199A8E))
                     : Colors.white,
                 fontWeight: FontWeight.w600,
-                fontSize: isTablet ? 16 : 14,
+                fontSize: isDesktop ? 18 : (isTablet ? 16 : 14),
               ),
             ),
           ],
@@ -371,7 +401,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     );
   }
 
-  Widget _buildDoctorCard(Map<String, dynamic> data, String docId, double screenWidth, double screenHeight, bool isTablet) {
+  Widget _buildDoctorCard(Map<String, dynamic> data, String docId, double screenWidth, double screenHeight, bool isTablet, bool isDesktop) {
     final basicInfo = data['basicInfo'] ?? {};
     final professionalDetails = data['professionalDetails'] ?? {};
     final documents = data['documents'] ?? {};
@@ -381,6 +411,9 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
 
     return Container(
       margin: EdgeInsets.only(bottom: screenHeight * 0.025),
+      constraints: BoxConstraints(
+        maxWidth: isDesktop ? 800 : double.infinity,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(25),
@@ -400,17 +433,17 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.all(screenWidth * 0.06),
+        padding: EdgeInsets.all(isDesktop ? screenWidth * 0.04 : screenWidth * 0.06),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            isTablet
+            isDesktop || isTablet
                 ? Row(
               children: [
-                _buildProfileSection(documents, isVerified, screenWidth, isTablet),
+                _buildProfileSection(documents, isVerified, screenWidth, isTablet, isDesktop),
                 SizedBox(width: screenWidth * 0.05),
                 Expanded(
-                  child: _buildDoctorInfo(basicInfo, professionalDetails, isVerified, screenWidth, isTablet),
+                  child: _buildDoctorInfo(basicInfo, professionalDetails, isVerified, screenWidth, isTablet, isDesktop),
                 ),
               ],
             )
@@ -418,10 +451,10 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
               children: [
                 Row(
                   children: [
-                    _buildProfileSection(documents, isVerified, screenWidth, isTablet),
+                    _buildProfileSection(documents, isVerified, screenWidth, isTablet, isDesktop),
                     SizedBox(width: screenWidth * 0.05),
                     Expanded(
-                      child: _buildDoctorInfo(basicInfo, professionalDetails, isVerified, screenWidth, isTablet),
+                      child: _buildDoctorInfo(basicInfo, professionalDetails, isVerified, screenWidth, isTablet, isDesktop),
                     ),
                   ],
                 ),
@@ -429,7 +462,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
             ),
             SizedBox(height: screenHeight * 0.03),
             Container(
-              padding: EdgeInsets.all(screenWidth * 0.05),
+              padding: EdgeInsets.all(isDesktop ? screenWidth * 0.03 : screenWidth * 0.05),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Colors.grey[50] ?? Colors.grey.shade50, Colors.grey[100] ?? Colors.grey.shade100],
@@ -442,13 +475,13 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow(Icons.business, 'Clinic', professionalDetails['clinicName'] ?? 'Not specified', screenWidth, isTablet),
+                  _buildInfoRow(Icons.business, 'Clinic', professionalDetails['clinicName'] ?? 'Not specified', screenWidth, isTablet, isDesktop),
                   SizedBox(height: screenHeight * 0.015),
-                  _buildInfoRow(Icons.phone, 'Contact', basicInfo['contactNumber'] ?? 'Not specified', screenWidth, isTablet),
+                  _buildInfoRow(Icons.phone, 'Contact', basicInfo['contactNumber'] ?? 'Not specified', screenWidth, isTablet, isDesktop),
                   SizedBox(height: screenHeight * 0.015),
-                  _buildInfoRow(Icons.email, 'Email', basicInfo['email'] ?? 'Not specified', screenWidth, isTablet),
+                  _buildInfoRow(Icons.email, 'Email', basicInfo['email'] ?? 'Not specified', screenWidth, isTablet, isDesktop),
                   SizedBox(height: screenHeight * 0.015),
-                  _buildInfoRow(Icons.badge, 'Registration', professionalDetails['registrationNumber'] ?? 'Not specified', screenWidth, isTablet),
+                  _buildInfoRow(Icons.badge, 'Registration', professionalDetails['registrationNumber'] ?? 'Not specified', screenWidth, isTablet, isDesktop),
                   SizedBox(height: screenHeight * 0.015),
                   _buildInfoRow(
                       Icons.attach_money,
@@ -456,30 +489,31 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                       professionalDetails['consultationFee']?.toString() ??
                           'Not specified',
                       screenWidth,
-                      isTablet),
+                      isTablet,
+                      isDesktop),
                   if (submittedAt != null) ...[
                     SizedBox(height: screenHeight * 0.015),
-                    _buildInfoRow(Icons.schedule, 'Submitted', _formatDate(submittedAt.toDate()), screenWidth, isTablet),
+                    _buildInfoRow(Icons.schedule, 'Submitted', _formatDate(submittedAt.toDate()), screenWidth, isTablet, isDesktop),
                   ],
                 ],
               ),
             ),
             SizedBox(height: screenHeight * 0.025),
-            isTablet
+            isDesktop || isTablet
                 ? Row(
-              children: _buildActionButtons(isVerified, data, docId, screenWidth, isTablet),
+              children: _buildActionButtons(isVerified, data, docId, screenWidth, isTablet, isDesktop),
             )
                 : Column(
               children: [
                 SizedBox(
                   width: double.infinity,
-                  child: _buildViewDetailsButton(data, docId, screenWidth, isTablet),
+                  child: _buildViewDetailsButton(data, docId, screenWidth, isTablet, isDesktop),
                 ),
                 if (!isVerified) ...[
                   SizedBox(height: screenHeight * 0.015),
                   SizedBox(
                     width: double.infinity,
-                    child: _buildApproveButton(docId, data, screenWidth, isTablet),
+                    child: _buildApproveButton(docId, data, screenWidth, isTablet, isDesktop),
                   ),
                 ],
               ],
@@ -490,12 +524,14 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     );
   }
 
-  Widget _buildProfileSection(Map<String, dynamic> documents, bool isVerified, double screenWidth, bool isTablet) {
+  Widget _buildProfileSection(Map<String, dynamic> documents, bool isVerified, double screenWidth, bool isTablet, bool isDesktop) {
+    final profileSize = isDesktop ? screenWidth * 0.08 : (isTablet ? screenWidth * 0.12 : screenWidth * 0.2);
+
     return Stack(
       children: [
         Container(
-          width: isTablet ? screenWidth * 0.12 : screenWidth * 0.2,
-          height: isTablet ? screenWidth * 0.12 : screenWidth * 0.2,
+          width: profileSize,
+          height: profileSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
@@ -529,7 +565,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                   ),
                   child: Icon(
                       Icons.person,
-                      size: isTablet ? screenWidth * 0.06 : screenWidth * 0.1,
+                      size: profileSize * 0.5,
                       color: Colors.grey
                   ),
                 );
@@ -543,7 +579,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
               ),
               child: Icon(
                   Icons.person,
-                  size: isTablet ? screenWidth * 0.06 : screenWidth * 0.1,
+                  size: profileSize * 0.5,
                   color: Colors.grey
               ),
             ),
@@ -567,7 +603,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
             ),
             child: Icon(
               isVerified ? Icons.verified : Icons.pending,
-              size: isTablet ? 18 : 16,
+              size: isDesktop ? 20 : (isTablet ? 18 : 16),
               color: Colors.white,
             ),
           ),
@@ -576,14 +612,14 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     );
   }
 
-  Widget _buildDoctorInfo(Map<String, dynamic> basicInfo, Map<String, dynamic> professionalDetails, bool isVerified, double screenWidth, bool isTablet) {
+  Widget _buildDoctorInfo(Map<String, dynamic> basicInfo, Map<String, dynamic> professionalDetails, bool isVerified, double screenWidth, bool isTablet, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           basicInfo['fullName'] ?? 'Unknown Doctor',
           style: TextStyle(
-            fontSize: isTablet ? 24 : 20,
+            fontSize: isDesktop ? 28 : (isTablet ? 24 : 20),
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
@@ -594,7 +630,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
         Text(
           professionalDetails['specialization'] ?? 'General Veterinarian',
           style: TextStyle(
-            fontSize: isTablet ? 18 : 16,
+            fontSize: isDesktop ? 20 : (isTablet ? 18 : 16),
             color: Colors.grey[600],
             fontWeight: FontWeight.w500,
           ),
@@ -605,7 +641,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
         Container(
           padding: EdgeInsets.symmetric(
               horizontal: screenWidth * 0.04,
-              vertical: screenWidth * 0.02
+              vertical: isDesktop ? 12 : screenWidth * 0.02
           ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -624,7 +660,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
             children: [
               Icon(
                 isVerified ? Icons.verified : Icons.pending,
-                size: isTablet ? 20 : 18,
+                size: isDesktop ? 22 : (isTablet ? 20 : 18),
                 color: isVerified ? Colors.green : Colors.orange,
               ),
               SizedBox(width: screenWidth * 0.015),
@@ -632,7 +668,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                 child: Text(
                   isVerified ? 'Verified' : 'Pending Approval',
                   style: TextStyle(
-                    fontSize: isTablet ? 15 : 13,
+                    fontSize: isDesktop ? 17 : (isTablet ? 15 : 13),
                     fontWeight: FontWeight.w700,
                     color: isVerified ? Colors.green : Colors.orange,
                   ),
@@ -646,10 +682,10 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     );
   }
 
-  List<Widget> _buildActionButtons(bool isVerified, Map<String, dynamic> data, String docId, double screenWidth, bool isTablet) {
+  List<Widget> _buildActionButtons(bool isVerified, Map<String, dynamic> data, String docId, double screenWidth, bool isTablet, bool isDesktop) {
     List<Widget> buttons = [
       Expanded(
-        child: _buildViewDetailsButton(data, docId, screenWidth, isTablet),
+        child: _buildViewDetailsButton(data, docId, screenWidth, isTablet, isDesktop),
       ),
     ];
 
@@ -657,7 +693,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
       buttons.addAll([
         SizedBox(width: screenWidth * 0.04),
         Expanded(
-          child: _buildApproveButton(docId, data, screenWidth, isTablet),
+          child: _buildApproveButton(docId, data, screenWidth, isTablet, isDesktop),
         ),
       ]);
     }
@@ -665,7 +701,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     return buttons;
   }
 
-  Widget _buildViewDetailsButton(Map<String, dynamic> data, String docId, double screenWidth, bool isTablet) {
+  Widget _buildViewDetailsButton(Map<String, dynamic> data, String docId, double screenWidth, bool isTablet, bool isDesktop) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -684,20 +720,20 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
         onPressed: () => _viewDoctorDetails(data, docId),
         icon: Icon(
             Icons.visibility,
-            size: isTablet ? 22 : 20
+            size: isDesktop ? 24 : (isTablet ? 22 : 20)
         ),
         label: Text(
             'View Details',
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: isTablet ? 16 : 14,
+              fontSize: isDesktop ? 18 : (isTablet ? 16 : 14),
             )
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           shadowColor: Colors.transparent,
-          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.035),
+          padding: EdgeInsets.symmetric(vertical: isDesktop ? 18 : screenWidth * 0.035),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
@@ -706,7 +742,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     );
   }
 
-  Widget _buildApproveButton(String docId, Map<String, dynamic> data, double screenWidth, bool isTablet) {
+  Widget _buildApproveButton(String docId, Map<String, dynamic> data, double screenWidth, bool isTablet, bool isDesktop) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -725,20 +761,20 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
         onPressed: () => _approveDoctor(docId, data),
         icon: Icon(
             Icons.check_circle,
-            size: isTablet ? 22 : 20
+            size: isDesktop ? 24 : (isTablet ? 22 : 20)
         ),
         label: Text(
             'Approve',
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: isTablet ? 16 : 14,
+              fontSize: isDesktop ? 18 : (isTablet ? 16 : 14),
             )
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           shadowColor: Colors.transparent,
-          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.035),
+          padding: EdgeInsets.symmetric(vertical: isDesktop ? 18 : screenWidth * 0.035),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
@@ -747,18 +783,18 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, double screenWidth, bool isTablet) {
+  Widget _buildInfoRow(IconData icon, String label, String value, double screenWidth, bool isTablet, bool isDesktop) {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(screenWidth * 0.02),
+          padding: EdgeInsets.all(isDesktop ? screenWidth * 0.015 : screenWidth * 0.02),
           decoration: BoxDecoration(
             color: const Color(0xFF199A8E).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
               icon,
-              size: isTablet ? 20 : 18,
+              size: isDesktop ? 22 : (isTablet ? 20 : 18),
               color: const Color(0xFF199A8E)
           ),
         ),
@@ -766,7 +802,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
         Text(
           '$label: ',
           style: TextStyle(
-            fontSize: isTablet ? 17 : 15,
+            fontSize: isDesktop ? 19 : (isTablet ? 17 : 15),
             fontWeight: FontWeight.w700,
             color: Colors.black87,
           ),
@@ -775,7 +811,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
           child: Text(
             value,
             style: TextStyle(
-              fontSize: isTablet ? 17 : 15,
+              fontSize: isDesktop ? 19 : (isTablet ? 17 : 15),
               color: Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
@@ -887,4 +923,3 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
     }
   }
 }
-

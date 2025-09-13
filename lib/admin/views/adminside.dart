@@ -1,4 +1,5 @@
 import 'package:al_haiwan/admin/controllers/admin_bottom_nav_controller.dart';
+import 'package:al_haiwan/doctor/views/bottom_nav_pages/appointments/doctor_appointment_management_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -25,7 +26,7 @@ class _AdminScreenState extends State<AdminScreen> {
     AdminAppointmentsScreen(),
     AdminProducts(),
     AdminOrderManagementScreen(),
-    AdminProfile(),
+    AdminDoctorVerificationPage()
   ];
 
   User? user; // To store the logged-in user's information
@@ -82,8 +83,8 @@ class _AdminScreenState extends State<AdminScreen> {
             label: 'Orders',
           ),
           BottomNavigationBarItem(
-            icon: _buildNavIcon('assets/adminicons/profile.png', 4),
-            label: 'Profile',
+            icon: _buildNavIcon('assets/icons/consult.png', 4),
+            label: 'Doctors',
           ),
         ],
         type: BottomNavigationBarType.fixed,
@@ -150,7 +151,8 @@ class _AdminScreenState extends State<AdminScreen> {
                 icon: "assets/adminicons/appointment.png",
                 label: "Appointments",
                 onTap: () {
-                  Get.to(() => AdminAppointmentsScreen());
+                  controller.changeIndex(1);
+                  Get.back();
                 },
               ),
               _buildDivider(),
