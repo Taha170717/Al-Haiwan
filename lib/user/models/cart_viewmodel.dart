@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
-import '../../../user_service.dart';
-import '../../../../models/cart_item_model.dart';
+import '../repository/user_service.dart';
+import 'cart_item_model.dart';
 
 class CartViewModel extends GetxController {
   var cartItems = <CartItemModel>[].obs;
@@ -278,6 +278,25 @@ class CartViewModel extends GetxController {
       colorText: Colors.white,
       duration: const Duration(seconds: 2),
     );
+  }
+
+  Future<void> clearCartSilently() async {
+    final userId = _userService.currentUserId;
+    if (userId == null) return;
+
+    // Clear all items from Firestore without showing snackbar
+    final batch = _firestore.batch();
+    final cartDocs = await _firestore
+        .collection('user_carts')
+        .doc(userId)
+        .collection('items')
+        .get();
+
+    for (final doc in cartDocs.docs) {
+      batch.delete(doc.reference);
+    }
+
+    await batch.commit();
   }
 
   int get itemCount => cartItems.fold(0, (sum, item) => sum + item.quantity);

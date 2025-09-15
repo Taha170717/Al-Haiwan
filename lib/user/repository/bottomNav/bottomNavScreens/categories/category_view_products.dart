@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import '../cart/cart_viewmodel.dart';
+import '../../../../models/cart_viewmodel.dart';
 import '../cart/cartscreen.dart';
 import 'product_detail_page.dart'; // Import ProductDetailPage
 

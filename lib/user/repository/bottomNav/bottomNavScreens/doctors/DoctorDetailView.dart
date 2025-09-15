@@ -178,12 +178,12 @@ class DoctorDetailView extends StatelessWidget {
                   SizedBox(height: screen.height * 0.01),
                   Row(
                     children: [
-                      Icon(Icons.attach_money,
+                      Icon(Icons.money,
                           size: screen.width * 0.04,
                           color: Colors.grey[600]),
                       SizedBox(width: screen.width * 0.02),
                       Text(
-                          "Consultation Fee: ₨${(controller.doctorProfile.value?.consultationFee ?? doctor.consultationFee).toInt()}",
+                          "Consultation Fee: ₨ ${(controller.doctorProfile.value?.consultationFee ?? doctor.consultationFee).toInt()}",
                           style: TextStyle(
                             fontSize:
                             screen.width * (isTablet ? 0.025 : 0.035),

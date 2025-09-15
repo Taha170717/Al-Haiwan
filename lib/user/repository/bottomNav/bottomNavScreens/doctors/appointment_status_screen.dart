@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../controllers/appointment_controller.dart';
-import '../../../../models/appointment_model.dart';
+import '../../../../models/user_appointment_model.dart';
 
 
 class AppointmentStatusScreen extends StatefulWidget {

@@ -33,6 +33,7 @@ class OrderController extends GetxController {
     required String city,
     required String state,
     required String zipCode,
+    bool showSuccessSnackbar = true,
   }) async {
     try {
       isLoading.value = true;
@@ -245,7 +246,9 @@ class OrderController extends GetxController {
       currentOrder.value = order;
       orders.insert(0, order);
 
-      _showSuccessSnackbar('Order placed successfully!');
+      if (showSuccessSnackbar) {
+        _showSuccessSnackbar('Order placed successfully!');
+      }
       return true;
     } catch (e) {
       _showErrorSnackbar('Failed to place order: ${e.toString()}');

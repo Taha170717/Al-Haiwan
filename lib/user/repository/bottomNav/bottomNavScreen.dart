@@ -11,9 +11,11 @@ import 'package:al_haiwan/user/repository/bottomNav/bottomNavScreens/myappointme
 import '../screens/login/loginpage.dart';
 import 'bottomNavScreens/myorders/myorders.dart';
 import 'bottomNavScreens/profile/profile.dart';
+import '../user_service.dart';
 
 class BottomNavScreen extends StatelessWidget {
   final BottomNavController controller = Get.put(BottomNavController());
+  final UserService userService = Get.find<UserService>();
 
   final List<Widget> pages = [
     HomeScreen(),
@@ -33,7 +35,7 @@ class BottomNavScreen extends StatelessWidget {
               "Alhewan",
               style: TextStyle(
                   color: Color(0xFF199A8E),
-                  fontFamily: "bolditalic"), // Custom teal color
+                  fontFamily: "bolditalic"),
             ),
             iconTheme: IconThemeData(color: Color(0XFF199A8E)),
           ),
@@ -73,115 +75,151 @@ class BottomNavScreen extends StatelessWidget {
             unselectedLabelStyle: TextStyle(fontSize: 10),
             onTap: controller.changeIndex,
           ),
-      drawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85,
-        child: Drawer(
-          backgroundColor: Colors.white,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              UserAccountsDrawerHeader(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+          drawer: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.85,
+            child: Drawer(
+              backgroundColor: Colors.white,
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  Obx(() => UserAccountsDrawerHeader(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(20)),
+                        ),
+                        currentAccountPicture: CircleAvatar(
+                          radius: 35,
+                          backgroundColor: Color(0xFF199A8E).withOpacity(0.1),
+                          child: userService.getUserImage != null
+                              ? ClipOval(
+                                  child: Image.network(
+                                    userService.getUserImage!,
+                                    width: 70,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Image.asset(
+                                      "assets/images/user.png",
+                                      width: 70,
+                                      height: 70,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    loadingBuilder:
+                                        (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        width: 70,
+                                        height: 70,
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                )
+                              : Image.asset(
+                                  "assets/images/user.png",
+                                  width: 70,
+                                  height: 70,
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                        accountName: Text(
+                          userService.getUserName ?? "User",
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        accountEmail: Text(
+                          userService.getUserEmail ?? "user@example.com",
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      )),
+                  _buildDrawerTile(
+                    icon: "assets/icons/profile.png",
+                    label: "Profile",
+                    onTap: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => ProfileScreen()));
+                    },
                   ),
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-                ),
-                currentAccountPicture: const CircleAvatar(
-                  radius: 35,
-                  backgroundImage: AssetImage("assets/images/user.png"),
-                ),
-                accountName: const Text(
-                  "Muhammad Taha",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                accountEmail: const Text("tahazafar112@gmail.com"),
+                  _buildDivider(),
+                  _buildDrawerTile(
+                    icon: "assets/icons/home.png",
+                    label: "Home",
+                    onTap: () {
+                      controller.changeIndex(0);
+                      Get.back();
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildDrawerTile(
+                    icon: "assets/icons/consult.png",
+                    label: "Doctors",
+                    onTap: () {
+                      controller.changeIndex(1);
+                      Get.back();
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildDrawerTile(
+                    icon: "assets/icons/schedule.png",
+                    label: "Appointments",
+                    onTap: () {
+                      controller.changeIndex(2);
+                      Get.back();
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildDrawerTile(
+                    icon: "assets/icons/checkout.png",
+                    label: "My Orders & Appointments",
+                    onTap: () {
+                      Get.to(() => MyAppointmentsOrdersPage());
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildDrawerTile(
+                    icon: "assets/icons/category.png",
+                    label: "Categories",
+                    onTap: () {
+                      controller.changeIndex(3);
+                      Get.back();
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildDrawerTile(
+                    icon: "assets/icons/cart.png",
+                    label: "Cart",
+                    onTap: () {
+                      controller.changeIndex(4);
+                      Get.back();
+                    },
+                  ),
+                  _buildDivider(),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text('Logout',
+                        style: TextStyle(color: Colors.red)),
+                    onTap: () {
+                      _showLogoutDialog(context);
+                    },
+                  ),
+                ],
               ),
-
-              _buildDrawerTile(
-                icon: "assets/icons/profile.png",
-                label: "Profile",
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen()));
-                },
-              ),
-              _buildDivider(),
-
-              _buildDrawerTile(
-                icon: "assets/icons/home.png",
-                label: "Home",
-                onTap: () {
-                  controller.changeIndex(0);
-                  Get.back();
-                },
-              ),
-              _buildDivider(),
-
-              _buildDrawerTile(
-                icon: "assets/icons/consult.png",
-                label: "Doctors",
-                onTap: () {
-                  controller.changeIndex(1);
-                  Get.back();
-                },
-              ),
-              _buildDivider(),
-
-              _buildDrawerTile(
-                icon: "assets/icons/schedule.png",
-                label: "Appointments",
-                onTap: () {
-                  controller.changeIndex(2);
-                  Get.back();
-                },
-              ),
-              _buildDivider(),
-
-              _buildDrawerTile(
-                icon: "assets/icons/checkout.png",
-                label: "My Orders",
-                onTap: () {
-                  Get.to(() => MyOrdersPage());
-                },
-              ),
-              _buildDivider(),
-
-              _buildDrawerTile(
-                icon: "assets/icons/category.png",
-                label: "Categories",
-                onTap: () {
-                  controller.changeIndex(3);
-                  Get.back();
-                },
-              ),
-              _buildDivider(),
-
-              _buildDrawerTile(
-                icon: "assets/icons/cart.png",
-                label: "Cart",
-                onTap: () {
-                  controller.changeIndex(4);
-                  Get.back();
-                },
-              ),
-              _buildDivider(),
-
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Logout', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  _showLogoutDialog(context);
-                },
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-
-    ),
-        );
+        ));
   }
 
   /// Bottom nav icon widget
@@ -253,8 +291,8 @@ class BottomNavScreen extends StatelessWidget {
                     onPressed: () async {
                       Navigator.of(context).pop(); // Close dialog
 
-                      // 🚨 Sign the user out from Firebase
-                      await FirebaseAuth.instance.signOut();
+                      // 🚨 Sign the user out using UserService
+                      await userService.signOut();
 
                       // ✅ Navigate to Login screen and clear history
                       Navigator.pushAndRemoveUntil(

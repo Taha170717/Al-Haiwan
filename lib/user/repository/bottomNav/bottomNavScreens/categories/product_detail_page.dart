@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../cart/cart_viewmodel.dart';
+import '../../../../models/cart_viewmodel.dart';
 import '../cart/cartscreen.dart';
 
 class ProductDetailPage extends StatefulWidget {

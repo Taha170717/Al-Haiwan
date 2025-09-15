@@ -3,9 +3,10 @@ import 'package:get/get.dart';
 
 import '../../../../controllers/order_controller.dart';
 import '../../../../controllers/profile_controller.dart';
+import '../../../../controllers/bottom_nav_controller.dart';
 import '../../../../models/order_model.dart';
 import '../../bottomNavScreen.dart';
-import '../cart/cart_viewmodel.dart';
+import '../../../../models/cart_viewmodel.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -18,6 +19,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final OrderController orderController = Get.put(OrderController());
   final ProfileController profileController = Get.put(ProfileController());
   final CartViewModel cartVM = Get.find<CartViewModel>();
+  final BottomNavController bottomNavController =
+      Get.put(BottomNavController());
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -686,11 +689,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       zipCode: zipController.text.trim().isNotEmpty
           ? zipController.text.trim()
           : '00000',
+      showSuccessSnackbar: false,
     );
 
     if (success) {
-      cartVM.clearCart();
-
+      cartVM.clearCartSilently();
 
       Get.snackbar(
         'Order Placed!',
@@ -699,7 +702,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
       );
-      Get.to(BottomNavScreen());
+
+      // Set cart page index and navigate to BottomNavScreen
+      bottomNavController.changeIndex(4);
+      Get.off(() => BottomNavScreen());
     }
   }
 }

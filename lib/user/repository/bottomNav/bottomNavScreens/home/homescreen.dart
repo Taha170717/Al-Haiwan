@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../controllers/bottom_nav_controller.dart';
 import '../../../../controllers/verified_doctor_controller.dart';
-import '../cart/cart_viewmodel.dart';
+import '../../../../models/cart_viewmodel.dart';
 import '../categories/category_view_products.dart';
 import '../categories/product_detail_page.dart';
 import '../doctors/DoctorDetailView.dart';

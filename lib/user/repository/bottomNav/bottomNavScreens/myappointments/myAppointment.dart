@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../../../models/appointment_model.dart';
+import '../../../../models/user_appointment_model.dart';
 import 'package:intl/intl.dart';
 
 class MyAppointmentScreen extends StatelessWidget {

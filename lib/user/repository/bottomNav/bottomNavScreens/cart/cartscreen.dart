@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../user_service.dart';
 import '../checkout/checkout_screen.dart';
 import 'cart_item_tile.dart';
-import 'cart_viewmodel.dart';
+import '../../../../models/cart_viewmodel.dart';
 
 // DEBUG: Loading doctor detail - print doctorId when opening detail page
 void printLoadingDoctorId(String doctorId) {

@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../../doctor/models/doctor_availability_model.dart';
 import '../../../../controllers/appointment_controller.dart';
-import '../../../../models/appointment_model.dart';
+import '../../../../models/user_appointment_model.dart';
 import '../../../../models/doctor_detail_viewmodel.dart' hide DoctorProfile;
 import '../../../../models/doctor_list_viewmodel.dart';
 import '../../bottomNavScreen.dart';
