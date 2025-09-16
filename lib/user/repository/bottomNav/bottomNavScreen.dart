@@ -12,6 +12,7 @@ import '../screens/login/loginpage.dart';
 import 'bottomNavScreens/myorders/myorders.dart';
 import 'bottomNavScreens/profile/profile.dart';
 import '../user_service.dart';
+import '../../../luna_Chatbot/screens/chat_screen.dart';
 
 class BottomNavScreen extends StatelessWidget {
   final BottomNavController controller = Get.put(BottomNavController());
@@ -75,6 +76,21 @@ class BottomNavScreen extends StatelessWidget {
             unselectedLabelStyle: TextStyle(fontSize: 10),
             onTap: controller.changeIndex,
           ),
+          // ✅ FAB (only shows if not in Cart or Categories)
+          floatingActionButton: (controller.currentIndex.value != 3 &&
+                  controller.currentIndex.value != 4)
+              ? FloatingActionButton(
+                  backgroundColor: Colors.white,
+                  onPressed: () {
+                    Get.to(() => const ChatBotScreen());
+                  },
+                  child: Image.asset(
+                    "assets/images/luna.png", // 🔹 create your own chatbot icon
+                    width: 90,
+                    height: 90,
+                  ),
+                )
+              : null,
           drawer: SizedBox(
             width: MediaQuery.of(context).size.width * 0.85,
             child: Drawer(
@@ -246,11 +262,8 @@ class BottomNavScreen extends StatelessWidget {
     );
   }
 
-
   void _showLogoutDialog(BuildContext context) {
-    final Size screenSize = MediaQuery
-        .of(context)
-        .size;
+    final Size screenSize = MediaQuery.of(context).size;
 
     showDialog(
       context: context,
@@ -350,5 +363,4 @@ class BottomNavScreen extends StatelessWidget {
       endIndent: 20,
     );
   }
-
 }

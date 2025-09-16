@@ -12,13 +12,13 @@ class Assets {
   static const String animationsLoading = 'assets/animations/loading.json';
   static const String animationsLoadings = 'assets/animations/loadings.json';
   static const String assetsAnimationsLoadings = 'assets/animations/loadings.json';
-  static const String doctoriconsAppointments = 'assets/doctor_icons/appointments.png';
-  static const String doctoriconsAvailable = 'assets/doctor_icons/available.png';
-  static const String doctoriconsChats = 'assets/doctor_icons/chats.png';
-  static const String doctoriconsDashboard = 'assets/doctor_icons/dashboard.png';
-  static const String doctoriconsMedicalrecords = 'assets/doctor_icons/medicalrecords.png';
-  static const String doctoriconsMoney = 'assets/doctor_icons/money.png';
-  static const String doctoriconsProfilesetting = 'assets/doctor_icons/profilesetting.png';
+  static const String doctorIconsAppointments = 'assets/doctor_icons/appointments.png';
+  static const String doctorIconsAvailable = 'assets/doctor_icons/available.png';
+  static const String doctorIconsChats = 'assets/doctor_icons/chats.png';
+  static const String doctorIconsDashboard = 'assets/doctor_icons/dashboard.png';
+  static const String doctorIconsMedicalrecords = 'assets/doctor_icons/medicalrecords.png';
+  static const String doctorIconsMoney = 'assets/doctor_icons/money.png';
+  static const String doctorIconsProfilesetting = 'assets/doctor_icons/profilesetting.png';
   static const String fontsPoppinsBold = 'assets/fonts/Poppins-Bold.ttf';
   static const String fontsPoppinsBoldItalic = 'assets/fonts/Poppins-BoldItalic.ttf';
   static const String fontsPoppinsExtraBoldItalic = 'assets/fonts/Poppins-ExtraBoldItalic.ttf';
@@ -68,12 +68,15 @@ class Assets {
   static const String imagesLogo2 = 'assets/images/logo2.jpg';
   static const String imagesLogo3 = 'assets/images/logo3.png';
   static const String imagesLogoback = 'assets/images/logoback.png';
+  static const String imagesLuna = 'assets/images/luna.png';
+  static const String imagesLunalogo = 'assets/images/lunalogo.png';
   static const String imagesMastercard = 'assets/images/mastercard.png';
   static const String imagesMed1 = 'assets/images/med1.png';
   static const String imagesObh = 'assets/images/obh.png';
   static const String imagesPanadol = 'assets/images/panadol.png';
   static const String imagesProfile = 'assets/images/Profile.png';
   static const String imagesUser = 'assets/images/user.png';
+  static const String imagesUser1 = 'assets/images/user1.png';
   static const String imagesVise = 'assets/images/Vise.png';
 
 }

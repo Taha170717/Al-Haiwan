@@ -32,6 +32,16 @@ service cloud.firestore {
                      (resource.data.isDoctor == true && resource.data.isVerified == true);
       allow update, delete: if isOwner(userId) || isAdminEmail();
       allow create: if isSignedIn();
+      
+      // Luna Chatbot Collections - User specific chats
+      match /chats/{chatId} {
+        allow read, write: if isAdminEmail() || isOwner(userId);
+        
+        // Chat Messages subcollection
+        match /messages/{messageId} {
+          allow read, write: if isAdminEmail() || isOwner(userId);
+        }
+      }
     }
     
     // Doctors Collection
