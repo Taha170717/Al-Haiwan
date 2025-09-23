@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "451198622828",
+    "project_id": "alhewan-e110c",
+    "storage_bucket": "alhewan-e110c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451198622828:android:219f91cea026868f664c49",
+        "android_client_info": {
+          "package_name": "com.example.al_haiwan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDi8sTzHEtcUBe_GDip2tpavl7g-pJmrso"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
