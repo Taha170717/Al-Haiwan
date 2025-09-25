@@ -590,6 +590,7 @@ class _DoctorVerificationPageState extends State<DoctorVerificationPage> {
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
+              //wqeqwe
               child: controller.profilePicture != null
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
