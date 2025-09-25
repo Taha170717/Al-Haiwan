@@ -130,6 +130,7 @@ class DoctorVerificationController extends GetxController {
         }
         mimeType = "application/octet-stream";
       }
+      //qwew
 
       final request = http.MultipartRequest("POST", Uri.parse(imageKitUploadUrl));
       request.fields['fileName'] = fileName;
