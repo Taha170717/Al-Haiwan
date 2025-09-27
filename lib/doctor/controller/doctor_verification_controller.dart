@@ -373,6 +373,77 @@ class DoctorVerificationController extends GetxController {
     );
   }
 
+  Future<bool> updateProfilePicture() async {
+    try {
+      // Pick image from gallery
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+
+      if (pickedFile == null) return false;
+
+      isLoading.value = true;
+      loadingMessage.value = 'Updating profile picture...';
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      final userId = user.uid;
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+      // Upload to ImageKit
+      final profilePictureUrl = await uploadFileToImageKit(
+        pickedFile,
+        '${userId}_profile_$timestamp.jpg',
+        'documents/profile_pictures/',
+      );
+
+      if (profilePictureUrl == null) {
+        throw Exception('Failed to upload image');
+      }
+
+      // Update in Firestore (doctor_verification_requests collection)
+      await FirebaseFirestore.instance
+          .collection('doctor_verification_requests')
+          .doc(userId)
+          .update({
+        'documents.profilePicture': profilePictureUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Also update in users collection if needed
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'profilePicture': profilePictureUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      Get.snackbar(
+        'Success',
+        'Profile picture updated successfully!',
+        backgroundColor: const Color(0xFF199A8E),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 2),
+      );
+
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to update profile picture: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+      loadingMessage.value = '';
+    }
+  }
+
   @override
   void onClose() {
     fullNameController.dispose();

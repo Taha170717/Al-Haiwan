@@ -355,8 +355,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
             index: controller.currentIndex.value,
             children: pages,
           ),
-          if (!isVerified && controller.currentIndex.value != 4)
-            Positioned.fill(
+              if (!isVerified)
+                Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                 child: Container(
@@ -435,8 +435,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
         selectedLabelStyle: const TextStyle(fontSize: 10),
         unselectedLabelStyle: const TextStyle(fontSize: 10),
         onTap: (index) {
-          if (!isVerified && index != 4) {
-            _showVerificationDialog();
+              if (!isVerified) {
+                _showVerificationDialog();
           } else {
             controller.changeIndex(index);
           }
@@ -598,10 +598,15 @@ class _DoctorScreenState extends State<DoctorScreen> {
             _buildDrawerTile(
               icon: "assets/doctor_icons/profilesetting.png",
               label: "Profile",
-              isLocked: false,
+              isLocked: !isVerified,
               onTap: () {
-                controller.changeIndex(4);
-                Get.back();
+                if (!isVerified) {
+                  Get.back();
+                  _showVerificationDialog();
+                } else {
+                  controller.changeIndex(4);
+                  Get.back();
+                }
               },
             ),
             _buildDivider(),
@@ -620,7 +625,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
 
   Widget _buildNavIcon(String assetPath, int index) {
     final isSelected = controller.currentIndex.value == index;
-    final isLocked = !isVerified && index != 4;
+    final isLocked = !isVerified;
 
     return Container(
       padding: const EdgeInsets.all(4),

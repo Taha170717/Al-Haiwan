@@ -4,12 +4,16 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' if (dart.library.html) 'dart:io';
 import 'package:al_haiwan/admin/views/bottom_nav_pages/products/product_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+
+// Remove Firebase Storage import
+// import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
+// Add ImageKit service import
+import '../services/imagekit_service.dart';
 import '../views/adminside.dart'; // Import AdminScreen
 
 class AddProductController extends GetxController {
@@ -52,30 +56,17 @@ class AddProductController extends GetxController {
   }
 
   Future<List<String>> uploadImagesToStorage(String productId) async {
-    List<String> downloadUrls = [];
-
-    // Use default instance — avoids domain verification issues
-    var storage = FirebaseStorage.instance;
-
-    for (var image in selectedImages) {
-      String fileName =
-          "${productId}_${DateTime.now().millisecondsSinceEpoch}.jpg";
-      var ref = storage.ref().child("products").child(fileName);
-
-      if (kIsWeb) {
-        final bytes = await image.readAsBytes();
-        await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
-      } else {
-        await ref.putFile(File(image.path));
-        print("Image URL: ${image.path}"); // Log the image URL
-      }
-
-      // Always get the actual public download URL
-      String url = await ref.getDownloadURL();
-      downloadUrls.add(url);
+    try {
+      // Use ImageKit service to upload all images to product_images folder
+      List<String> downloadUrls = await ImageKitService.uploadProductImages(
+        selectedImages,
+        productId,
+      );
+      return downloadUrls;
+    } catch (e) {
+      print("Error uploading images to ImageKit: $e");
+      throw Exception("Failed to upload images: $e");
     }
-
-    return downloadUrls;
   }
 
   Future<void> addProduct() async {

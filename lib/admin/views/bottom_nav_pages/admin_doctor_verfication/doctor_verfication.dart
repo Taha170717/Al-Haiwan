@@ -16,6 +16,29 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
   final TextEditingController searchController = TextEditingController();
   String searchQuery = '';
 
+  // Add counters for doctor statistics
+  int totalDoctors = 0;
+  int verifiedDoctors = 0;
+  int pendingDoctors = 0;
+
+  // Method to calculate doctor counts
+  void _calculateDoctorCounts(List<QueryDocumentSnapshot> docs) {
+    totalDoctors = docs.length;
+    verifiedDoctors = 0;
+    pendingDoctors = 0;
+
+    for (var doc in docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final isVerified = data['isVerified'] ?? false;
+
+      if (isVerified) {
+        verifiedDoctors++;
+      } else {
+        pendingDoctors++;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -56,123 +79,6 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
           constraints: BoxConstraints(maxWidth: maxContentWidth),
           child: Column(
             children: [
-              Container(
-                padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    screenHeight * 0.025,
-                    horizontalPadding,
-                    screenHeight * 0.04
-                ),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: isDesktop ? 600 : double.infinity,
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
-                              blurRadius: 20,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: searchController,
-                          onChanged: (value) {
-                            setState(() {
-                              searchQuery = value.toLowerCase();
-                            });
-                          },
-                          decoration: InputDecoration(
-                            hintText: 'Search doctors by name...',
-                            hintStyle: TextStyle(color: Colors.grey[500]),
-                            prefixIcon: Container(
-                              padding: const EdgeInsets.all(12),
-                              child: Icon(
-                                  Icons.search,
-                                  color: const Color(0xFF199A8E),
-                                  size: isDesktop ? 28 : (isTablet ? 26 : 24)
-                              ),
-                            ),
-                            suffixIcon: searchQuery.isNotEmpty
-                                ? IconButton(
-                              onPressed: () {
-                                searchController.clear();
-                                setState(() {
-                                  searchQuery = '';
-                                });
-                              },
-                              icon: Icon(
-                                Icons.clear,
-                                color: Colors.grey,
-                                size: isDesktop ? 26 : (isTablet ? 24 : 22),
-                              ),
-                            )
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: screenWidth * 0.05,
-                                vertical: isDesktop ? 20 : screenHeight * 0.022
-                            ),
-                          ),
-                          style: TextStyle(fontSize: isDesktop ? 20 : (isTablet ? 18 : 16)),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: screenHeight * 0.025),
-                    isDesktop
-                        ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet, isDesktop),
-                        SizedBox(width: screenWidth * 0.03),
-                        _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet, isDesktop),
-                        SizedBox(width: screenWidth * 0.03),
-                        _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet, isDesktop),
-                      ],
-                    )
-                        : isTablet
-                        ? Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet, isDesktop),
-                        _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet, isDesktop),
-                        _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet, isDesktop),
-                      ],
-                    )
-                        : Wrap(
-                      alignment: WrapAlignment.spaceEvenly,
-                      spacing: screenWidth * 0.02,
-                      children: [
-                        _buildFilterChip('All', 'all', Icons.people, null, screenWidth, isTablet, isDesktop),
-                        _buildFilterChip('Verified', 'verified', Icons.verified_user, Colors.green, screenWidth, isTablet, isDesktop),
-                        _buildFilterChip('Pending', 'pending', Icons.pending_actions, Colors.orange, screenWidth, isTablet, isDesktop),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
@@ -180,160 +86,218 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
                       .orderBy('submittedAt', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(screenWidth * 0.05),
+                    // Calculate doctor counts when data is available
+                    if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                      _calculateDoctorCounts(snapshot.data!.docs);
+                    } else {
+                      totalDoctors = 0;
+                      verifiedDoctors = 0;
+                      pendingDoctors = 0;
+                    }
+
+                    return Column(
+                      children: [
+                        // Move filter chips here so they can access the counts
+                        Container(
+                          padding: EdgeInsets.fromLTRB(
+                              horizontalPadding,
+                              screenHeight * 0.025,
+                              horizontalPadding,
+                              screenHeight * 0.025),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: isDesktop ? 600 : double.infinity,
+                            ),
+                            child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                shape: BoxShape.circle,
+                                borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF199A8E).withOpacity(0.2),
+                                    color: Colors.black.withOpacity(0.15),
                                     blurRadius: 20,
-                                    spreadRadius: 5,
+                                    offset: const Offset(0, 5),
                                   ),
                                 ],
                               ),
-                              child: CircularProgressIndicator(
-                                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
-                                strokeWidth: isTablet ? 4 : 3,
+                              child: TextField(
+                                controller: searchController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    searchQuery = value.toLowerCase();
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  hintText: 'Search doctors by name...',
+                                  hintStyle: TextStyle(color: Colors.grey[500]),
+                                  prefixIcon: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Icon(Icons.search,
+                                        color: const Color(0xFF199A8E),
+                                        size: isDesktop
+                                            ? 28
+                                            : (isTablet ? 26 : 24)),
+                                  ),
+                                  suffixIcon: searchQuery.isNotEmpty
+                                      ? IconButton(
+                                          onPressed: () {
+                                            searchController.clear();
+                                            setState(() {
+                                              searchQuery = '';
+                                            });
+                                          },
+                                          icon: Icon(
+                                            Icons.clear,
+                                            color: Colors.grey,
+                                            size: isDesktop
+                                                ? 26
+                                                : (isTablet ? 24 : 22),
+                                          ),
+                                        )
+                                      : null,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: screenWidth * 0.05,
+                                      vertical: isDesktop
+                                          ? 20
+                                          : screenHeight * 0.022),
+                                ),
+                                style: TextStyle(
+                                    fontSize:
+                                        isDesktop ? 20 : (isTablet ? 18 : 16)),
                               ),
                             ),
-                            SizedBox(height: screenHeight * 0.025),
-                            Text(
-                              'Loading doctors...',
-                              style: TextStyle(
-                                fontSize: isTablet ? 18 : 16,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      );
-                    }
-
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                        Container(
+                          padding: EdgeInsets.fromLTRB(horizontalPadding, 0,
+                              horizontalPadding, screenHeight * 0.02),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Error loading doctors',
-                              style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(30),
+                              bottomRight: Radius.circular(30),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Please try again later',
-                              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                            ),
-                          ],
+                          ),
+                          child: isDesktop
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _buildFilterChip('All', 'all', Icons.people,
+                                        null, screenWidth, isTablet, isDesktop),
+                                    SizedBox(width: screenWidth * 0.03),
+                                    _buildFilterChip(
+                                        'Verified',
+                                        'verified',
+                                        Icons.verified_user,
+                                        Colors.green,
+                                        screenWidth,
+                                        isTablet,
+                                        isDesktop),
+                                    SizedBox(width: screenWidth * 0.03),
+                                    _buildFilterChip(
+                                        'Pending',
+                                        'pending',
+                                        Icons.pending_actions,
+                                        Colors.orange,
+                                        screenWidth,
+                                        isTablet,
+                                        isDesktop),
+                                  ],
+                                )
+                              : isTablet
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        _buildFilterChip(
+                                            'All',
+                                            'all',
+                                            Icons.people,
+                                            null,
+                                            screenWidth,
+                                            isTablet,
+                                            isDesktop),
+                                        _buildFilterChip(
+                                            'Verified',
+                                            'verified',
+                                            Icons.verified_user,
+                                            Colors.green,
+                                            screenWidth,
+                                            isTablet,
+                                            isDesktop),
+                                        _buildFilterChip(
+                                            'Pending',
+                                            'pending',
+                                            Icons.pending_actions,
+                                            Colors.orange,
+                                            screenWidth,
+                                            isTablet,
+                                            isDesktop),
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Expanded(
+                                          child: _buildFilterChip(
+                                              'All',
+                                              'all',
+                                              Icons.people,
+                                              null,
+                                              screenWidth,
+                                              isTablet,
+                                              isDesktop),
+                                        ),
+                                        SizedBox(width: screenWidth * 0.02),
+                                        Expanded(
+                                          child: _buildFilterChip(
+                                              'Verified',
+                                              'verified',
+                                              Icons.verified_user,
+                                              Colors.green,
+                                              screenWidth,
+                                              isTablet,
+                                              isDesktop),
+                                        ),
+                                        SizedBox(width: screenWidth * 0.02),
+                                        Expanded(
+                                          child: _buildFilterChip(
+                                              'Pending',
+                                              'pending',
+                                              Icons.pending_actions,
+                                              Colors.orange,
+                                              screenWidth,
+                                              isTablet,
+                                              isDesktop),
+                                        ),
+                                      ],
+                                    ),
                         ),
-                      );
-                    }
 
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No doctors found',
-                              style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'No verification requests yet',
-                              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                            ),
-                          ],
+                        // Main content area
+                        Expanded(
+                          child: _buildMainContent(snapshot, horizontalPadding,
+                              screenWidth, screenHeight, isTablet, isDesktop),
                         ),
-                      );
-                    }
-
-                    // Filter doctors based on selected filter and search query
-                    final filteredDocs = snapshot.data!.docs.where((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      final isVerified = data['isVerified'] ?? false;
-                      final fullName = data['basicInfo']?['fullName']?.toString().toLowerCase() ?? '';
-
-                      // Apply search filter
-                      if (searchQuery.isNotEmpty && !fullName.contains(searchQuery)) {
-                        return false;
-                      }
-
-                      // Apply status filter
-                      switch (selectedFilter) {
-                        case 'verified':
-                          return isVerified;
-                        case 'pending':
-                          return !isVerified;
-                        default:
-                          return true;
-                      }
-                    }).toList();
-
-                    if (filteredDocs.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No doctors match your criteria',
-                              style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Try adjusting your search or filters',
-                              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: screenWidth * 0.05,
-                      ),
-                      itemCount: filteredDocs.length,
-                      itemBuilder: (context, index) {
-                        final doc = filteredDocs[index];
-                        final data = doc.data() as Map<String, dynamic>;
-                        return _buildDoctorCard(data, doc.id, screenWidth, screenHeight, isTablet, isDesktop);
-                      },
+                      ],
                     );
                   },
                 ),
@@ -347,6 +311,21 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
 
   Widget _buildFilterChip(String label, String value, IconData icon, Color? statusColor, double screenWidth, bool isTablet, bool isDesktop) {
     final isSelected = selectedFilter == value;
+
+    // Get count based on filter type
+    int count = 0;
+    switch (value) {
+      case 'all':
+        count = totalDoctors;
+        break;
+      case 'verified':
+        count = verifiedDoctors;
+        break;
+      case 'pending':
+        count = pendingDoctors;
+        break;
+    }
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -356,9 +335,8 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? screenWidth * 0.025 : screenWidth * 0.04,
-            vertical: isDesktop ? 16 : (isTablet ? 12 : 10)
-        ),
+            horizontal: isDesktop ? screenWidth * 0.025 : screenWidth * 0.03,
+            vertical: isDesktop ? 16 : (isTablet ? 12 : 8)),
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
           borderRadius: BorderRadius.circular(25),
@@ -379,26 +357,219 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
           children: [
             Icon(
               icon,
-              size: isDesktop ? 22 : (isTablet ? 20 : 18),
+              size: isDesktop ? 22 : (isTablet ? 20 : 16),
               color: isSelected
                   ? (statusColor ?? const Color(0xFF199A8E))
                   : Colors.white,
             ),
-            SizedBox(width: screenWidth * 0.015),
+            SizedBox(width: screenWidth * 0.01),
             Text(
-              label,
+              isDesktop || isTablet ? '$label ($count)' : label,
               style: TextStyle(
                 color: isSelected
                     ? (statusColor ?? const Color(0xFF199A8E))
                     : Colors.white,
                 fontWeight: FontWeight.w600,
-                fontSize: isDesktop ? 18 : (isTablet ? 16 : 14),
+                fontSize: isDesktop ? 18 : (isTablet ? 16 : 12),
               ),
             ),
+            // Show count badge for mobile
+            if (!isDesktop && !isTablet && count > 0) ...[
+              SizedBox(width: screenWidth * 0.01),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (statusColor ?? const Color(0xFF199A8E))
+                      : Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  count.toString(),
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : const Color(0xFF199A8E),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildMainContent(
+      AsyncSnapshot<QuerySnapshot> snapshot,
+      double horizontalPadding,
+      double screenWidth, double screenHeight, bool isTablet, bool isDesktop) {
+    if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+      // Filter doctors based on selected filter and search query
+      final filteredDocs = snapshot.data!.docs.where((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        final isVerified = data['isVerified'] ?? false;
+        final fullName =
+            data['basicInfo']?['fullName']?.toString().toLowerCase() ?? '';
+
+        // Apply search filter
+        if (searchQuery.isNotEmpty && !fullName.contains(searchQuery)) {
+          return false;
+        }
+
+        // Apply status filter
+        switch (selectedFilter) {
+          case 'verified':
+            return isVerified;
+          case 'pending':
+            return !isVerified;
+          default:
+            return true;
+        }
+      }).toList();
+
+      if (filteredDocs.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child:
+                    Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No doctors match your criteria',
+                style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Try adjusting your search or filters',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return ListView.builder(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: screenWidth * 0.05,
+        ),
+        itemCount: filteredDocs.length,
+        itemBuilder: (context, index) {
+          final doc = filteredDocs[index];
+          final data = doc.data() as Map<String, dynamic>;
+          return _buildDoctorCard(
+              data, doc.id, screenWidth, screenHeight, isTablet, isDesktop);
+        },
+      );
+    } else if (snapshot.hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child:
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading doctors',
+              style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please try again later',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    } else if (snapshot.connectionState == ConnectionState.waiting) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(screenWidth * 0.05),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF199A8E).withOpacity(0.2),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: CircularProgressIndicator(
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                strokeWidth: isTablet ? 4 : 3,
+              ),
+            ),
+            SizedBox(height: screenHeight * 0.025),
+            Text(
+              'Loading doctors...',
+              style: TextStyle(
+                fontSize: isTablet ? 18 : 16,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child:
+                  Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No doctors found',
+              style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No verification requests yet',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildDoctorCard(Map<String, dynamic> data, String docId, double screenWidth, double screenHeight, bool isTablet, bool isDesktop) {
