@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import '../../../controller/doctor_verification_controller.dart'; // Import the controller
 
 import 'doctor_profile_management_screen.dart'; // Import Firestore
 
@@ -21,6 +22,8 @@ class _DoctorProfileState extends State<DoctorProfile> {
   String? email;
 
   bool isLoading = true;
+  final DoctorVerificationController _verificationController =
+      Get.put(DoctorVerificationController());
 
   Future<void> _loadDoctorData() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -62,6 +65,14 @@ class _DoctorProfileState extends State<DoctorProfile> {
     }
   }
 
+  Future<void> _updateProfilePicture() async {
+    final success = await _verificationController.updateProfilePicture();
+    if (success) {
+      // Reload the profile data to show the new image
+      await _loadDoctorData();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -94,20 +105,62 @@ class _DoctorProfileState extends State<DoctorProfile> {
               padding: EdgeInsets.symmetric(vertical: screen.height * 0.08),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: screen.width * 0.16,
-                          backgroundImage: profilePicUrl != null &&
-                                  profilePicUrl!.isNotEmpty
-                              ? NetworkImage(profilePicUrl!)
-                              : AssetImage('assets/images/default_doctor.png')
-                                  as ImageProvider,
-                          backgroundColor: Colors.white,
-                  ),
+                        GestureDetector(
+                          onTap: _updateProfilePicture,
+                          child: Obx(() => Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: screen.width * 0.16,
+                                    backgroundImage: profilePicUrl != null &&
+                                            profilePicUrl!.isNotEmpty
+                                        ? NetworkImage(profilePicUrl!)
+                                        : AssetImage(
+                                                'assets/images/default_doctor.png')
+                                            as ImageProvider,
+                                    backgroundColor: Colors.white,
+                                  ),
+                                  // Loading indicator
+                                  if (_verificationController.isLoading.value)
+                                    Positioned.fill(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.5),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  // Camera icon overlay
+                                  if (!_verificationController.isLoading.value)
+                                    Positioned(
+                                      bottom: 0,
+                                      right: screen.width * 0.02,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF199A8E),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.camera_alt,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              )),
+                        ),
                   SizedBox(height: screen.height * 0.02),
                   Text(
                           doctorName ?? 'Doctor',
                           style: TextStyle(
-                      fontSize: screen.width * 0.06,
+                      fontSize: screen.width * 0.044,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),

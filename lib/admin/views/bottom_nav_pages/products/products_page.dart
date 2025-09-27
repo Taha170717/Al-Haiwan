@@ -110,6 +110,83 @@ class _AdminProductsState extends State<AdminProducts> {
     }).toList();
   }
 
+  // Helper method to get count for each filter
+  int _getFilterCount(List<QueryDocumentSnapshot> products, String filter) {
+    return products.where((doc) {
+      final name = (doc['name'] ?? '').toString().toLowerCase();
+      final brand = (doc['brand'] ?? '').toString().toLowerCase();
+      final category = (doc['category'] ?? '').toString();
+      final int stockQty = (doc['stockQuantity'] ?? 0) is int
+          ? (doc['stockQuantity'] ?? 0) as int
+          : int.tryParse((doc['stockQuantity'] ?? '0').toString()) ?? 0;
+
+      // Search filter
+      bool matchesSearch =
+          name.contains(searchQuery) || brand.contains(searchQuery);
+
+      // Stock filter based on the filter parameter
+      bool matchesStockFilter = true;
+      switch (filter) {
+        case 'Low Stock':
+          matchesStockFilter = stockQty > 0 && stockQty <= 5;
+          break;
+        case 'Out of Stock':
+          matchesStockFilter = stockQty <= 0;
+          break;
+        case 'In Stock':
+          matchesStockFilter = stockQty > 5;
+          break;
+        case 'All':
+        default:
+          matchesStockFilter = true;
+      }
+
+      // Category filter
+      bool matchesCategoryFilter =
+          selectedCategory == 'All' || category == selectedCategory;
+
+      return matchesSearch && matchesStockFilter && matchesCategoryFilter;
+    }).length;
+  }
+
+  // Helper method to get count for each category
+  int _getCategoryCount(List<QueryDocumentSnapshot> products, String category) {
+    return products.where((doc) {
+      final name = (doc['name'] ?? '').toString().toLowerCase();
+      final brand = (doc['brand'] ?? '').toString().toLowerCase();
+      final docCategory = (doc['category'] ?? '').toString();
+      final int stockQty = (doc['stockQuantity'] ?? 0) is int
+          ? (doc['stockQuantity'] ?? 0) as int
+          : int.tryParse((doc['stockQuantity'] ?? '0').toString()) ?? 0;
+
+      // Search filter
+      bool matchesSearch =
+          name.contains(searchQuery) || brand.contains(searchQuery);
+
+      // Stock filter
+      bool matchesStockFilter = true;
+      switch (selectedFilter) {
+        case 'Low Stock':
+          matchesStockFilter = stockQty > 0 && stockQty <= 5;
+          break;
+        case 'Out of Stock':
+          matchesStockFilter = stockQty <= 0;
+          break;
+        case 'In Stock':
+          matchesStockFilter = stockQty > 5;
+          break;
+        case 'All':
+        default:
+          matchesStockFilter = true;
+      }
+
+      // Category filter based on the category parameter
+      bool matchesCategoryFilter = category == 'All' || docCategory == category;
+
+      return matchesSearch && matchesStockFilter && matchesCategoryFilter;
+    }).length;
+  }
+
   Widget _buildFilterChips() {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
@@ -131,131 +208,152 @@ class _AdminProductsState extends State<AdminProducts> {
       'Cleaning'
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Stock Status Filters
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: isWeb ? 24 : screenWidth * 0.03),
-          child: Text(
-            'Stock Status',
-            style: TextStyle(
-              fontSize: isWeb ? 14 : screenWidth * 0.035,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
-            ),
-          ),
-        ),
-        SizedBox(height: isWeb ? 8 : screenHeight * 0.008),
-        SizedBox(
-          height: isWeb ? 40 : screenHeight * 0.05,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: isWeb ? 24 : screenWidth * 0.03),
-            itemCount: stockFilters.length,
-            itemBuilder: (context, index) {
-              final filter = stockFilters[index];
-              final isSelected = selectedFilter == filter;
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('products')
+          .orderBy('name')
+          .snapshots(),
+      builder: (context, snapshot) {
+        final products =
+            snapshot.hasData ? snapshot.data!.docs : <QueryDocumentSnapshot>[];
 
-              return Padding(
-                padding: EdgeInsets.only(right: isWeb ? 12 : screenWidth * 0.02),
-                child: FilterChip(
-                  label: Text(
-                    filter,
-                    style: TextStyle(
-                      fontSize: isWeb ? 14 : screenWidth * 0.032,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : primary,
-                    ),
-                  ),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      selectedFilter = filter;
-                    });
-                  },
-                  backgroundColor: Colors.white,
-                  selectedColor: primary,
-                  checkmarkColor: Colors.white,
-                  side: BorderSide(
-                    color: isSelected ? primary : primary.withOpacity(0.3),
-                    width: 1.2,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(isWeb ? 20 : screenWidth * 0.06),
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isWeb ? 16 : screenWidth * 0.025,
-                    vertical: isWeb ? 8 : screenHeight * 0.008,
-                  ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Stock Status Filters
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: isWeb ? 24 : screenWidth * 0.03),
+              child: Text(
+                'Stock Status',
+                style: TextStyle(
+                  fontSize: isWeb ? 14 : screenWidth * 0.035,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
                 ),
-              );
-            },
-          ),
-        ),
-
-        SizedBox(height: isWeb ? 16 : screenHeight * 0.015),
-
-        // Category Filters
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: isWeb ? 24 : screenWidth * 0.03),
-          child: Text(
-            'Category',
-            style: TextStyle(
-              fontSize: isWeb ? 14 : screenWidth * 0.035,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              ),
             ),
-          ),
-        ),
-        SizedBox(height: isWeb ? 8 : screenHeight * 0.008),
-        SizedBox(
-          height: isWeb ? 40 : screenHeight * 0.05,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: isWeb ? 24 : screenWidth * 0.03),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              final isSelected = selectedCategory == category;
+            SizedBox(height: isWeb ? 8 : screenHeight * 0.008),
+            SizedBox(
+              height: isWeb ? 40 : screenHeight * 0.05,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(
+                    horizontal: isWeb ? 24 : screenWidth * 0.03),
+                itemCount: stockFilters.length,
+                itemBuilder: (context, index) {
+                  final filter = stockFilters[index];
+                  final isSelected = selectedFilter == filter;
+                  final count = _getFilterCount(products, filter);
 
-              return Padding(
-                padding: EdgeInsets.only(right: isWeb ? 12 : screenWidth * 0.02),
-                child: FilterChip(
-                  label: Text(
-                    category,
-                    style: TextStyle(
-                      fontSize: isWeb ? 14 : screenWidth * 0.032,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : primary,
+                  return Padding(
+                    padding:
+                        EdgeInsets.only(right: isWeb ? 12 : screenWidth * 0.02),
+                    child: FilterChip(
+                      label: Text(
+                        '$filter ($count)',
+                        style: TextStyle(
+                          fontSize: isWeb ? 14 : screenWidth * 0.032,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.white : primary,
+                        ),
+                      ),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          selectedFilter = filter;
+                        });
+                      },
+                      backgroundColor: Colors.white,
+                      selectedColor: primary,
+                      checkmarkColor: Colors.white,
+                      side: BorderSide(
+                        color: isSelected ? primary : primary.withOpacity(0.3),
+                        width: 1.2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            isWeb ? 20 : screenWidth * 0.06),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isWeb ? 16 : screenWidth * 0.025,
+                        vertical: isWeb ? 8 : screenHeight * 0.008,
+                      ),
                     ),
-                  ),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      selectedCategory = category;
-                    });
-                  },
-                  backgroundColor: Colors.white,
-                  selectedColor: primary,
-                  checkmarkColor: Colors.white,
-                  side: BorderSide(
-                    color: isSelected ? primary : primary.withOpacity(0.3),
-                    width: 1.2,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(isWeb ? 20 : screenWidth * 0.06),
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isWeb ? 16 : screenWidth * 0.025,
-                    vertical: isWeb ? 8 : screenHeight * 0.008,
-                  ),
+                  );
+                },
+              ),
+            ),
+
+            SizedBox(height: isWeb ? 16 : screenHeight * 0.015),
+
+            // Category Filters
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: isWeb ? 24 : screenWidth * 0.03),
+              child: Text(
+                'Category',
+                style: TextStyle(
+                  fontSize: isWeb ? 14 : screenWidth * 0.035,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
                 ),
-              );
-            },
-          ),
-        ),
-      ],
+              ),
+            ),
+            SizedBox(height: isWeb ? 8 : screenHeight * 0.008),
+            SizedBox(
+              height: isWeb ? 40 : screenHeight * 0.05,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(
+                    horizontal: isWeb ? 24 : screenWidth * 0.03),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final category = categories[index];
+                  final isSelected = selectedCategory == category;
+                  final count = _getCategoryCount(products, category);
+
+                  return Padding(
+                    padding:
+                        EdgeInsets.only(right: isWeb ? 12 : screenWidth * 0.02),
+                    child: FilterChip(
+                      label: Text(
+                        '$category ($count)',
+                        style: TextStyle(
+                          fontSize: isWeb ? 14 : screenWidth * 0.032,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.white : primary,
+                        ),
+                      ),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          selectedCategory = category;
+                        });
+                      },
+                      backgroundColor: Colors.white,
+                      selectedColor: primary,
+                      checkmarkColor: Colors.white,
+                      side: BorderSide(
+                        color: isSelected ? primary : primary.withOpacity(0.3),
+                        width: 1.2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            isWeb ? 20 : screenWidth * 0.06),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isWeb ? 16 : screenWidth * 0.025,
+                        vertical: isWeb ? 8 : screenHeight * 0.008,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -679,61 +777,108 @@ class _AdminProductsState extends State<AdminProducts> {
                                               child: SizedBox(
                                                 width: isDesktop ? 80 : isTablet ? 60 : screenWidth * 0.15,
                                                 height: isDesktop ? 80 : isTablet ? 60 : screenWidth * 0.15,
-                                                child: imageUrl != null && imageUrl.contains('firebasestorage.googleapis.com')
+                                                child: (imageUrl != null &&
+                                                        (imageUrl.contains(
+                                                                'firebasestorage.googleapis.com') ||
+                                                            imageUrl.contains(
+                                                                'ik.imagekit.io') ||
+                                                            imageUrl.startsWith(
+                                                                'https://') // generic check for remote images
+                                                        ))
                                                     ? Image.network(
-                                                  imageUrl,
-                                                  fit: BoxFit.cover,
-                                                  filterQuality: FilterQuality.low,
-                                                  cacheWidth: 232,
-                                                  cacheHeight: 232,
-                                                  gaplessPlayback: true,
-                                                  loadingBuilder: (context, child, progress) {
-                                                    if (progress == null) return child;
-                                                    return Container(
-                                                      color: Colors.grey.shade200,
-                                                      child: Center(
-                                                        child: SizedBox(
-                                                          width: isWeb ? 20 : screenWidth * 0.045,
-                                                          height: isWeb ? 20 : screenWidth * 0.045,
-                                                          child: const CircularProgressIndicator(strokeWidth: 2),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                  errorBuilder: (context, error, stackTrace) {
-                                                    print('Image load error for $imageUrl: $error');
-                                                    return Container(
-                                                      color: Colors.grey.shade100,
+                                                        imageUrl,
+                                                        fit: BoxFit.cover,
+                                                        filterQuality:
+                                                            FilterQuality.low,
+                                                        cacheWidth: 232,
+                                                        cacheHeight: 232,
+                                                        gaplessPlayback: true,
+                                                        loadingBuilder:
+                                                            (context, child,
+                                                                progress) {
+                                                          if (progress == null)
+                                                            return child;
+                                                          return Container(
+                                                            color: Colors
+                                                                .grey.shade200,
+                                                            child: Center(
+                                                              child: SizedBox(
+                                                                width: isWeb
+                                                                    ? 20
+                                                                    : screenWidth *
+                                                                        0.045,
+                                                                height: isWeb
+                                                                    ? 20
+                                                                    : screenWidth *
+                                                                        0.045,
+                                                                child: const CircularProgressIndicator(
+                                                                    strokeWidth:
+                                                                        2),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                        errorBuilder: (context,
+                                                            error, stackTrace) {
+                                                          print(
+                                                              'Image load error for $imageUrl: $error');
+                                                          return Container(
+                                                            color: Colors
+                                                                .grey.shade100,
+                                                            child: Column(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .center,
+                                                              children: [
+                                                                Icon(
+                                                                    Icons
+                                                                        .refresh,
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade600,
+                                                                    size: isWeb
+                                                                        ? 16
+                                                                        : screenWidth *
+                                                                            0.04),
+                                                                Text(
+                                                                    'Tap to retry',
+                                                                    style: TextStyle(
+                                                                        fontSize: isWeb
+                                                                            ? 10
+                                                                            : screenWidth *
+                                                                                0.02,
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .shade600)),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                      )
+                                                    : Container(
+                                                        color: Colors.grey.shade100,
                                                       child: Column(
                                                         mainAxisAlignment: MainAxisAlignment.center,
                                                         children: [
-                                                          Icon(Icons.refresh,
-                                                              color: Colors.grey.shade600,
-                                                              size: isWeb ? 16 : screenWidth * 0.04),
-                                                          Text('Tap to retry',
-                                                              style: TextStyle(
+                                                            Icon(
+                                                                Icons
+                                                                    .add_photo_alternate_outlined,
+                                                                color: Colors
+                                                                    .grey
+                                                                    .shade400,
+                                                                size: isWeb
+                                                                    ? 20
+                                                                    : screenWidth *
+                                                                        0.05),
+                                                            Text('No Image',
+                                                                style: TextStyle(
                                                                   fontSize: isWeb ? 10 : screenWidth * 0.02,
-                                                                  color: Colors.grey.shade600)),
-                                                        ],
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade400)),
+                                                          ],
                                                       ),
-                                                    );
-                                                  },
-                                                )
-                                                    : Container(
-                                                  color: Colors.grey.shade100,
-                                                  child: Column(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    children: [
-                                                      Icon(Icons.add_photo_alternate_outlined,
-                                                          color: Colors.grey.shade400,
-                                                          size: isWeb ? 20 : screenWidth * 0.05),
-                                                      Text('No Image',
-                                                          style: TextStyle(
-                                                              fontSize: isWeb ? 10 : screenWidth * 0.02,
-                                                              color: Colors.grey.shade400)),
-                                                    ],
-                                                  ),
-                                                ),
+                                                      ),
                                               ),
                                             ),
                                             SizedBox(width: isWeb ? 16 : screenWidth * 0.03),

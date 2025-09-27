@@ -18,6 +18,7 @@ class Assets {
   static const String doctorIconsDashboard = 'assets/doctor_icons/dashboard.png';
   static const String doctorIconsMedicalrecords = 'assets/doctor_icons/medicalrecords.png';
   static const String doctorIconsMoney = 'assets/doctor_icons/money.png';
+  static const String doctorIconsNotifications = 'assets/doctor_icons/notifications.png';
   static const String doctorIconsProfilesetting = 'assets/doctor_icons/profilesetting.png';
   static const String fontsPoppinsBold = 'assets/fonts/Poppins-Bold.ttf';
   static const String fontsPoppinsBoldItalic = 'assets/fonts/Poppins-BoldItalic.ttf';
