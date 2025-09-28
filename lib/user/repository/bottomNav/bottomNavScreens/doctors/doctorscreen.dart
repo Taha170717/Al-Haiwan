@@ -255,7 +255,7 @@ class VerifiedDoctorsScreen extends StatelessWidget {
                               doctor.fullName,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: titleFontSize * 0.9,
+                                fontSize: titleFontSize * 0.7,
                                 color: Colors.black87,
                               ),
                               maxLines: 1,
@@ -283,7 +283,7 @@ class VerifiedDoctorsScreen extends StatelessWidget {
                                 Text(
                                   'Verified',
                                   style: TextStyle(
-                                    fontSize: subtitleFontSize * 0.8,
+                                    fontSize: subtitleFontSize * 0.7,
                                     color: Colors.green,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -313,12 +313,17 @@ class VerifiedDoctorsScreen extends StatelessWidget {
                             color: Colors.grey[600],
                           ),
                           SizedBox(width: 4),
+                          Text('Experience: ', style: TextStyle(
+                            fontSize: subtitleFontSize,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),),
                           Expanded(
                             child: Text(
                               doctor.experience,
                               style: TextStyle(
                                 fontSize: subtitleFontSize,
-                                color: Colors.grey[600],
+                                color: Colors.green,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

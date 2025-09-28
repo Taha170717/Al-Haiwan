@@ -37,8 +37,8 @@ dependencies:
   google_sign_in: ^6.3.0
   firebase_remote_config: ^6.0.1
 
-  # ImageKit for image uploads
-  imagekit_flutter_sdk: ^1.0.3
+  # ImageKit for image uploads - using custom service implementation
+  # imagekit_flutter_sdk: ^1.0.3  # This package doesn't exist - removed
   crypto: ^3.0.3
   flutter_rating_bar: ^4.0.1
   shared_preferences: ^2.5.3

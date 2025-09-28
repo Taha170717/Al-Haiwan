@@ -97,4 +97,9 @@ class UserService extends GetxController {
   Future<void> refreshProfile() async {
     await loadUserProfile();
   }
+
+  // Update profile image URL locally (called after successful upload)
+  void updateProfileImageUrl(String imageUrl) {
+    profileImageUrl.value = imageUrl;
+  }
 }

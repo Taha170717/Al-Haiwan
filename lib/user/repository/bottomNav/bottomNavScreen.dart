@@ -111,21 +111,38 @@ class BottomNavScreen extends StatelessWidget {
                         currentAccountPicture: CircleAvatar(
                           radius: 35,
                           backgroundColor: Color(0xFF199A8E).withOpacity(0.1),
-                          child: userService.getUserImage != null
-                              ? ClipOval(
+                          child: Builder(
+                            builder: (context) {
+                              // Refresh user profile data when drawer opens
+                              userService.refreshProfile();
+
+                              final profileImageUrl = userService.getUserImage;
+
+                              if (profileImageUrl != null &&
+                                  profileImageUrl.isNotEmpty) {
+                                return ClipOval(
                                   child: Image.network(
-                                    userService.getUserImage!,
+                                    profileImageUrl,
                                     width: 70,
                                     height: 70,
                                     fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Image.asset(
-                                      "assets/images/user.png",
-                                      width: 70,
-                                      height: 70,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    errorBuilder: (context, error, stackTrace) {
+                                      print(
+                                          'Error loading profile image: $error');
+                                      return Container(
+                                        width: 70,
+                                        height: 70,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.grey[200],
+                                        ),
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 40,
+                                          color: Color(0xFF199A8E),
+                                        ),
+                                      );
+                                    },
                                     loadingBuilder:
                                         (context, child, loadingProgress) {
                                       if (loadingProgress == null) return child;
@@ -137,19 +154,43 @@ class BottomNavScreen extends StatelessWidget {
                                             strokeWidth: 2,
                                             valueColor:
                                                 AlwaysStoppedAnimation<Color>(
-                                                    Colors.white),
+                                                    Color(0xFF199A8E)),
+                                            value: loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                                : null,
                                           ),
                                         ),
                                       );
                                     },
                                   ),
-                                )
-                              : Image.asset(
-                                  "assets/images/user.png",
+                                );
+                              } else {
+                                // Show default user icon when no profile image
+                                return Container(
                                   width: 70,
                                   height: 70,
-                                  fit: BoxFit.cover,
-                                ),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withOpacity(0.2),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                         ),
                         accountName: Text(
                           userService.getUserName ?? "User",

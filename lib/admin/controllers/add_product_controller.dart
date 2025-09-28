@@ -13,7 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 // Add ImageKit service import
-import '../services/imagekit_service.dart';
+import '../../utils/services/imagekit_service.dart';
 import '../views/adminside.dart'; // Import AdminScreen
 
 class AddProductController extends GetxController {

@@ -4,15 +4,28 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:io';
 import '../models/user_appointment_model.dart';
 import '../../utils/snackbar_utils.dart';
 
 class AppointmentController extends GetxController {
+  static const String _imageKitPublicKey =
+      'public_PZlQaFn7qH7zGf31Yp3rLKnUMGc=';
+  static const String _imageKitPrivateKey =
+      'private_sWCIXKsbU9kaLKEer34eiiF3sKw=';
+  static const String _imageKitUploadEndpoint =
+      'https://upload.imagekit.io/api/v1/files/upload';
+  static const String _paymentScreenshotsFolder = 'payment_screenshots/';
+
   var ownerName = ''.obs;
   var petName = ''.obs;
   var selectedPaymentMethod = ''.obs;
   var paymentScreenshotPath = ''.obs;
+  var paymentScreenshotBytes = Rx<Uint8List?>(null); // For web platform
   var isLoading = false.obs;
   var isBookingAppointment = false.obs;
   var petType = ''.obs;
@@ -41,6 +54,11 @@ class AppointmentController extends GetxController {
 
       if (image != null) {
         paymentScreenshotPath.value = image.path;
+
+        // For web platform, also store bytes for preview
+        if (kIsWeb) {
+          paymentScreenshotBytes.value = await image.readAsBytes();
+        }
       }
     } catch (e) {
       SnackbarUtils.showError(
@@ -48,33 +66,100 @@ class AppointmentController extends GetxController {
     }
   }
 
+  // Clear screenshot data
+  void clearPaymentScreenshot() {
+    paymentScreenshotPath.value = '';
+    paymentScreenshotBytes.value = null;
+  }
+
   Future<String?> _uploadPaymentScreenshot(String appointmentId) async {
     if (paymentScreenshotPath.value.isEmpty) return null;
 
     try {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('payment_screenshots')
-          .child('$appointmentId.jpg');
+      Uint8List imageBytes;
 
       if (kIsWeb) {
-        // On web, upload using bytes from XFile
-        final xfile = XFile(paymentScreenshotPath.value);
-        final bytes = await xfile.readAsBytes();
-        await ref.putData(bytes);
+        // On web, use the stored bytes
+        if (paymentScreenshotBytes.value != null) {
+          imageBytes = paymentScreenshotBytes.value!;
+        } else {
+          final xfile = XFile(paymentScreenshotPath.value);
+          imageBytes = await xfile.readAsBytes();
+        }
       } else {
-        // On mobile/desktop, upload using File
+        // On mobile/desktop, read from file
         final file = File(paymentScreenshotPath.value);
-        await ref.putFile(file);
+        imageBytes = await file.readAsBytes();
       }
 
-      return await ref.getDownloadURL();
+      final uniqueFilename =
+          '${appointmentId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Generate authentication parameters
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final token = _generateAuthToken(timestamp);
+
+      // Prepare multipart request
+      var request =
+          http.MultipartRequest('POST', Uri.parse(_imageKitUploadEndpoint));
+
+      // Add authorization header
+      final authString = base64Encode(utf8.encode('$_imageKitPrivateKey:'));
+      request.headers['Authorization'] = 'Basic $authString';
+
+      // Add form fields
+      request.fields.addAll({
+        'publicKey': _imageKitPublicKey,
+        'signature': token,
+        'expire':
+            (DateTime.now().millisecondsSinceEpoch ~/ 1000 + 2400).toString(),
+        'token': token,
+        'fileName': uniqueFilename,
+        'folder': _paymentScreenshotsFolder,
+        'useUniqueFileName': 'false',
+        'overwriteFile': 'true',
+        'overwriteAITags': 'false',
+        'overwriteTags': 'false',
+        'overwriteCustomMetadata': 'false',
+      });
+
+      // Add file
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: uniqueFilename,
+        ),
+      );
+
+      // Send request
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        var jsonResponse = json.decode(responseBody);
+        final imageUrl = jsonResponse['url'] as String;
+        return imageUrl;
+      } else {
+        throw Exception(
+            'Failed to upload screenshot to ImageKit: HTTP ${response.statusCode}');
+      }
     } catch (e) {
-      print('Error uploading screenshot: $e');
+      print('Error uploading payment screenshot: $e');
       return null;
     }
   }
 
+  /// Generate authentication token for ImageKit upload
+  String _generateAuthToken(String timestamp) {
+    try {
+      var bytes = utf8.encode(timestamp + _imageKitPrivateKey);
+      var digest = sha256.convert(bytes);
+      return digest.toString();
+    } catch (e) {
+      throw Exception('Failed to generate authentication token: $e');
+    }
+  }
 
   Future<bool> bookAppointment({
     required String doctorId,
@@ -137,7 +222,7 @@ class AppointmentController extends GetxController {
           .collection('appointments')
           .doc();
 
-      // Upload payment screenshot
+      // Upload payment screenshot via ImageKit
       final screenshotUrl = await _uploadPaymentScreenshot(appointmentRef.id);
 
       // Fetch doctor full name and profile picture

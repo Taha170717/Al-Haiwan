@@ -675,61 +675,417 @@ class _AdminProductsState extends State<AdminProducts> {
                                 background: Container(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [Colors.red.shade400, Colors.red.shade700],
+                                      colors: [
+                                        Colors.red.shade50,
+                                        Colors.red.shade100,
+                                        Colors.red.shade400,
+                                        Colors.red.shade600,
+                                      ],
+                                      stops: const [0.0, 0.3, 0.8, 1.0],
                                       begin: Alignment.centerLeft,
                                       end: Alignment.centerRight,
                                     ),
                                     borderRadius: BorderRadius.circular(isWeb ? 12 : screenWidth * 0.04),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(-2, 2),
+                                      ),
+                                    ],
                                   ),
                                   alignment: Alignment.centerRight,
-                                  padding: EdgeInsets.symmetric(horizontal: isWeb ? 24 : screenWidth * 0.05),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal:
+                                          isWeb ? 32 : screenWidth * 0.06),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(
-                                        'Delete',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: isWeb ? 14 : screenWidth * 0.035,
+                                      Container(
+                                        padding: EdgeInsets.all(
+                                            isWeb ? 12 : screenWidth * 0.025),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.9),
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.red.withOpacity(0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.delete_outline,
+                                          color: Colors.red.shade700,
+                                          size: isWeb ? 28 : screenWidth * 0.06,
                                         ),
                                       ),
-                                      SizedBox(width: isWeb ? 8 : screenWidth * 0.02),
-                                      Icon(Icons.delete,
-                                          color: Colors.white,
-                                          size: isWeb ? 20 : screenWidth * 0.05),
+                                      SizedBox(
+                                          height:
+                                              isWeb ? 8 : screenHeight * 0.008),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              isWeb ? 12 : screenWidth * 0.025,
+                                          vertical:
+                                              isWeb ? 6 : screenHeight * 0.006,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.9),
+                                          borderRadius: BorderRadius.circular(
+                                              isWeb ? 16 : screenWidth * 0.04),
+                                        ),
+                                        child: Text(
+                                          'Delete',
+                                          style: TextStyle(
+                                            color: Colors.red.shade700,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: isWeb
+                                                ? 14
+                                                : screenWidth * 0.035,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
                                 confirmDismiss: (_) async {
                                   final res = await showDialog<bool>(
                                     context: context,
+                                    barrierDismissible: false,
                                     builder: (context) => AlertDialog(
+                                      backgroundColor: Colors.white,
+                                      surfaceTintColor: Colors.transparent,
                                       shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(isWeb ? 12 : screenWidth * 0.035)),
-                                      title: Text('Delete product?',
-                                          style: TextStyle(fontSize: isWeb ? 18 : screenWidth * 0.045)),
-                                      content: Text('Are you sure you want to delete "$name"?',
-                                          style: TextStyle(fontSize: isWeb ? 16 : screenWidth * 0.04)),
-                                      actionsPadding: EdgeInsets.fromLTRB(
-                                          isWeb ? 24 : screenWidth * 0.04,
-                                          0,
-                                          isWeb ? 24 : screenWidth * 0.04,
-                                          isWeb ? 16 : screenHeight * 0.015),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.of(context).pop(false),
-                                          child: Text('Cancel',
-                                              style: TextStyle(fontSize: isWeb ? 16 : screenWidth * 0.04)),
-                                        ),
-                                        FilledButton(
-                                          style: FilledButton.styleFrom(
-                                            backgroundColor: Colors.red.shade600,
-                                            foregroundColor: Colors.white,
+                                        borderRadius: BorderRadius.circular(
+                                            isWeb ? 20 : screenWidth * 0.05),
+                                      ),
+                                      elevation: 24,
+                                      shadowColor:
+                                          Colors.black.withOpacity(0.3),
+                                      titlePadding: EdgeInsets.zero,
+                                      contentPadding: EdgeInsets.zero,
+                                      actionsPadding: EdgeInsets.zero,
+                                      insetPadding: EdgeInsets.symmetric(
+                                        horizontal:
+                                            isWeb ? 40 : screenWidth * 0.08,
+                                        vertical:
+                                            isWeb ? 24 : screenHeight * 0.02,
+                                      ),
+                                      title: Container(
+                                        width: double.infinity,
+                                        padding: EdgeInsets.all(
+                                            isWeb ? 24 : screenWidth * 0.05),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.red.shade50,
+                                              Colors.red.shade100
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
                                           ),
-                                          onPressed: () => Navigator.of(context).pop(true),
-                                          child: Text('Delete',
-                                              style: TextStyle(fontSize: isWeb ? 16 : screenWidth * 0.04)),
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(isWeb
+                                                ? 20
+                                                : screenWidth * 0.05),
+                                            topRight: Radius.circular(isWeb
+                                                ? 20
+                                                : screenWidth * 0.05),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: EdgeInsets.all(isWeb
+                                                  ? 12
+                                                  : screenWidth * 0.025),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red.shade100,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.red.shade300,
+                                                  width: 2,
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                Icons.warning_rounded,
+                                                color: Colors.red.shade700,
+                                                size: isWeb
+                                                    ? 24
+                                                    : screenWidth * 0.055,
+                                              ),
+                                            ),
+                                            SizedBox(
+                                                width: isWeb
+                                                    ? 16
+                                                    : screenWidth * 0.03),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Delete Product',
+                                                    style: TextStyle(
+                                                      fontSize: isWeb
+                                                          ? 20
+                                                          : screenWidth * 0.048,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color:
+                                                          Colors.red.shade800,
+                                                      letterSpacing: 0.3,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                      height: isWeb
+                                                          ? 4
+                                                          : screenHeight *
+                                                              0.004),
+                                                  Text(
+                                                    'This action cannot be undone',
+                                                    style: TextStyle(
+                                                      fontSize: isWeb
+                                                          ? 12
+                                                          : screenWidth * 0.028,
+                                                      color:
+                                                          Colors.red.shade600,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      content: Container(
+                                        padding: EdgeInsets.all(
+                                            isWeb ? 24 : screenWidth * 0.05),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: double.infinity,
+                                              padding: EdgeInsets.all(isWeb
+                                                  ? 16
+                                                  : screenWidth * 0.035),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade50,
+                                                borderRadius:
+                                                    BorderRadius.circular(isWeb
+                                                        ? 12
+                                                        : screenWidth * 0.03),
+                                                border: Border.all(
+                                                    color:
+                                                        Colors.grey.shade200),
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Product to delete:',
+                                                    style: TextStyle(
+                                                      fontSize: isWeb
+                                                          ? 14
+                                                          : screenWidth * 0.032,
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                      height: isWeb
+                                                          ? 8
+                                                          : screenHeight *
+                                                              0.008),
+                                                  Text(
+                                                    name,
+                                                    style: TextStyle(
+                                                      fontSize: isWeb
+                                                          ? 16
+                                                          : screenWidth * 0.038,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color:
+                                                          Colors.grey.shade800,
+                                                    ),
+                                                  ),
+                                                  if (brand.isNotEmpty) ...[
+                                                    SizedBox(
+                                                        height: isWeb
+                                                            ? 4
+                                                            : screenHeight *
+                                                                0.004),
+                                                    Text(
+                                                      'Brand: $brand',
+                                                      style: TextStyle(
+                                                        fontSize: isWeb
+                                                            ? 14
+                                                            : screenWidth *
+                                                                0.032,
+                                                        color: Colors
+                                                            .grey.shade600,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
+                                            SizedBox(
+                                                height: isWeb
+                                                    ? 20
+                                                    : screenHeight * 0.02),
+                                            Text(
+                                              'Are you sure you want to permanently delete this product? All associated data will be lost.',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: isWeb
+                                                    ? 15
+                                                    : screenWidth * 0.035,
+                                                color: Colors.grey.shade700,
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      actions: [
+                                        Container(
+                                          width: double.infinity,
+                                          padding: EdgeInsets.all(
+                                              isWeb ? 24 : screenWidth * 0.05),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade50,
+                                            borderRadius: BorderRadius.only(
+                                              bottomLeft: Radius.circular(isWeb
+                                                  ? 20
+                                                  : screenWidth * 0.05),
+                                              bottomRight: Radius.circular(isWeb
+                                                  ? 20
+                                                  : screenWidth * 0.05),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(false),
+                                                  style: TextButton.styleFrom(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                      vertical: isWeb
+                                                          ? 16
+                                                          : screenHeight *
+                                                              0.015,
+                                                    ),
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius
+                                                          .circular(isWeb
+                                                              ? 12
+                                                              : screenWidth *
+                                                                  0.03),
+                                                      side: BorderSide(
+                                                          color: Colors
+                                                              .grey.shade300),
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.white,
+                                                  ),
+                                                  child: Text(
+                                                    'Cancel',
+                                                    style: TextStyle(
+                                                      fontSize: isWeb
+                                                          ? 16
+                                                          : screenWidth * 0.038,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color:
+                                                          Colors.grey.shade700,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                  width: isWeb
+                                                      ? 12
+                                                      : screenWidth * 0.025),
+                                              Expanded(
+                                                child: ElevatedButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(true),
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.red.shade600,
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    elevation: 2,
+                                                    shadowColor: Colors.red
+                                                        .withOpacity(0.3),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                      vertical: isWeb
+                                                          ? 16
+                                                          : screenHeight *
+                                                              0.015,
+                                                    ),
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius
+                                                          .circular(isWeb
+                                                              ? 12
+                                                              : screenWidth *
+                                                                  0.03),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.delete_outline,
+                                                        size: isWeb
+                                                            ? 18
+                                                            : screenWidth *
+                                                                0.04,
+                                                      ),
+                                                      SizedBox(
+                                                          width: isWeb
+                                                              ? 8
+                                                              : screenWidth *
+                                                                  0.015),
+                                                      Text(
+                                                        'Delete',
+                                                        style: TextStyle(
+                                                          fontSize: isWeb
+                                                              ? 16
+                                                              : screenWidth *
+                                                                  0.038,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -751,13 +1107,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                   color: Colors.transparent,
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(isWeb ? 12 : screenWidth * 0.04),
-                                    onTap: () {
-                                      // Quick access to edit on card tap
-                                      Get.to(() => AddProducts(
-                                        productId: productId,
-                                        existingData: product.data() as Map<String, dynamic>,
-                                      ));
-                                    },
+                                    onTap: () {},
                                     child: Card(
                                       elevation: 2.5,
                                       shadowColor: Colors.black12,

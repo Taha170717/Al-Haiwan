@@ -28,13 +28,9 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
   final reasonController = TextEditingController();
   final ownerNameController = TextEditingController();
   final petNameController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
-  File? _paymentScreenshot;
 
   Rx<PaymentMethod> selectedPaymentMethod = PaymentMethod.EasyPaisa.obs;
   double consultationFee = 800;
-
-  // final double adminFee = 100; // REMOVE
 
   late AppointmentController appointmentController;
   late DoctorDetailViewModel detailVM;
@@ -459,104 +455,325 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Payment Screenshot", style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: screen.width * 0.035
-        )),
+        Row(
+          children: [
+            Text("Payment Screenshot",
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: screen.width * 0.035)),
+            Text(" *",
+                style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: screen.width * 0.035)),
+            Spacer(),
+            Container(
+              padding: EdgeInsets.symmetric(
+                  horizontal: screen.width * 0.02,
+                  vertical: screen.height * 0.005),
+              decoration: BoxDecoration(
+                color: Color(0xFF199A8E).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(screen.width * 0.02),
+              ),
+              child: Text(
+                "Required",
+                style: TextStyle(
+                  color: Color(0xFF199A8E),
+                  fontSize: screen.width * 0.03,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
         SizedBox(height: screen.height * 0.01),
+        Text(
+          "Upload a clear screenshot of your payment confirmation",
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: screen.width * 0.032,
+          ),
+        ),
+        SizedBox(height: screen.height * 0.015),
         Container(
           width: double.infinity,
-          height: screen.height * 0.15,
+          height: screen.height * 0.2,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey[300]!),
             borderRadius: BorderRadius.circular(screen.width * 0.03),
+            color: Colors.grey[50],
           ),
-          child: _paymentScreenshot != null
-              ? Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(screen.width * 0.03),
-                      child: kIsWeb
-                          ? Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              color: Colors.grey[300],
-                              child: Center(
-                                child: Text(
-                                  "Screenshot preview not available on Web",
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.grey),
+          child: Obx(() {
+            final hasScreenshot =
+                appointmentController.paymentScreenshotPath.value.isNotEmpty;
+
+            return hasScreenshot
+                ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(screen.width * 0.03),
+                        child: _buildImagePreview(screen),
+                      ),
+                      // Delete button
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () {
+                            appointmentController.clearPaymentScreenshot();
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
                                 ),
-                              ),
-                            )
-                          : Image.file(
-                              _paymentScreenshot!,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
+                              ],
                             ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: () => setState(() => _paymentScreenshot = null),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
+                            child: Icon(Icons.close,
+                                color: Colors.white, size: 18),
                           ),
-                          child:
-                              Icon(Icons.close, color: Colors.white, size: 20),
                         ),
                       ),
-                    ),
-                  ],
-                )
-              : GestureDetector(
-                  onTap: _pickPaymentScreenshot,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.camera_alt,
-                          size: screen.width * 0.08, color: Colors.grey),
-                      SizedBox(height: screen.height * 0.01),
-                      Text("Upload Payment Screenshot",
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: screen.width * 0.035,
-                          )),
+                      // Platform indicator
+                      Positioned(
+                        bottom: 8,
+                        left: 8,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screen.width * 0.02,
+                              vertical: screen.height * 0.005),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.7),
+                            borderRadius:
+                                BorderRadius.circular(screen.width * 0.02),
+                          ),
+                          child: Text(
+                            kIsWeb ? "Web Upload" : "Mobile Upload",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screen.width * 0.025,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
-                  ),
-                ),
+                  )
+                : GestureDetector(
+                    onTap: () => appointmentController.pickPaymentScreenshot(),
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(screen.width * 0.04),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF199A8E).withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                                kIsWeb ? Icons.upload_file : Icons.camera_alt,
+                                size: screen.width * 0.08,
+                                color: Color(0xFF199A8E)),
+                          ),
+                          SizedBox(height: screen.height * 0.015),
+                          Text(
+                            kIsWeb
+                                ? "Click to Upload Screenshot"
+                                : "Tap to Select from Gallery",
+                            style: TextStyle(
+                              color: Color(0xFF199A8E),
+                              fontSize: screen.width * 0.037,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: screen.height * 0.008),
+                          Text(
+                            kIsWeb
+                                ? "Supports JPG, PNG • Max 5MB"
+                                : "From Gallery or Camera • Max 5MB",
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: screen.width * 0.032,
+                            ),
+                          ),
+                          SizedBox(height: screen.height * 0.015),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: screen.width * 0.04,
+                                vertical: screen.height * 0.008),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: Color(0xFF199A8E).withOpacity(0.3)),
+                              borderRadius:
+                                  BorderRadius.circular(screen.width * 0.02),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: screen.width * 0.035,
+                                  color: Color(0xFF199A8E),
+                                ),
+                                SizedBox(width: screen.width * 0.02),
+                                Text(
+                                  "Clear payment proof required",
+                                  style: TextStyle(
+                                    color: Color(0xFF199A8E),
+                                    fontSize: screen.width * 0.03,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+          }),
         ),
       ],
     );
   }
 
-  Future<void> _pickPaymentScreenshot() async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 80,
-      );
-
-      if (image != null) {
-        setState(() {
-          _paymentScreenshot = File(image.path);
-        });
+  Widget _buildImagePreview(Size screen) {
+    if (kIsWeb) {
+      // Web platform: use bytes for preview
+      final bytes = appointmentController.paymentScreenshotBytes.value;
+      if (bytes != null && bytes.isNotEmpty) {
+        return Image.memory(
+          bytes,
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print('Error displaying web image: $error');
+            return Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.grey[300],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error,
+                      color: Colors.red, size: screen.width * 0.06),
+                  SizedBox(height: 8),
+                  Text(
+                    "Error loading image",
+                    style: TextStyle(fontSize: 14, color: Colors.red),
+                  ),
+                  Text(
+                    "Please try selecting again",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      } else {
+        // Fallback for web when bytes are not available but path exists
+        final path = appointmentController.paymentScreenshotPath.value;
+        if (path.isNotEmpty) {
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.green[50],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check_circle,
+                    color: Colors.green, size: screen.width * 0.06),
+                SizedBox(height: 8),
+                Text(
+                  "Image selected successfully",
+                  style: TextStyle(fontSize: 14, color: Colors.green),
+                ),
+                Text(
+                  "Ready to upload",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          );
+        }
       }
-    } catch (e) {
-      SnackbarUtils.showError("Error", "Failed to pick image: $e");
+    } else {
+      // Mobile platform: use File for preview
+      final path = appointmentController.paymentScreenshotPath.value;
+      if (path.isNotEmpty) {
+        return Image.file(
+          File(path),
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print('Error displaying mobile image: $error');
+            return Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.grey[300],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error,
+                      color: Colors.red, size: screen.width * 0.06),
+                  SizedBox(height: 8),
+                  Text(
+                    "Error loading image",
+                    style: TextStyle(fontSize: 14, color: Colors.red),
+                  ),
+                  Text(
+                    "Please try selecting again",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }
     }
+
+    // Default state when no image is selected
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.grey[100],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.image_outlined,
+              color: Colors.grey[400], size: screen.width * 0.08),
+          SizedBox(height: 8),
+          Text(
+            "No image selected",
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          ),
+          Text(
+            "Tap to select payment screenshot",
+            style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
-    final total = consultationFee; // REMOVE adminFee addition
+    final total = consultationFee;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -694,7 +911,6 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
             Text("Payment Detail", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
             SizedBox(height: screen.height * 0.02),
             _paymentRow("Consultation", "₨ ${consultationFee.toInt()}", isBold: true),
-            // _paymentRow("Admin Fee", "₨ ${adminFee.toInt()}", isBold: true), // REMOVE
             _paymentRow("Discount", "-"),
             Divider(),
             _paymentRow("Total", "₨ ${total.toInt()}", isBold: true),
@@ -767,24 +983,29 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                                 return;
                               }
 
-                    if (_paymentScreenshot == null) {
+                              if (appointmentController
+                                  .paymentScreenshotPath.value.isEmpty) {
                                 SnackbarUtils.showError("Missing Screenshot",
                                     "Please upload payment screenshot");
                                 return;
                               }
 
-                    // Set appointment controller values
-                    appointmentController.ownerName.value = ownerNameController.text.trim();
-                    if (appointmentController.consultationType.value == ConsultationType.pet) {
+                              // Set appointment controller values
+                              appointmentController.ownerName.value =
+                                  ownerNameController.text.trim();
+                              if (appointmentController.consultationType.value == ConsultationType.pet) {
                       appointmentController.petName.value = petNameController.text.trim();
                     }
                     appointmentController.selectedPaymentMethod.value = selectedPaymentMethod.value.toString().split('.').last;
-                    appointmentController.paymentScreenshotPath.value = _paymentScreenshot!.path;
-                    appointmentController.reason.value = reasonController.text.trim();
+                              appointmentController
+                                      .paymentScreenshotPath.value =
+                                  appointmentController
+                                      .paymentScreenshotPath.value;
+                              appointmentController.reason.value =
+                                  reasonController.text.trim();
 
-
-                    // Book appointment
-                    final success = await appointmentController.bookAppointment(
+                              // Book appointment
+                              final success = await appointmentController.bookAppointment(
                       doctorId: widget.doctor.id,
                       selectedDate: detailVM.selectedDate.value?.toString() ?? '',
                       selectedTime: detailVM.selectedTime.value,

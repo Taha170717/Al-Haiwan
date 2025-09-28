@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,7 +10,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'package:crypto/crypto.dart';
 import '../models/user_model.dart';
+import '../repository/user_service.dart';
 
 class ProfileController extends GetxController {
   final ImagePicker _imagePicker = ImagePicker();
@@ -17,6 +21,16 @@ class ProfileController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final UserService _userService = Get.put(UserService());
+
+  // ImageKit configuration
+  static const String _imageKitPublicKey =
+      'public_PZlQaFn7qH7zGf31Yp3rLKnUMGc=';
+  static const String _imageKitPrivateKey =
+      'private_sWCIXKsbU9kaLKEer34eiiF3sKw=';
+  static const String _imageKitUploadEndpoint =
+      'https://upload.imagekit.io/api/v1/files/upload';
+  static const String _userImagesFolder = 'userimages/';
 
   // Observable variables
   final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
@@ -290,33 +304,30 @@ class ProfileController extends GetxController {
           final user = _auth.currentUser;
 
           if (user != null && file.bytes != null) {
-            final ref = _storage.ref().child('profile_images/${user.uid}');
-            final uploadTask = ref.putData(
-              file.bytes!,
-              SettableMetadata(contentType: 'image/${file.extension}'),
-            );
-            final snapshot = await uploadTask;
-            final downloadUrl = await snapshot.ref.getDownloadURL();
+            final url = await _uploadImageToImageKit(file.bytes!, file.name);
+            if (url != null) {
+              await _firestore.collection('users').doc(user.uid).update({
+                'profileImageUrl': url,
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
 
-            await _firestore.collection('users').doc(user.uid).update({
-              'profileImageUrl': downloadUrl,
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
+              // Update local state
+              profileImageUrl.value = url;
+              if (currentUser.value != null) {
+                currentUser.value = currentUser.value!.copyWith(
+                  profileImageUrl: url,
+                  updatedAt: DateTime.now(),
+                );
+              }
 
-            // Update local state
-            profileImageUrl.value = downloadUrl;
-            if (currentUser.value != null) {
-              currentUser.value = currentUser.value!.copyWith(
-                profileImageUrl: downloadUrl,
-                updatedAt: DateTime.now(),
+              _userService.profileImageUrl(url);
+              _userService.refreshProfile();
+              _showSnackbar(
+                title: "Success",
+                message: "Profile image updated successfully",
+                type: SnackbarType.success,
               );
             }
-
-            _showSnackbar(
-              title: "Success",
-              message: "Profile image updated successfully",
-              type: SnackbarType.success,
-            );
           }
         }
       } else {
@@ -331,31 +342,31 @@ class ProfileController extends GetxController {
         if (image != null) {
           final user = _auth.currentUser;
           if (user != null) {
-            final file = File(image.path);
-            final ref = _storage.ref().child('profile_images/${user.uid}');
-            final uploadTask = ref.putFile(file);
-            final snapshot = await uploadTask;
-            final downloadUrl = await snapshot.ref.getDownloadURL();
+            final bytes = await image.readAsBytes();
+            final url = await _uploadImageToImageKit(bytes, image.name);
+            if (url != null) {
+              await _firestore.collection('users').doc(user.uid).update({
+                'profileImageUrl': url,
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
 
-            await _firestore.collection('users').doc(user.uid).update({
-              'profileImageUrl': downloadUrl,
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
+              // Update local state
+              profileImageUrl.value = url;
+              if (currentUser.value != null) {
+                currentUser.value = currentUser.value!.copyWith(
+                  profileImageUrl: url,
+                  updatedAt: DateTime.now(),
+                );
+              }
 
-            // Update local state
-            profileImageUrl.value = downloadUrl;
-            if (currentUser.value != null) {
-              currentUser.value = currentUser.value!.copyWith(
-                profileImageUrl: downloadUrl,
-                updatedAt: DateTime.now(),
+              _userService.updateProfileImageUrl(url);
+              _userService.refreshProfile();
+              _showSnackbar(
+                title: "Success",
+                message: "Profile image updated successfully",
+                type: SnackbarType.success,
               );
             }
-
-            _showSnackbar(
-              title: "Success",
-              message: "Profile image updated successfully",
-              type: SnackbarType.success,
-            );
           }
         }
       }
@@ -367,6 +378,80 @@ class ProfileController extends GetxController {
       );
     } finally {
       isUpdating.value = false;
+    }
+  }
+
+  Future<String?> _uploadImageToImageKit(
+      Uint8List bytes, String filename) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      final uniqueFilename =
+          '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final token = _generateAuthToken(timestamp);
+
+      var request =
+          http.MultipartRequest('POST', Uri.parse(_imageKitUploadEndpoint));
+
+      // Add authorization header
+      final authString = base64Encode(utf8.encode('$_imageKitPrivateKey:'));
+      request.headers['Authorization'] = 'Basic $authString';
+
+      // Add form fields
+      request.fields.addAll({
+        'publicKey': _imageKitPublicKey,
+        'signature': token,
+        'expire':
+            (DateTime.now().millisecondsSinceEpoch ~/ 1000 + 2400).toString(),
+        'token': token,
+        'fileName': uniqueFilename,
+        'folder': _userImagesFolder,
+        'useUniqueFileName': 'false',
+        'overwriteFile': 'true',
+        'overwriteAITags': 'false',
+        'overwriteTags': 'false',
+        'overwriteCustomMetadata': 'false',
+      });
+
+      // Add file
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: uniqueFilename,
+        ),
+      );
+
+      // Send request
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        var jsonResponse = json.decode(responseBody);
+        final imageUrl = jsonResponse['url'] as String;
+        return imageUrl;
+      } else {
+        throw Exception(
+            'Failed to upload image to ImageKit: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
+    }
+  }
+
+  /// Generate authentication token for ImageKit upload
+  String _generateAuthToken(String timestamp) {
+    try {
+      // Simple token generation - for production, use proper HMAC-SHA1
+      // with your private key and include timestamp + other parameters
+      var bytes = utf8.encode(timestamp + _imageKitPrivateKey);
+      var digest = sha256.convert(bytes);
+      return digest.toString();
+    } catch (e) {
+      throw Exception('Failed to generate authentication token: $e');
     }
   }
 
