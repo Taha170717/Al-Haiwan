@@ -36,6 +36,8 @@ dependencies:
   firebase_storage: ^13.0.0
   google_sign_in: ^6.3.0
   firebase_remote_config: ^6.0.1
+  flutter_dotenv: ^5.1.0
+
 
   # ImageKit for image uploads - using custom service implementation
   # imagekit_flutter_sdk: ^1.0.3  # This package doesn't exist - removed
@@ -98,6 +100,7 @@ flutter:
        - assets/adminicons/
        - assets/doctor_icons/
        - assets/animations/loadings.json
+       - .env
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
