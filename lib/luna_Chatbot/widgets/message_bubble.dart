@@ -5,14 +5,12 @@ class ChatBubble extends StatelessWidget {
   final Message message;
   final VoidCallback? onSpeak;
   final bool isSpeaking;
-  final bool isCurrentlySpeaking;
 
   const ChatBubble({
     super.key,
     required this.message,
     this.onSpeak,
     this.isSpeaking = false,
-    this.isCurrentlySpeaking = false,
   });
 
   @override
@@ -112,20 +110,13 @@ class ChatBubble extends StatelessWidget {
                           ),
                           child: IconButton(
                             icon: isSpeaking
-                                ? Icon(
-                                    isCurrentlySpeaking
-                                        ? Icons.stop_outlined
-                                        : Icons.play_arrow_outlined,
-                                    size: 20,
-                                    color: const Color(0xFFFFA726))
-                                : const Icon(Icons.volume_up_outlined,
-                                    size: 20, color: Color(0xFFFFA726)),
+                                ? const Icon(Icons.stop,
+                                    size: 22, color: Color(0xFFFFA726))
+                                : const Icon(Icons.volume_up,
+                                    size: 22, color: Color(0xFFFFA726)),
                             onPressed: onSpeak,
-                            tooltip: isSpeaking
-                                ? isCurrentlySpeaking
-                                    ? 'Stop speaking'
-                                    : 'Start speaking'
-                                : 'Listen to message',
+                            tooltip:
+                                isSpeaking ? 'Stop speaking' : 'Start speaking',
                             padding: const EdgeInsets.all(8),
                             constraints: const BoxConstraints(
                               minWidth: 36,

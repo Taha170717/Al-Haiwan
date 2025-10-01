@@ -75,7 +75,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     _currentSessionId = await _chatService.startNewSession();
     messages.clear();
 
-    const greeting = "How can I help you today? 🐶";
+    const greeting = "Hello! I'm Luna 🐶, your AI Animal Healthcare Assistant. I specialize in pet health, veterinary care, and animal wellness. I can help you with questions about your pet's symptoms, general care advice, nutrition, and when you might need to see a veterinarian. How can I help you and your furry friend today?";
     messages.add(Message(sender: 'Luna', text: greeting));
 
     await _chatService.saveMessage(_currentSessionId!, greeting, "bot");
@@ -180,7 +180,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     );
 
     try {
-      final reply = await GeminiService.generate(
+      final reply = await GroqService.generate(
         userText,
         base64Image: base64Image,
       );
@@ -243,7 +243,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
             ),
             const SizedBox(width: 10),
             const Text(
-              'Luna AI Assistant',
+              'Luna - Animal Healthcare',
               style: TextStyle(
                 color: Color(0xFFFFA726),
                 fontWeight: FontWeight.w600,
@@ -272,7 +272,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 child: Column(
                   children: [
                     const Text(
-                      'Welcome to Luna 🐶',
+                      'Luna 🐶 Animal Healthcare',
                       style: TextStyle(
                         color: Color(0xFFFFA726),
                         fontWeight: FontWeight.bold,
@@ -281,7 +281,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Ask me anything about your pet\'s health!',
+                      'Your trusted AI assistant for pet health & wellness',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 16,
@@ -317,20 +317,20 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                       itemCount: chatMessages.length,
                       itemBuilder: (ctx, i) {
                         final m = chatMessages[i];
-                        return ChatBubble(
-                          message: m,
-                          onSpeak: m.sender == 'Luna'
-                                    ? () => _toggleSpeak(m.text, i.toString())
+                              final messageId = docs[i]
+                                  .id; // Use Firestore document ID as unique identifier
+                              return ChatBubble(
+                                message: m,
+                                onSpeak: m.sender == 'Luna'
+                                    ? () => _toggleSpeak(m.text, messageId)
                                     : null,
                                 isSpeaking: _isSpeaking &&
-                                    _currentSpeakingMessageId == i.toString(),
-                                isCurrentlySpeaking: _isSpeaking &&
-                                    _currentSpeakingMessageId == i.toString(),
+                                    _currentSpeakingMessageId == messageId,
                               );
                             },
-                    );
-                  },
-                ),
+                          );
+                        },
+                      ),
               ),
               if (_selectedImage != null)
                 Container(

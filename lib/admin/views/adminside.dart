@@ -54,7 +54,7 @@ class _AdminScreenState extends State<AdminScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text(
-          "Al-Haiwan Admin Panel",
+          "Al-Hewan Admin Panel",
           style: TextStyle(color: Color(0xFF199A8E), fontFamily: "bolditalic"),
         ),
         iconTheme: const IconThemeData(color: Color(0XFF199A8E)),

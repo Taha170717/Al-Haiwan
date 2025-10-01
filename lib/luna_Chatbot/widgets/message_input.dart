@@ -28,6 +28,16 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   @override
+  void didUpdateWidget(MessageInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update text field when speech-to-text provides new text
+    if (widget.initialText != oldWidget.initialText &&
+        widget.initialText.isNotEmpty) {
+      _controller.text = widget.initialText;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -73,5 +83,7 @@ class _MessageInputState extends State<MessageInput> {
     if (text.isEmpty) return;
     widget.onSend(text);
     _controller.clear();
+    // Remove focus to hide keyboard after sending
+    widget.focusNode?.unfocus();
   }
 }
