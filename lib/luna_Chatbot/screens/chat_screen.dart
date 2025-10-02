@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,8 +13,8 @@ import '../widgets/message_bubble.dart';
 import '../widgets/message_input.dart';
 import '../widgets/drawer_widget.dart';
 import '../services/firebase_storage_service.dart';
-import '../services/gemini_service.dart';
-import '../services/chat_service.dart'; // ✅ Firestore wrapper
+import '../services/gemini_service.dart'; // Updated import
+import '../services/chat_service.dart'; // Firestore wrapper
 
 class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key});
@@ -36,6 +37,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   String _spokenText = '';
   bool _isSpeaking = false;
   String? _currentSpeakingMessageId;
+  Timer? _ttsTimeout;
 
   final ChatService _chatService = ChatService();
 
@@ -44,19 +46,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     super.initState();
     _speech = stt.SpeechToText();
     _initUserAndChat();
-
-    // Configure TTS once
-    _tts.setLanguage("en-US");
-    _tts.setSpeechRate(0.9);
-    _tts.setPitch(1.0);
-
-    // Add TTS completion handler
-    _tts.setCompletionHandler(() {
-      setState(() {
-        _isSpeaking = false;
-        _currentSpeakingMessageId = null;
-      });
-    });
+    _initTTS();
   }
 
   /// Ensure user exists (anonymous sign-in if needed)
@@ -75,7 +65,8 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     _currentSessionId = await _chatService.startNewSession();
     messages.clear();
 
-    const greeting = "How can I help you today? 🐶";
+    const greeting =
+        "Hi! I'm Luna, your Animal Care Health Assistant! 🐾 How can I help you with your pet's health and well-being today?";
     messages.add(Message(sender: 'Luna', text: greeting));
 
     await _chatService.saveMessage(_currentSessionId!, greeting, "bot");
@@ -112,23 +103,79 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   }
 
   Future<void> _toggleSpeak(String text, String messageId) async {
-    if (_isSpeaking && _currentSpeakingMessageId == messageId) {
-      // Stop speaking
-      await _tts.stop();
+    try {
+      if (_isSpeaking && _currentSpeakingMessageId == messageId) {
+        // AGGRESSIVE STOP - try multiple methods
+        print('Stopping TTS aggressively...');
+
+        // Cancel any timer
+        _ttsTimeout?.cancel();
+
+        // Try to stop TTS
+        await _tts.stop();
+
+        // Force state update immediately
+        setState(() {
+          _isSpeaking = false;
+          _currentSpeakingMessageId = null;
+        });
+
+        // Double-check with a small delay
+        Future.delayed(Duration(milliseconds: 100), () async {
+          if (mounted) {
+            await _tts.stop(); // Try again
+            setState(() {
+              _isSpeaking = false;
+              _currentSpeakingMessageId = null;
+            });
+          }
+        });
+
+        print('TTS stopped successfully');
+      } else {
+        // Stop any current speech first
+        if (_isSpeaking) {
+          _ttsTimeout?.cancel();
+          await _tts.stop();
+          setState(() {
+            _isSpeaking = false;
+            _currentSpeakingMessageId = null;
+          });
+          // Small delay to ensure stop is processed
+          await Future.delayed(Duration(milliseconds: 200));
+        }
+
+        print('Starting TTS...');
+        setState(() {
+          _isSpeaking = true;
+          _currentSpeakingMessageId = messageId;
+        });
+
+        final result = await _tts.speak(text);
+        print('TTS speak initiated with result: $result');
+
+        // Add a timer-based backup mechanism
+        _ttsTimeout?.cancel();
+        _ttsTimeout = Timer(Duration(seconds: 30), () {
+          if (_isSpeaking && mounted) {
+            print('TTS timeout - force stopping');
+            _tts.stop();
+            setState(() {
+              _isSpeaking = false;
+              _currentSpeakingMessageId = null;
+            });
+          }
+        });
+
+        // Note: Don't reset state here as completion handler will do it
+      }
+    } catch (e) {
+      print('Error in TTS: $e');
+      _ttsTimeout?.cancel();
       setState(() {
         _isSpeaking = false;
         _currentSpeakingMessageId = null;
       });
-    } else {
-      // Start speaking
-      if (_isSpeaking) {
-        await _tts.stop();
-      }
-      setState(() {
-        _isSpeaking = true;
-        _currentSpeakingMessageId = messageId;
-      });
-      await _tts.speak(text);
     }
   }
 
@@ -136,6 +183,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   void dispose() {
     _tts.stop();
     _focusNode.dispose();
+    _ttsTimeout?.cancel();
     super.dispose();
   }
 
@@ -207,6 +255,65 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     }
   }
 
+  /// Initialize TTS with proper configuration
+  Future<void> _initTTS() async {
+    try {
+      // Check if TTS is available
+      final isAvailable = await _tts.isLanguageAvailable("en-US");
+      if (!isAvailable) {
+        print('TTS en-US language not available');
+      }
+
+      await _tts.setLanguage("en-US");
+      await _tts.setSpeechRate(0.8);
+      await _tts.setPitch(1.0);
+      await _tts.setVolume(1.0);
+
+      // Add TTS completion handler
+      _tts.setCompletionHandler(() {
+        print('TTS completion handler called');
+        if (mounted) {
+          setState(() {
+            _isSpeaking = false;
+            _currentSpeakingMessageId = null;
+          });
+        }
+        _ttsTimeout?.cancel();
+      });
+
+      // Add error handler
+      _tts.setErrorHandler((message) {
+        print('TTS Error: $message');
+        if (mounted) {
+          setState(() {
+            _isSpeaking = false;
+            _currentSpeakingMessageId = null;
+          });
+        }
+        _ttsTimeout?.cancel();
+      });
+
+      // Add start handler
+      _tts.setStartHandler(() {
+        print('TTS started speaking');
+      });
+
+      // Add cancel handler (for when stop is called)
+      _tts.setCancelHandler(() {
+        print('TTS cancelled/stopped');
+        if (mounted) {
+          setState(() {
+            _isSpeaking = false;
+            _currentSpeakingMessageId = null;
+          });
+        }
+        _ttsTimeout?.cancel();
+      });
+    } catch (e) {
+      print('TTS Initialization Error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -243,7 +350,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
             ),
             const SizedBox(width: 10),
             const Text(
-              'Luna AI Assistant',
+              'Luna - Animal Care Health Chatbot',
               style: TextStyle(
                 color: Color(0xFFFFA726),
                 fontWeight: FontWeight.w600,
@@ -272,7 +379,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 child: Column(
                   children: [
                     const Text(
-                      'Welcome to Luna 🐶',
+                      'Welcome to Luna 🐾',
                       style: TextStyle(
                         color: Color(0xFFFFA726),
                         fontWeight: FontWeight.bold,
@@ -281,7 +388,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Ask me anything about your pet\'s health!',
+                      'Your trusted Animal Care Health Assistant',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 16,
@@ -321,14 +428,17 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                                   .id; // Use Firestore document ID as unique identifier
                               return ChatBubble(
                                 message: m,
-                          onSpeak: m.sender == 'Luna'
-                                    ? () => _toggleSpeak(m.text, messageId)
-                                    : null,
+                                onSpeak:
+                                    (!m.sender.toLowerCase().contains('user'))
+                                        ? () => _toggleSpeak(m.text, messageId)
+                                        : null,
+                                isSpeaking: _isSpeaking &&
+                                    _currentSpeakingMessageId == messageId,
                               );
                             },
                           );
                         },
-                ),
+                      ),
               ),
               if (_selectedImage != null)
                 Container(
