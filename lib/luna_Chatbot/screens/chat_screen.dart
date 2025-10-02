@@ -75,7 +75,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     _currentSessionId = await _chatService.startNewSession();
     messages.clear();
 
-    const greeting = "Hello! I'm Luna 🐶, your AI Animal Healthcare Assistant. I specialize in pet health, veterinary care, and animal wellness. I can help you with questions about your pet's symptoms, general care advice, nutrition, and when you might need to see a veterinarian. How can I help you and your furry friend today?";
+    const greeting = "How can I help you today? 🐶";
     messages.add(Message(sender: 'Luna', text: greeting));
 
     await _chatService.saveMessage(_currentSessionId!, greeting, "bot");
@@ -243,7 +243,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
             ),
             const SizedBox(width: 10),
             const Text(
-              'Luna - Animal Healthcare',
+              'Luna AI Assistant',
               style: TextStyle(
                 color: Color(0xFFFFA726),
                 fontWeight: FontWeight.w600,
@@ -272,7 +272,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 child: Column(
                   children: [
                     const Text(
-                      'Luna 🐶 Animal Healthcare',
+                      'Welcome to Luna 🐶',
                       style: TextStyle(
                         color: Color(0xFFFFA726),
                         fontWeight: FontWeight.bold,
@@ -281,7 +281,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Your trusted AI assistant for pet health & wellness',
+                      'Ask me anything about your pet\'s health!',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 16,
@@ -321,16 +321,14 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                                   .id; // Use Firestore document ID as unique identifier
                               return ChatBubble(
                                 message: m,
-                                onSpeak: m.sender == 'Luna'
+                          onSpeak: m.sender == 'Luna'
                                     ? () => _toggleSpeak(m.text, messageId)
                                     : null,
-                                isSpeaking: _isSpeaking &&
-                                    _currentSpeakingMessageId == messageId,
                               );
                             },
                           );
                         },
-                      ),
+                ),
               ),
               if (_selectedImage != null)
                 Container(
