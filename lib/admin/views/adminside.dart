@@ -29,7 +29,7 @@ class _AdminScreenState extends State<AdminScreen> {
     AdminDoctorVerificationPage()
   ];
 
-  User? user; // To store the logged-in user's information
+  User? user;
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _AdminScreenState extends State<AdminScreen> {
   }
 
   Future<void> _getCurrentUser() async {
-    user = FirebaseAuth.instance.currentUser; // Fetch the logged-in user
+    user = FirebaseAuth.instance.currentUser;
     setState(() {}); // Update the UI
   }
 
