@@ -19,6 +19,13 @@ class DefaultFirebaseOptions {
     if (kIsWeb) {
       return web;
     }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return android;
+      // Extend here when you add iOS, macOS, Windows, Linux configs
+      default:
+        break;
+    }
     throw UnsupportedError(
       'DefaultFirebaseOptions are only configured for web platform.',
     );
@@ -32,5 +39,13 @@ class DefaultFirebaseOptions {
       messagingSenderId: "451198622828",
       appId: "1:451198622828:web:fc6be59691939408664c49",
       measurementId: "G-WNEF6Q53EK"
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: "AIzaSyDi8sTzHEtcUBe_GDip2tpavl7g-pJmrso",
+    appId: "1:451198622828:android:219f91cea026868f664c49",
+    messagingSenderId: "451198622828",
+    projectId: "alhewan-e110c",
+    storageBucket: "alhewan-e110c.firebasestorage.app",
   );
 }
