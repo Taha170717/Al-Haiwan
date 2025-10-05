@@ -9,7 +9,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'package:al_haiwan/user/repository/screens/splash/splashscreen.dart';
-
+//asdjaskdas
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
