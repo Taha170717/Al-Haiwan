@@ -9,6 +9,7 @@ class Assets {
   static const String adminiconsProducts = 'assets/adminicons/products.png';
   static const String adminiconsProfile = 'assets/adminicons/profile.png';
   static const String adminiconsReport = 'assets/adminicons/report.png';
+  static const String alHaiwan = '.env';
   static const String animationsLoading = 'assets/animations/loading.json';
   static const String animationsLoadings = 'assets/animations/loadings.json';
   static const String assetsAnimationsLoadings = 'assets/animations/loadings.json';
@@ -66,7 +67,7 @@ class Assets {
   static const String imagesGoogle = 'assets/images/google.png';
   static const String imagesHome = 'assets/images/home.png';
   static const String imagesLogo = 'assets/images/logo.png';
-  static const String imagesLogo2 = 'assets/images/logo2.jpg';
+  static const String imagesLogo2 = 'assets/images/logo2.png';
   static const String imagesLogo3 = 'assets/images/logo3.png';
   static const String imagesLogoback = 'assets/images/logoback.png';
   static const String imagesLuna = 'assets/images/luna.png';
