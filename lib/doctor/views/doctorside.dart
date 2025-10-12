@@ -12,7 +12,7 @@ import 'Doctor_Verification.dart';
 import 'bottom_nav_pages/appointments/appoinmentspage.dart';
 import 'dart:ui';
 
-import 'notifications/doctor_notifications_Screen.dart';
+import 'bottom_nav_pages/notifications/doctor_notifications_Screen.dart';
 
 class DoctorScreen extends StatefulWidget {
   const DoctorScreen({super.key});
@@ -23,13 +23,8 @@ class DoctorScreen extends StatefulWidget {
 
 class _DoctorScreenState extends State<DoctorScreen> {
   final DoctorBottomNavController controller = Get.put(DoctorBottomNavController());
-  final List<Widget> pages = [
-    DoctorDashboard(),
-    AppointmentPage(),
-    MedicalRecordPage(),
-    Chatpage(),
-    DoctorProfile(),
-  ];
+
+  List<Widget> pages = [];
 
   User? user;
   String? username;
@@ -59,6 +54,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
             isDoctor = snapshot.data()?['isDoctor'] ?? false;
             isVerified = snapshot.data()?['isVerified'] ?? false;
             isLoading = false;
+            _initializePages();
           });
         } else {
           await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
@@ -75,6 +71,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
             isDoctor = true;
             isVerified = false;
             isLoading = false;
+            _initializePages();
           });
         }
       }
@@ -82,8 +79,21 @@ class _DoctorScreenState extends State<DoctorScreen> {
       print("Error fetching user details: $e");
       setState(() {
         isLoading = false;
+        _initializePages();
       });
     }
+  }
+
+  void _initializePages() {
+    pages = [
+      DoctorDashboard(),
+      AppointmentPage(),
+      MedicalRecordPage(
+        doctorId: user?.uid ?? '',
+      ),
+      Chatpage(),
+      DoctorProfile(),
+    ];
   }
 
   void _checkVerificationForNavigation(int targetIndex) {

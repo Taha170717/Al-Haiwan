@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
-import '../../models/notification_model.dart';
+import '../../../models/notification_model.dart';
 
 class DoctorNotificationsScreen extends StatelessWidget {
   @override

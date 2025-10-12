@@ -134,7 +134,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           title: 'Total Doctors',
                           value: value,
                           loading: loading,
-                          icon: Icons.local_hospital_rounded,
+                          icon: Icons.local_hospital_sharp,
                           gradient: const [
                             Color(0xFF2ECC71),
                             Color(0xFF27AE60),
@@ -187,68 +187,114 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
               SizedBox(height: gapBetweenCards),
 
-
+              // Row 3: Orders and Appointments
               Row(
                 children: [
-                  // Total Users
+                  // Total Orders
                   Expanded(
                     child: StreamBuilder<QuerySnapshot>(
                       stream: ordersQuery.snapshots(),
                       builder: (context, snapshot) {
-                        final loading =
-                            snapshot.connectionState == ConnectionState.waiting;
-                        final value =
-                        snapshot.hasData ? snapshot.data!.size : 0;
-
-                        if (snapshot.hasError) {
-                          _setErrorOnce(
-                            'Failed to load Orders: ${snapshot.error}',
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return _StatCard(
+                            title: 'Total Orders',
+                            value: 0,
+                            loading: true,
+                            icon: Icons.shopping_bag_rounded,
+                            gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
+                            accent: const Color(0xFF2196F3),
+                            height: 150,
                           );
+                        }
+                        if (snapshot.hasError) {
+                          return _StatCard(
+                            title: 'Total Orders',
+                            value: 0,
+                            loading: false,
+                            icon: Icons.shopping_bag_rounded,
+                            gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
+                            accent: const Color(0xFF2196F3),
+                            height: 150,
+                          );
+                        }
+
+                        final docs = snapshot.data?.docs ?? [];
+                        int pending = 0;
+                        int completed = 0;
+
+                        for (final d in docs) {
+                          final status = (d['status'] as String?)?.toLowerCase().trim() ?? '';
+                          if (status == 'pending' || status == 'processing') pending++;
+                          if (status == 'completed' || status == 'delivered') completed++;
                         }
 
                         return _StatCard(
                           title: 'Total Orders',
-                          value: value,
-                          loading: loading,
-                          icon: Icons.group_rounded,
-                          gradient: const [
-                            Color(0xFF199A8E),
-                            Color(0xFF3DCF71),
-                          ],
-                          accent: const Color(0xFF3D5AFE),
-                          height: cardHeight,
+                          value: docs.length,
+                          loading: false,
+                          icon: Icons.shopping_bag_rounded,
+                          gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
+                          accent: const Color(0xFF2196F3),
+                          height: 200,
+                          sub1Label: 'Pending',
+                          sub1Value: pending,
+                          sub2Label: 'Completed',
+                          sub2Value: completed,
                         );
                       },
                     ),
                   ),
                   SizedBox(width: gapBetweenCards),
-                  // Total Doctors
+                  // Total Appointments
                   Expanded(
                     child: StreamBuilder<QuerySnapshot>(
                       stream: appointmentsQuery.snapshots(),
                       builder: (context, snapshot) {
-                        final loading =
-                            snapshot.connectionState == ConnectionState.waiting;
-                        final value =
-                        snapshot.hasData ? snapshot.data!.size : 0;
-
-                        if (snapshot.hasError) {
-                          _setErrorOnce(
-                            'Failed to load Appointments: ${snapshot.error}',
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return _StatCard(
+                            title: 'Total Appointments',
+                            value: 0,
+                            loading: true,
+                            icon: Icons.event_available_rounded,
+                            gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
+                            accent: const Color(0xFF4CAF50),
+                            height: 150,
                           );
+                        }
+                        if (snapshot.hasError) {
+                          return _StatCard(
+                            title: 'Total Appointments',
+                            value: 0,
+                            loading: false,
+                            icon: Icons.event_available_rounded,
+                            gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
+                            accent: const Color(0xFF4CAF50),
+                            height: 150,
+                          );
+                        }
+
+                        final docs = snapshot.data?.docs ?? [];
+                        int pending = 0;
+                        int confirmed = 0;
+
+                        for (final d in docs) {
+                          final status = (d['status'] as String?)?.toLowerCase().trim() ?? '';
+                          if (status == 'pending') pending++;
+                          if (status == 'confirmed' || status == 'approved') confirmed++;
                         }
 
                         return _StatCard(
                           title: 'Total Appointments',
-                          value: value,
-                          loading: loading,
-                          icon: Icons.local_hospital_rounded,
-                          gradient: const [
-                            Color(0xFF8EC5FC), // light blue
-                            Color(0xFFE0C3FC), // soft purple
-                          ],
-                          accent: const Color(0xFF6A82FB),
-                          height: cardHeight,
+                          value: docs.length,
+                          loading: false,
+                          icon: Icons.event_available_rounded,
+                          gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
+                          accent: const Color(0xFF4CAF50),
+                          height: 200,
+                          sub1Label: 'Pending',
+                          sub1Value: pending,
+                          sub2Label: 'Confirmed',
+                          sub2Value: confirmed,
                         );
                       },
                     ),
@@ -306,6 +352,10 @@ class _StatCard extends StatelessWidget {
   final List<Color> gradient;
   final Color accent;
   final double height;
+  final String? sub1Label;
+  final int? sub1Value;
+  final String? sub2Label;
+  final int? sub2Value;
 
   const _StatCard({
     required this.title,
@@ -315,6 +365,10 @@ class _StatCard extends StatelessWidget {
     required this.gradient,
     required this.accent,
     required this.height,
+    this.sub1Label,
+    this.sub1Value,
+    this.sub2Label,
+    this.sub2Value,
   });
 
   @override
@@ -367,6 +421,30 @@ class _StatCard extends StatelessWidget {
                     letterSpacing: 0.2,
                   ),
                 ),
+                if (sub1Label != null && sub1Value != null && sub2Label != null && sub2Value != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '$sub1Value $sub1Label',
+                        style: TextStyle(
+                          color: textColor.withOpacity(0.8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        '$sub2Value $sub2Label',
+                        style: TextStyle(
+                          color: textColor.withOpacity(0.8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const Spacer(),
                 Align(
                   alignment: Alignment.bottomLeft,
@@ -392,41 +470,68 @@ class _StatCard extends StatelessWidget {
                       ),
                     ],
                   )
-                      : Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                      : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '$value',
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 36,
-                          height: 0.9,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.35),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '$value',
+                            style: TextStyle(
+                              color: textColor,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 36,
+                              height: 0.9,
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          'Live Update',
-                          style: TextStyle(
-                            color: textColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                            letterSpacing: 0.3,
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.35),
+                              ),
+                            ),
+                            child: Text(
+                              'Live Update',
+                              style: TextStyle(
+                                color: textColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
+                      if ((sub1Label != null && sub1Value != null) ||
+                          (sub2Label != null && sub2Value != null)) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            if (sub1Label != null && sub1Value != null)
+                              _SubCountChip(
+                                label: sub1Label!,
+                                value: sub1Value!,
+                                textColor: textColor,
+                              ),
+                            if (sub2Label != null && sub2Value != null) ...[
+                              const SizedBox(width: 8),
+                              _SubCountChip(
+                                label: sub2Label!,
+                                value: sub2Value!,
+                                textColor: textColor,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -452,6 +557,39 @@ class _Bubble extends StatelessWidget {
       width: size,
       decoration:
       BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _SubCountChip extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color textColor;
+
+  const _SubCountChip({
+    required this.label,
+    required this.value,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.20),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.35)),
+      ),
+      child: Text(
+        '$label: $value',
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          letterSpacing: 0.2,
+        ),
+      ),
     );
   }
 }
