@@ -559,7 +559,7 @@ class AdminAppointmentsScreen extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.attach_money, color: Colors.white, size: isDesktop ? 20 : isTablet ? 18 : 16),
+                      Icon(Icons.money, color: Colors.white, size: isDesktop ? 20 : isTablet ? 18 : 16),
                       Text(
                         'PKR ${appointment.consultationFee?.toStringAsFixed(0) ?? '0'}',
                         style: TextStyle(

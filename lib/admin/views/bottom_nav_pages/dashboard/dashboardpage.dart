@@ -203,7 +203,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             icon: Icons.shopping_bag_rounded,
                             gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
                             accent: const Color(0xFF2196F3),
-                            height: 150,
+                            height: 250,
                           );
                         }
                         if (snapshot.hasError) {
@@ -214,7 +214,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             icon: Icons.shopping_bag_rounded,
                             gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
                             accent: const Color(0xFF2196F3),
-                            height: 150,
+                            height: 250,
                           );
                         }
 
@@ -235,7 +235,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           icon: Icons.shopping_bag_rounded,
                           gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
                           accent: const Color(0xFF2196F3),
-                          height: 200,
+                          height: 250,
                           sub1Label: 'Pending',
                           sub1Value: pending,
                           sub2Label: 'Completed',
@@ -252,24 +252,24 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return _StatCard(
-                            title: 'Total Appointments',
+                            title: 'Total Bookings',
                             value: 0,
                             loading: true,
                             icon: Icons.event_available_rounded,
                             gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
                             accent: const Color(0xFF4CAF50),
-                            height: 150,
+                            height: 250,
                           );
                         }
                         if (snapshot.hasError) {
                           return _StatCard(
-                            title: 'Total Appointments',
+                            title: 'Total Bookings',
                             value: 0,
                             loading: false,
                             icon: Icons.event_available_rounded,
                             gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
                             accent: const Color(0xFF4CAF50),
-                            height: 150,
+                            height: 250,
                           );
                         }
 
@@ -284,13 +284,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         }
 
                         return _StatCard(
-                          title: 'Total Appointments',
+                          title: 'Total Bookings',
                           value: docs.length,
                           loading: false,
                           icon: Icons.event_available_rounded,
                           gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
                           accent: const Color(0xFF4CAF50),
-                          height: 200,
+                          height: 250,
                           sub1Label: 'Pending',
                           sub1Value: pending,
                           sub2Label: 'Confirmed',
@@ -422,9 +422,8 @@ class _StatCard extends StatelessWidget {
                   ),
                 ),
                 if (sub1Label != null && sub1Value != null && sub2Label != null && sub2Value != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '$sub1Value $sub1Label',
@@ -513,7 +512,8 @@ class _StatCard extends StatelessWidget {
                       if ((sub1Label != null && sub1Value != null) ||
                           (sub2Label != null && sub2Value != null)) ...[
                         const SizedBox(height: 10),
-                        Row(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (sub1Label != null && sub1Value != null)
                               _SubCountChip(
@@ -521,6 +521,9 @@ class _StatCard extends StatelessWidget {
                                 value: sub1Value!,
                                 textColor: textColor,
                               ),
+                            SizedBox(
+                              height: 10,
+                            ),
                             if (sub2Label != null && sub2Value != null) ...[
                               const SizedBox(width: 8),
                               _SubCountChip(

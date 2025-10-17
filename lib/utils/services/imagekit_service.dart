@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'dart:io' if (dart.library.html) 'dart:io';
 import 'package:crypto/crypto.dart';
+import 'package:uuid/uuid.dart';
 
 import '../config/imagekit_config.dart';
 
@@ -51,7 +52,7 @@ class ImageKitService {
       if (ImageKitConfig.publicKey == 'your_public_key_here' ||
           ImageKitConfig.privateKey == 'your_private_key_here') {
         throw Exception(
-            'ImageKit credentials not configured. Please update lib/admin/config/imagekit_config.dart');
+            'ImageKit credentials not configured. Please update lib/utils/config/imagekit_config.dart');
       }
 
       // Get image bytes
@@ -63,26 +64,19 @@ class ImageKitService {
         imageBytes = await file.readAsBytes();
       }
 
-      // Generate authentication parameters
-      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-      final token = _generateAuthToken(timestamp);
+      // Generate proper ImageKit authentication parameters
+      final authParams = _generateAuthenticationParameters();
 
       // Prepare multipart request
       var request = http.MultipartRequest(
           'POST', Uri.parse(ImageKitConfig.uploadEndpoint));
 
-      // Add authorization header
-      final authString =
-          base64Encode(utf8.encode('${ImageKitConfig.privateKey}:'));
-      request.headers['Authorization'] = 'Basic $authString';
-
-      // Add form fields
+      // Add form fields with proper authentication
       request.fields.addAll({
         'publicKey': ImageKitConfig.publicKey,
-        'signature': token,
-        'expire':
-            (DateTime.now().millisecondsSinceEpoch ~/ 1000 + 2400).toString(),
-        'token': token,
+        'signature': authParams['signature']!,
+        'expire': authParams['expire']!,
+        'token': authParams['token']!,
         'fileName': fileName,
         'folder': folderPath,
         'useUniqueFileName': 'false',
@@ -123,18 +117,45 @@ class ImageKitService {
     }
   }
 
-  /// Generate authentication token for ImageKit upload
-  /// For production, implement proper HMAC-SHA1 signature generation
-  static String _generateAuthToken(String timestamp) {
+  /// Upload a single payment screenshot to ImageKit
+  static Future<String> uploadPaymentScreenshot(
+    XFile image,
+    String appointmentId,
+  ) async {
     try {
-      // Simple token generation - for production, use proper HMAC-SHA1
-      // with your private key and include timestamp + other parameters
-      var bytes = utf8.encode(timestamp + ImageKitConfig.privateKey);
-      var digest = sha256.convert(bytes);
-      return digest.toString();
+      final fileName =
+          'payment_${appointmentId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final folderPath = 'payment_screenshots/';
+
+      return await _uploadSingleImage(image, fileName, folderPath);
     } catch (e) {
-      throw Exception('Failed to generate authentication token: $e');
+      print('Error uploading payment screenshot: $e');
+      throw Exception('Failed to upload payment screenshot: $e');
     }
+  }
+
+  /// Generate proper ImageKit authentication parameters
+  static Map<String, String> _generateAuthenticationParameters() {
+    // Generate a unique token (UUID v4)
+    final token = const Uuid().v4();
+
+    // Generate expire timestamp (30 minutes from now to be safe)
+    // ImageKit requires Unix timestamp in seconds, less than 1 hour in the future
+    final expire =
+        (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1800; // 30 minutes
+
+    // Generate HMAC-SHA1 signature: HMAC-SHA1(token + expire, private_key)
+    final message = token + expire.toString();
+    final key = utf8.encode(ImageKitConfig.privateKey);
+    final hmac = Hmac(sha1, key);
+    final digest = hmac.convert(utf8.encode(message));
+    final signature = digest.toString();
+
+    return {
+      'token': token,
+      'expire': expire.toString(),
+      'signature': signature,
+    };
   }
 
   /// Delete an image from ImageKit (optional utility method)

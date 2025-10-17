@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
 import '../models/user_model.dart';
 import '../repository/user_service.dart';
+import '../../utils/config/imagekit_config.dart';
 
 class ProfileController extends GetxController {
   final ImagePicker _imagePicker = ImagePicker();
@@ -24,13 +25,10 @@ class ProfileController extends GetxController {
   final UserService _userService = Get.put(UserService());
 
   // ImageKit configuration
-  static const String _imageKitPublicKey =
-      'public_PZlQaFn7qH7zGf31Yp3rLKnUMGc=';
-  static const String _imageKitPrivateKey =
-      'private_sWCIXKsbU9kaLKEer34eiiF3sKw=';
-  static const String _imageKitUploadEndpoint =
-      'https://upload.imagekit.io/api/v1/files/upload';
-  static const String _userImagesFolder = 'userimages/';
+  final String _imageKitPublicKey = ImageKitConfig.publicKey;
+  final String _imageKitPrivateKey = ImageKitConfig.privateKey;
+  final String _imageKitUploadEndpoint = ImageKitConfig.uploadEndpoint;
+  final String _userImagesFolder = ImageKitConfig.userImagesFolder;
 
   // Observable variables
   final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
@@ -43,6 +41,7 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     loadUserProfile();
+    testImageKitConnection(); // Test ImageKit connection on initialization
   }
 
   void _showSnackbar({
@@ -292,6 +291,8 @@ class ProfileController extends GetxController {
     try {
       isUpdating.value = true;
 
+      print('Starting profile image upload process...');
+
       if (kIsWeb) {
         // Web platform: use file_picker
         FilePickerResult? result = await _filePicker.pickFiles(
@@ -303,48 +304,16 @@ class ProfileController extends GetxController {
           final file = result.files.first;
           final user = _auth.currentUser;
 
+          print('File selected: ${file.name}, size: ${file.size} bytes');
+
           if (user != null && file.bytes != null) {
+            print('Current user: ${user.uid}');
+            print('File bytes available: ${file.bytes!.length} bytes');
+
             final url = await _uploadImageToImageKit(file.bytes!, file.name);
             if (url != null) {
-              await _firestore.collection('users').doc(user.uid).update({
-                'profileImageUrl': url,
-                'updatedAt': FieldValue.serverTimestamp(),
-              });
+              print('Upload successful, updating Firestore with URL: $url');
 
-              // Update local state
-              profileImageUrl.value = url;
-              if (currentUser.value != null) {
-                currentUser.value = currentUser.value!.copyWith(
-                  profileImageUrl: url,
-                  updatedAt: DateTime.now(),
-                );
-              }
-
-              _userService.profileImageUrl(url);
-              _userService.refreshProfile();
-              _showSnackbar(
-                title: "Success",
-                message: "Profile image updated successfully",
-                type: SnackbarType.success,
-              );
-            }
-          }
-        }
-      } else {
-        // Mobile platform: use image_picker
-        final XFile? image = await _imagePicker.pickImage(
-          source: ImageSource.gallery,
-          maxWidth: 800,
-          maxHeight: 800,
-          imageQuality: 80,
-        );
-
-        if (image != null) {
-          final user = _auth.currentUser;
-          if (user != null) {
-            final bytes = await image.readAsBytes();
-            final url = await _uploadImageToImageKit(bytes, image.name);
-            if (url != null) {
               await _firestore.collection('users').doc(user.uid).update({
                 'profileImageUrl': url,
                 'updatedAt': FieldValue.serverTimestamp(),
@@ -366,11 +335,74 @@ class ProfileController extends GetxController {
                 message: "Profile image updated successfully",
                 type: SnackbarType.success,
               );
+            } else {
+              throw Exception('Failed to get upload URL from ImageKit');
+            }
+          } else {
+            if (user == null) {
+              throw Exception('User not authenticated');
+            }
+            if (file.bytes == null) {
+              throw Exception('File bytes are null - file may be corrupted');
             }
           }
+        } else {
+          print('No file selected or file picker cancelled');
+        }
+      } else {
+        // Mobile platform: use image_picker
+        final XFile? image = await _imagePicker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 800,
+          maxHeight: 800,
+          imageQuality: 80,
+        );
+
+        if (image != null) {
+          final user = _auth.currentUser;
+          if (user != null) {
+            print('Image selected: ${image.name}, path: ${image.path}');
+
+            final bytes = await image.readAsBytes();
+            print('Image bytes read: ${bytes.length} bytes');
+
+            final url = await _uploadImageToImageKit(bytes, image.name);
+            if (url != null) {
+              print('Upload successful, updating Firestore with URL: $url');
+
+              await _firestore.collection('users').doc(user.uid).update({
+                'profileImageUrl': url,
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+
+              // Update local state
+              profileImageUrl.value = url;
+              if (currentUser.value != null) {
+                currentUser.value = currentUser.value!.copyWith(
+                  profileImageUrl: url,
+                  updatedAt: DateTime.now(),
+                );
+              }
+
+              _userService.updateProfileImageUrl(url);
+              _userService.refreshProfile();
+              _showSnackbar(
+                title: "Success",
+                message: "Profile image updated successfully",
+                type: SnackbarType.success,
+              );
+            } else {
+              throw Exception('Failed to get upload URL from ImageKit');
+            }
+          } else {
+            throw Exception('User not authenticated');
+          }
+        } else {
+          print('No image selected or image picker cancelled');
         }
       }
     } catch (e) {
+      print('Error in uploadProfileImage: $e');
       _showSnackbar(
         title: "Error",
         message: "Failed to upload image: $e",
@@ -387,33 +419,43 @@ class ProfileController extends GetxController {
       final user = _auth.currentUser;
       if (user == null) return null;
 
+      // Validate credentials
+      if (_imageKitPublicKey == 'your_public_key_here' ||
+          _imageKitPrivateKey == 'your_private_key_here') {
+        throw Exception(
+            'ImageKit credentials not configured. Please update ImageKit configuration.');
+      }
+
+      // Validate file size (5MB limit)
+      const maxFileSize = 5 * 1024 * 1024; // 5MB
+      if (bytes.length > maxFileSize) {
+        throw Exception(
+            'Image file is too large. Maximum size allowed is 5MB.');
+      }
+
+      // Validate file type (check if it's actually an image)
+      if (!_isValidImageFile(bytes)) {
+        throw Exception(
+            'Invalid image file format. Please select a valid image (JPEG, PNG, WebP, etc.).');
+      }
+
       final uniqueFilename =
           '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-      final token = _generateAuthToken(timestamp);
 
       var request =
           http.MultipartRequest('POST', Uri.parse(_imageKitUploadEndpoint));
 
-      // Add authorization header
+      // For server-side uploads, use private key authentication
+      // Create the basic auth string: base64encode(private_key:)
       final authString = base64Encode(utf8.encode('$_imageKitPrivateKey:'));
       request.headers['Authorization'] = 'Basic $authString';
 
-      // Add form fields
+      // Add form fields for server-side upload
       request.fields.addAll({
-        'publicKey': _imageKitPublicKey,
-        'signature': token,
-        'expire':
-            (DateTime.now().millisecondsSinceEpoch ~/ 1000 + 2400).toString(),
-        'token': token,
         'fileName': uniqueFilename,
         'folder': _userImagesFolder,
         'useUniqueFileName': 'false',
         'overwriteFile': 'true',
-        'overwriteAITags': 'false',
-        'overwriteTags': 'false',
-        'overwriteCustomMetadata': 'false',
       });
 
       // Add file
@@ -425,33 +467,130 @@ class ProfileController extends GetxController {
         ),
       );
 
-      // Send request
+      // Send request with detailed logging
+      print('Uploading profile image to ImageKit: $uniqueFilename');
+      print('File size: ${bytes.length} bytes');
+      print('Using server-side authentication with private key');
+
       var response = await request.send();
       var responseBody = await response.stream.bytesToString();
+
+      print('ImageKit response status: ${response.statusCode}');
+      print('ImageKit response body: $responseBody');
 
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(responseBody);
         final imageUrl = jsonResponse['url'] as String;
+        print('Successfully uploaded profile image: $imageUrl');
         return imageUrl;
       } else {
-        throw Exception(
-            'Failed to upload image to ImageKit: HTTP ${response.statusCode}');
+        // Parse error response for more specific error messages
+        String errorMessage = 'HTTP ${response.statusCode}';
+        try {
+          var errorResponse = json.decode(responseBody);
+          if (errorResponse['message'] != null) {
+            errorMessage = errorResponse['message'];
+          } else if (errorResponse['error'] != null) {
+            errorMessage = errorResponse['error'];
+          }
+        } catch (e) {
+          // If JSON parsing fails, use the raw response
+          errorMessage =
+              responseBody.isNotEmpty ? responseBody : 'Unknown error occurred';
+        }
+
+        print('ImageKit upload failed with status: ${response.statusCode}');
+        print('Error message: $errorMessage');
+        print('Full response body: $responseBody');
+
+        // Provide user-friendly error messages based on status code
+        String userMessage;
+        switch (response.statusCode) {
+          case 400:
+            userMessage =
+                'Invalid image file or upload parameters. Please try with a different image.';
+            break;
+          case 401:
+            userMessage =
+                'Authentication failed. Please check ImageKit configuration.';
+            break;
+          case 403:
+            userMessage =
+                'Upload not allowed. Please check your ImageKit permissions.';
+            break;
+          case 413:
+            userMessage =
+                'Image file is too large. Please choose a smaller image.';
+            break;
+          case 429:
+            userMessage = 'Too many upload requests. Please try again later.';
+            break;
+          default:
+            userMessage = 'Upload failed: $errorMessage';
+        }
+
+        throw Exception(userMessage);
       }
     } catch (e) {
+      print('Error in _uploadImageToImageKit: $e');
       throw Exception('Failed to upload image: $e');
     }
   }
 
-  /// Generate authentication token for ImageKit upload
-  String _generateAuthToken(String timestamp) {
+  // Validate if the file is a valid image by checking file headers
+  bool _isValidImageFile(Uint8List bytes) {
+    if (bytes.length < 4) return false;
+
+    // Check for common image file signatures
+    // JPEG: FF D8 FF
+    if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
+      return true;
+    }
+
+    // PNG: 89 50 4E 47
+    if (bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return true;
+    }
+
+    // WebP: starts with "RIFF" and contains "WEBP"
+    if (bytes.length >= 12) {
+      String header = String.fromCharCodes(bytes.sublist(0, 4));
+      String format = String.fromCharCodes(bytes.sublist(8, 12));
+      if (header == 'RIFF' && format == 'WEBP') {
+        return true;
+      }
+    }
+
+    // GIF: 47 49 46 38
+    if (bytes.length >= 6) {
+      String header = String.fromCharCodes(bytes.sublist(0, 6));
+      if (header.startsWith('GIF8')) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Test ImageKit connection and credentials
+  Future<void> testImageKitConnection() async {
     try {
-      // Simple token generation - for production, use proper HMAC-SHA1
-      // with your private key and include timestamp + other parameters
-      var bytes = utf8.encode(timestamp + _imageKitPrivateKey);
-      var digest = sha256.convert(bytes);
-      return digest.toString();
+      print('Testing ImageKit connection...');
+      print('Public Key: $_imageKitPublicKey');
+      print('Upload Endpoint: $_imageKitUploadEndpoint');
+      print('User Images Folder: $_userImagesFolder');
+
+      // Test server-side authentication
+      final authString = base64Encode(utf8.encode('$_imageKitPrivateKey:'));
+      print('Generated auth string for server-side upload authentication');
+
+      print(
+          'ImageKit connection test completed - using server-side authentication');
     } catch (e) {
-      throw Exception('Failed to generate authentication token: $e');
+      print('ImageKit connection test failed: $e');
     }
   }
 

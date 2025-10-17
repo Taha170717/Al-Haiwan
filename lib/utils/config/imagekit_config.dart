@@ -11,6 +11,7 @@ class ImageKitConfig {
 
   // Folder configuration
   static const String productImagesFolder = 'product_images/';
+  static const String userImagesFolder = 'userimages/';
 
   // Quality and size settings
   static const int imageQuality = 80; // 1-100, higher is better quality but larger file
