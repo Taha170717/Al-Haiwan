@@ -2,11 +2,76 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-import '../../../../models/user_appointment_model.dart';
 import 'package:intl/intl.dart';
+import '../../../../../doctor/controller/doctor_chat_controller.dart';
+import '../../../../../doctor/views/bottom_nav_pages/chat/doctor_chat_screen.dart';
+import '../../../../../doctor/views/bottom_nav_pages/chat/doctor_chat_screen_list.dart';
+
+
+class Appointment {
+  final String id;
+  final String doctorId;
+  final String doctorName;
+  final String doctorSpecialty;
+  final String doctorProfileImage;
+  final String petName;
+  final String date;
+  final String time;
+  final String reason;
+  final String status;
+  final DateTime createdAt;
+
+  Appointment({
+    required this.id,
+    required this.doctorId,
+    required this.doctorName,
+    required this.doctorSpecialty,
+    required this.doctorProfileImage,
+    required this.petName,
+    required this.date,
+    required this.time,
+    required this.reason,
+    required this.status,
+    required this.createdAt,
+  });
+
+  factory Appointment.fromFirestore(Map<String, dynamic> data, String id) {
+    // Handle selectedDate - could be Timestamp or String
+    String formattedDate = '';
+    var rawDate = data['selectedDate'];
+    if (rawDate is Timestamp) {
+      formattedDate = DateFormat('MMM dd, yyyy').format(rawDate.toDate());
+    } else if (rawDate is String && rawDate.isNotEmpty) {
+      try {
+        DateTime parsedDate = DateTime.parse(rawDate);
+        formattedDate = DateFormat('MMM dd, yyyy').format(parsedDate);
+      } catch (e) {
+        formattedDate = rawDate; // fallback to original string
+      }
+    }
+
+    // Handle selectedTime - should be a simple string
+    String formattedTime = data['selectedTime']?.toString() ?? '';
+
+    return Appointment(
+      id: id,
+      doctorId: data['doctorId'] ?? '',
+      doctorName: data['doctorName'] ?? 'Unknown Doctor',
+      doctorSpecialty: data['doctorSpecialty'] ?? 'Veterinarian',
+      doctorProfileImage: data['doctorprofilepic'] ?? '',
+      petName: data['petName'] ?? '',
+      date: formattedDate,
+      time: formattedTime,
+      reason: data['reason'] ?? '',
+      status: data['status'] ?? 'pending',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+}
 
 class MyAppointmentScreen extends StatelessWidget {
+  final DoctorChatController chatController = Get.put(DoctorChatController());
+
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
@@ -31,7 +96,7 @@ class MyAppointmentScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('appointments')
-            .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid) // Replace with actual user ID
+            .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
             .where('status', whereIn: ['confirmed', 'completed'])
             .snapshots(),
         builder: (context, snapshot) {
@@ -55,9 +120,12 @@ class MyAppointmentScreen extends StatelessWidget {
             );
           }
 
-          final appointments = snapshot.data?.docs.map((doc) =>
-              Appointment.fromFirestore(doc.data() as Map<String, dynamic>, doc.id)
-          ).toList() ?? [];
+          final appointments = snapshot.data?.docs.map((doc) {
+                print('Raw appointment data: ${doc.data()}');
+                return Appointment.fromFirestore(
+                    doc.data() as Map<String, dynamic>, doc.id);
+              }).toList() ??
+              [];
 
           if (appointments.isEmpty) {
             return Center(
@@ -97,119 +165,211 @@ class MyAppointmentScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    Container(
-                      width: screen.width * (isTablet ? 0.12 : 0.18),
-                      height: screen.width * (isTablet ? 0.12 : 0.18),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(screen.width * 0.025),
-                        border: Border.all(color: Color(0xFF199A8E), width: 1),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(screen.width * 0.025),
-                        child: appointment.doctorprofilepic != null && appointment.doctorprofilepic!.isNotEmpty
-                            ? Image.network(
-                          appointment.doctorprofilepic!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
+                    Row(
+                      children: [
+                        Container(
+                          width: screen.width * (isTablet ? 0.12 : 0.18),
+                          height: screen.width * (isTablet ? 0.12 : 0.18),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(screen.width * 0.025),
+                            border: Border.all(color: Color(0xFF199A8E), width: 1),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(screen.width * 0.025),
+                            child: appointment.doctorProfileImage.isNotEmpty
+                                ? Image.network(
+                              appointment.doctorProfileImage,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: Icon(Icons.person, color: Colors.grey),
+                                );
+                              },
+                            )
+                                : Container(
                               color: Colors.grey[200],
                               child: Icon(Icons.person, color: Colors.grey),
-                            );
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              color: Colors.grey[200],
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                            : Container(
-                          color: Colors.grey[200],
-                          child: Icon(Icons.person, color: Colors.grey),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    SizedBox(width: screen.width * 0.03),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            appointment.doctorName,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: screen.width * (isTablet ? 0.03 : 0.04),
-                            ),
-                          ),
-                          Text(
-                            'Veterinarian',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: screen.width * (isTablet ? 0.025 : 0.035),
-                            ),
-                          ),
-                          SizedBox(height: screen.height * 0.005),
-                          Row(
-                            children: [
-                              Icon(Icons.calendar_today, size: screen.width * (isTablet ? 0.03 : 0.035), color: Color(0xFF199A8E)),
-                              SizedBox(width: screen.width * 0.01),
-                              Text(
-                                _formattedDate(appointment.selectedDate) + ', ' + appointment.selectedTime,
-                                style: TextStyle(fontSize: screen.width * (isTablet ? 0.025 : 0.03)),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: screen.height * 0.005),
-
-                          // Dynamic consultation type display
-                          _buildConsultationInfo(appointment, screen, isTablet),
-
-                          SizedBox(height: screen.height * 0.005),
-                          Row(
+                        SizedBox(width: screen.width * 0.03),
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.notes, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
-                              SizedBox(width: screen.width * 0.01),
-                              Expanded(
-                                child: Text(
-                                  appointment.reason,
-                                  style: TextStyle(fontSize: screen.width * (isTablet ? 0.025 : 0.03)),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                              Text(
+                                appointment.doctorName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: screen.width * (isTablet ? 0.03 : 0.04),
                                 ),
+                              ),
+                              Text(
+                                appointment.doctorSpecialty,
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: screen.width * (isTablet ? 0.025 : 0.035),
+                                ),
+                              ),
+                              SizedBox(height: screen.height * 0.005),
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_today, size: screen.width * (isTablet ? 0.03 : 0.035), color: Color(0xFF199A8E)),
+                                  SizedBox(width: screen.width * 0.01),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        appointment.date,
+                                        style: TextStyle(
+                                            fontSize: screen.width *
+                                                (isTablet ? 0.025 : 0.03)),
+                                      ),
+                                      if (appointment.time.isNotEmpty)
+                                        Text(
+                                          appointment.time,
+                                          style: TextStyle(
+                                            fontSize: screen.width *
+                                                (isTablet ? 0.023 : 0.028),
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: screen.height * 0.005),
+                              Row(
+                                children: [
+                                  Icon(Icons.pets, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
+                                  SizedBox(width: screen.width * 0.01),
+                                  Text(
+                                    appointment.petName,
+                                    style: TextStyle(
+                                      fontSize: screen.width * (isTablet ? 0.025 : 0.03),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: screen.height * 0.005),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.notes, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
+                                  SizedBox(width: screen.width * 0.01),
+                                  Expanded(
+                                    child: Text(
+                                      appointment.reason,
+                                      style: TextStyle(fontSize: screen.width * (isTablet ? 0.025 : 0.03)),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screen.width * 0.02,
-                        vertical: screen.height * 0.005,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(appointment.status.name)
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(screen.width * 0.02),
-                      ),
-                      child: Text(
-                        appointment.status.name.toUpperCase(),
-                        style: TextStyle(
-                          color: _getStatusColor(appointment.status.name),
-                          fontSize: screen.width * (isTablet ? 0.02 : 0.025),
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
+                        Column(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: screen.width * 0.02,
+                                vertical: screen.height * 0.005,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(appointment.status).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(screen.width * 0.02),
+                              ),
+                              child: Text(
+                                appointment.status.toUpperCase(),
+                                style: TextStyle(
+                                  color: _getStatusColor(appointment.status),
+                                  fontSize: screen.width * (isTablet ? 0.02 : 0.025),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (appointment.status.toLowerCase() == 'confirmed')
+                              SizedBox(height: screen.height * 0.01),
+                            if (appointment.status.toLowerCase() == 'confirmed')
+                              GestureDetector(
+                                onTap: () async {
+                                  try {
+                                    // Validate required data
+                                    if (appointment.doctorId.isEmpty) {
+                                      throw Exception('Doctor ID is empty');
+                                    }
+                                    if (appointment.doctorName.isEmpty) {
+                                      throw Exception('Doctor name is empty');
+                                    }
+
+                                    print(
+                                        'Starting chat with doctor: ${appointment.doctorId}');
+                                    print(
+                                        'Doctor name: ${appointment.doctorName}');
+                                    print(
+                                        'Doctor image: ${appointment.doctorProfileImage}');
+
+                                    final chatId = await chatController.startChatWithDoctor(
+                                      doctorId: appointment.doctorId,
+                                      doctorName: appointment.doctorName,
+                                      doctorImage: appointment.doctorProfileImage,
+                                    );
+
+                                    print('Chat ID created: $chatId');
+
+                                    Get.to(() => DoctorChatScreen(
+                                      chatId: chatId,
+                                      doctorName: appointment.doctorName,
+                                      doctorImage: appointment.doctorProfileImage,
+                                    ));
+                                  } catch (e) {
+                                    print('Error starting chat: $e');
+                                    Get.snackbar(
+                                      'Error',
+                                      'Failed to start chat: ${e.toString()}',
+                                      backgroundColor:
+                                          Colors.red.withOpacity(0.8),
+                                      colorText: Colors.white,
+                                      duration: Duration(seconds: 5),
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: screen.width * 0.03,
+                                    vertical: screen.height * 0.008,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF199A8E),
+                                    borderRadius: BorderRadius.circular(screen.width * 0.02),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.chat, color: Colors.white, size: screen.width * 0.04),
+                                      SizedBox(width: screen.width * 0.01),
+                                      Text(
+                                        'Chat',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: screen.width * (isTablet ? 0.02 : 0.025),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -220,82 +380,6 @@ class MyAppointmentScreen extends StatelessWidget {
       ),
     );
   }
-  Widget _buildConsultationInfo(Appointment appointment, Size screen, bool isTablet) {
-    // Handle backward compatibility - if consultationType is not available, use petName to determine type
-    ConsultationType consultationType;
-    try {
-      consultationType = appointment.consultationType;
-    } catch (e) {
-      // For backward compatibility with old appointments
-      consultationType = appointment.petName != null ? ConsultationType.pet : ConsultationType.livestock;
-    }
-
-    switch (consultationType) {
-      case ConsultationType.pet:
-        return Column(
-          children: [
-            if (appointment.petType != null) ...[
-              Row(
-                children: [
-                  Icon(Icons.category, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
-                  SizedBox(width: screen.width * 0.01),
-                  Text(
-                    appointment.petType!,
-                    style: TextStyle(
-                      fontSize: screen.width * (isTablet ? 0.025 : 0.03),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: screen.height * 0.005),
-            ],
-            Row(
-              children: [
-                Icon(Icons.pets, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
-                SizedBox(width: screen.width * 0.01),
-                Text(
-                  appointment.petName ?? 'Pet',
-                  style: TextStyle(
-                    fontSize: screen.width * (isTablet ? 0.025 : 0.03),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      case ConsultationType.livestock:
-        return Row(
-          children: [
-            Icon(Icons.agriculture, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
-            SizedBox(width: screen.width * 0.01),
-            Text(
-              '${appointment.numberOfPatients ?? 1} Livestock Animals',
-              style: TextStyle(
-                fontSize: screen.width * (isTablet ? 0.025 : 0.03),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        );
-      case ConsultationType.poultry:
-        return Row(
-          children: [
-            Icon(Icons.egg, size: screen.width * (isTablet ? 0.03 : 0.035), color: Colors.grey),
-            SizedBox(width: screen.width * 0.01),
-            Text(
-              '${appointment.numberOfPatients ?? 1} Poultry Birds',
-              style: TextStyle(
-                fontSize: screen.width * (isTablet ? 0.025 : 0.03),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        );
-    }
-  }
-
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -309,18 +393,6 @@ class MyAppointmentScreen extends StatelessWidget {
         return Colors.red;
       default:
         return Colors.grey;
-    }
-  }
-
-  String _formattedDate(String dateStr) {
-    try {
-      final date = DateTime.tryParse(dateStr);
-      if (date != null) {
-        return DateFormat('yyyy-MM-dd').format(date);
-      }
-      return dateStr.split(' ').first;
-    } catch (_) {
-      return dateStr;
     }
   }
 }

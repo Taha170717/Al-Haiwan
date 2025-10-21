@@ -1,0 +1,237 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminEmail() {
+      return isSignedIn() && request.auth.token.email == 'tahazafar112@gmail.com';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isVerifiedDoctor() {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDoctor == true &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isVerified == true;
+    }
+
+    function validateOrderData(data) {
+      return data.keys().hasAll(['userId', 'userName', 'userPhone', 'userEmail', 'deliveryAddress', 'city', 'state', 'zipCode', 'items', 'subtotal', 'deliveryFee', 'total', 'paymentMethod', 'status', 'createdAt'])
+        && data.userId is string
+        && data.userName is string
+        && data.userPhone is string
+        && data.userEmail is string
+        && data.deliveryAddress is string
+        && data.city is string
+        && data.state is string
+        && data.zipCode is string
+        && data.items is list
+        && data.subtotal is number
+        && data.deliveryFee is number
+        && data.total is number
+        && data.paymentMethod is string
+        && data.status in ['pending', 'accepted', 'preparing', 'in_transit', 'delivered', 'cancelled']
+        && data.createdAt is string;
+    }
+
+    // OTP Verification Collection
+    match /otp_verifications/{email} {
+      allow create, update, delete, get: if true; // Public access for OTP verification
+    }
+
+    // Users Collection - FIXED to allow doctors to read user profiles for chat
+    match /users/{userId} {
+      allow read: if isAdminEmail() || isOwner(userId) || 
+                     (isSignedIn() && (
+                       (resource.data.isDoctor == true && resource.data.isVerified == true) ||
+                       isVerifiedDoctor()
+                     ));
+      allow update, delete: if isOwner(userId) || isAdminEmail();
+      allow create: if isSignedIn();
+      allow list: if isAdminEmail() || isVerifiedDoctor(); // Allow doctors to list users for chat
+    }
+    
+    // Doctors Collection
+    match /doctors/{uid} {
+      allow read: if isAdminEmail() || isOwner(uid);
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow update, delete: if isOwner(uid) || isAdminEmail();
+    }
+
+    match /doctor_verification_requests/{userId} {
+      allow read: if isAdminEmail() || isOwner(userId) || 
+                     (resource.data.isVerified == true && resource.data.verificationStatus == 'approved');
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isAdminEmail() || isOwner(userId);
+      allow delete: if isAdminEmail();
+      
+      allow list: if true;
+    }
+
+    match /doctor_profiles/{doctorId} {
+      allow read: if true; // Allow public read access for all users to view doctor profiles
+      allow create: if isVerifiedDoctor() && isOwner(doctorId);
+      allow update: if isAdminEmail() || (isVerifiedDoctor() && isOwner(doctorId));
+      allow delete: if isAdminEmail();
+      allow list: if true; // Allow listing for patient search functionality
+    }
+
+    match /doctor_availability/{doctorId} {
+      allow read: if true; // Allow public read access for all users to view availability
+      allow create: if isVerifiedDoctor() && isOwner(doctorId);
+      allow update: if isAdminEmail() || (isVerifiedDoctor() && isOwner(doctorId));
+      allow delete: if isAdminEmail();
+      allow list: if true; // Allow public listing for appointment booking
+      
+      match /time_slots/{slotId} {
+        allow read: if true; // Allow public read access for time slots
+        allow create, update: if isAdminEmail() || (isVerifiedDoctor() && isOwner(doctorId));
+        allow delete: if isAdminEmail() || (isVerifiedDoctor() && isOwner(doctorId));
+      }
+    }
+
+    // Verification Requests Collection
+    match /verification_requests/{requestId} {
+      allow read: if isAdminEmail() || (isSignedIn() && resource.data.doctorId == request.auth.uid);
+      allow create: if isSignedIn() && request.auth.uid != null;
+      allow update: if isAdminEmail() || (isSignedIn() && resource.data.doctorId == request.auth.uid);
+      allow delete: if isAdminEmail();
+    }
+
+    match /verification_requests/{requestId}/documents/{documentId} {
+      allow read, write: if isSignedIn() && (isAdminEmail() || 
+        get(/databases/$(database)/documents/verification_requests/$(requestId)).data.doctorId == request.auth.uid);
+    }
+
+    match /appointments/{appointmentId} {
+      allow read: if isAdminEmail() || (isSignedIn() && (request.auth.uid == resource.data.userId || 
+                                       request.auth.uid == resource.data.doctorId));
+      allow create: if isSignedIn() && 
+                       request.auth.uid == request.resource.data.userId &&
+                       request.resource.data.keys().hasAll(['doctorId', 'userId', 'ownerName', 'petName', 'selectedDate', 'selectedTime', 'consultationFee', 'paymentMethod', 'status', 'createdAt']) &&
+                       request.resource.data.status == 'pending';
+      allow update: if isAdminEmail() || 
+                       (isSignedIn() && request.auth.uid == resource.data.userId && 
+                        request.resource.data.status in ['pending', 'cancelled']) ||
+                       (isVerifiedDoctor() && request.auth.uid == resource.data.doctorId && 
+                        request.resource.data.status in ['pending', 'paymentVerified', 'confirmed', 'completed', 'cancelled']);
+      allow delete: if isAdminEmail() || (isOwner(resource.data.userId) && resource.data.status == 'pending');
+      allow list: if isAdminEmail() || 
+                     (isSignedIn() && request.query.limit <= 50) ||
+                     (isVerifiedDoctor() && request.query.limit <= 50);
+      
+      match /messages/{messageId} {
+        allow read: if isAdminEmail() || (isSignedIn() && (request.auth.uid == get(/databases/$(database)/documents/appointments/$(appointmentId)).data.userId || 
+                                         request.auth.uid == get(/databases/$(database)/documents/appointments/$(appointmentId)).data.doctorId));
+        allow create: if isSignedIn() && (request.auth.uid == get(/databases/$(database)/documents/appointments/$(appointmentId)).data.userId || 
+                                         request.auth.uid == get(/databases/$(database)/documents/appointments/$(appointmentId)).data.doctorId);
+        allow update, delete: if isAdminEmail();
+      }
+    }
+
+    // FIXED Doctor Chats Collection - Allow both users and doctors to access
+    match /doctor_chats/{chatId} {
+      allow read: if isAdminEmail() || (isSignedIn() && (request.auth.uid == resource.data.userId || 
+                                       request.auth.uid == resource.data.doctorId));
+      allow create: if isSignedIn() && 
+                       request.auth.uid == request.resource.data.userId &&
+                       request.resource.data.keys().hasAll(['doctorId', 'userId', 'doctorName', 'doctorImage', 'lastMessage', 'lastMessageTime', 'unreadCount', 'createdAt']);
+      allow update: if isAdminEmail() || (isSignedIn() && (request.auth.uid == resource.data.userId || 
+                                         request.auth.uid == resource.data.doctorId));
+      allow delete: if isAdminEmail();
+      // FIXED: Allow both users and doctors to list chats
+      allow list: if isAdminEmail() || 
+                     (isSignedIn() && request.query.limit <= 100);
+      
+      match /messages/{messageId} {
+        allow read: if isAdminEmail() || (isSignedIn() && (request.auth.uid == get(/databases/$(database)/documents/doctor_chats/$(chatId)).data.userId || 
+                                         request.auth.uid == get(/databases/$(database)/documents/doctor_chats/$(chatId)).data.doctorId));
+        allow create: if isSignedIn() && (request.auth.uid == get(/databases/$(database)/documents/doctor_chats/$(chatId)).data.userId || 
+                                         request.auth.uid == get(/databases/$(database)/documents/doctor_chats/$(chatId)).data.doctorId) &&
+                        request.resource.data.keys().hasAll(['senderId', 'senderName', 'message', 'timestamp']);
+        allow update, delete: if isAdminEmail();
+      }
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      allow create: if isSignedIn() && (isAdminEmail() || isVerifiedDoctor());
+      allow update: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      allow delete: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 50);
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 100);
+      
+      allow create: if isSignedIn() 
+        && request.auth.uid == request.resource.data.userId
+        && validateOrderData(request.resource.data)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.paymentMethod == 'Cash on Delivery';
+      
+      allow update: if isAdminEmail() || 
+        (isSignedIn() && request.auth.uid == resource.data.userId && 
+         resource.data.status == 'pending' && 
+         request.resource.data.status == 'cancelled');
+      
+      allow delete: if isAdminEmail();
+    }
+
+    match /products/{productId} {
+      allow read: if true; // Anyone can read products
+      allow list: if true; // Anyone can list products
+      allow create: if isAdminEmail();
+      allow update: if isAdminEmail();
+      allow delete: if isAdminEmail();
+    }
+
+    // User Carts Collection
+    match /user_carts/{userId} {
+      allow read, write: if isAdminEmail() || isOwner(userId);
+      
+      // Cart Items subcollection
+      match /items/{itemId} {
+        allow read, write: if isAdminEmail() || isOwner(userId);
+      }
+    }
+
+    // Categories Collection
+    match /categories/{categoryId} {
+      allow read: if true; // Anyone can read categories
+      allow list: if true; // Anyone can list categories
+      allow create, update, delete: if isAdminEmail();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true; // Anyone can read reviews
+      allow list: if true; // Anyone can list reviews
+      allow create: if isSignedIn() 
+        && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if isAdminEmail() || 
+        (isSignedIn() && request.auth.uid == resource.data.userId);
+    }
+
+    match /order_analytics/{analyticsId} {
+      allow read, write: if isAdminEmail();
+    }
+
+    match /inventory_logs/{logId} {
+      allow read: if isAdminEmail();
+      allow create: if isSignedIn(); // System can create logs
+      allow update, delete: if isAdminEmail();
+    }
+
+    // Catch-all rule for any other collections
+    match /{document=**} {
+      allow read, write: if isAdminEmail(); // Admin has full access to everything
+    }
+  }
+}

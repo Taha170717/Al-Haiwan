@@ -1,5 +1,5 @@
 import 'package:al_haiwan/doctor/controller/doctor_bottom_nav_Controller.dart';
-import 'package:al_haiwan/doctor/views/bottom_nav_pages/chat/chatpage.dart';
+import 'package:al_haiwan/doctor/views/bottom_nav_pages/chat/doctor_chat_screen_list.dart';
 import 'package:al_haiwan/doctor/views/bottom_nav_pages/dashboard/dashboardpage.dart';
 import 'package:al_haiwan/doctor/views/bottom_nav_pages/medicalrecords/medicalrecordpage.dart';
 import 'package:al_haiwan/doctor/views/bottom_nav_pages/profile/profilepage.dart';
@@ -91,7 +91,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
       MedicalRecordPage(
         doctorId: user?.uid ?? '',
       ),
-      Chatpage(),
+      DoctorUsersChatListScreen(),
       DoctorProfile(),
     ];
   }
