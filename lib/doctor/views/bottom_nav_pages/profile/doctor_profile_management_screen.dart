@@ -15,7 +15,7 @@ class DoctorProfileManagementScreen extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           'Manage Profile',
@@ -23,6 +23,7 @@ class DoctorProfileManagementScreen extends StatelessWidget {
             fontSize: screenWidth * 0.05,
             fontWeight: FontWeight.bold,
             color: Colors.white,
+            fontFamily: 'bolditalic'
           ),
         ),
         backgroundColor: Colors.teal,

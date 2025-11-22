@@ -1,7 +1,9 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
+import '../../user/models/user_chat_model.dart';
 import '../models/doctor_chat_model.dart';
 
 class DoctorChatController extends GetxController {
@@ -15,54 +17,81 @@ class DoctorChatController extends GetxController {
   Stream<List<DoctorChat>> getDoctorChats() {
     final userId = _auth.currentUser?.uid;
     if (userId == null) {
-      print('Error: User not authenticated in getDoctorChats');
       return Stream.value([]);
     }
-
-    print('Getting doctor chats for user: $userId');
 
     return _db
         .collection('doctor_chats')
         .where('userId', isEqualTo: userId)
         .snapshots()
-        .map((snapshot) {
-      print('Found ${snapshot.docs.length} chat documents');
-
+        .asyncMap((snapshot) async {
       final chats = <DoctorChat>[];
 
       for (var doc in snapshot.docs) {
         try {
-          print('Processing chat document ID: ${doc.id}');
-          print('Document data: ${doc.data()}');
+          final data = doc.data();
 
-          if (doc.id.isEmpty) {
-            print('Warning: Document has empty ID, skipping');
-            continue;
+          if (doc.id.isEmpty) continue;
+
+          String doctorImage = data['doctorImage'] ?? '';
+          final doctorId = data['doctorId'] ?? '';
+
+          if (doctorId.isNotEmpty) {
+            try {
+              final verificationDoc = await _db
+                  .collection('doctor_verification_requests')
+                  .doc(doctorId)
+                  .get();
+
+              if (verificationDoc.exists) {
+                final verificationData = verificationDoc.data();
+                if (verificationData != null &&
+                    verificationData.containsKey('documents')) {
+                  final documents = verificationData['documents'];
+                  if (documents != null && documents is Map) {
+                    final profilePic = documents['profilePicture'];
+                    if (profilePic != null && profilePic is String && profilePic.isNotEmpty) {
+                      doctorImage = profilePic;
+                    }
+                  }
+                }
+
+                // Fallback to direct profilePicture field if documents not found
+                if (doctorImage == (data['doctorImage'] ?? '') &&
+                    verificationData != null &&
+                    verificationData.containsKey('profilePicture')) {
+                  final profilePic = verificationData['profilePicture'];
+                  if (profilePic != null && profilePic is String && profilePic.isNotEmpty) {
+                    doctorImage = profilePic;
+                  }
+                }
+              }
+            } catch (e) {
+              // Continue with the stored doctorImage as fallback
+            }
           }
 
-          final chat = DoctorChat.fromFirestore(doc.data(), doc.id);
+          // Create chat with updated doctor image
+          final chatData = Map<String, dynamic>.from(data);
+          chatData['doctorImage'] = doctorImage;
+
+          final chat = DoctorChat.fromFirestore(chatData, doc.id);
           chats.add(chat);
-          print('Successfully created chat object for: ${chat.doctorName}');
         } catch (e) {
-          print('Error processing chat document ${doc.id}: $e');
+          // Skip problematic chat documents
         }
       }
 
       // Sort by last message time descending
       chats.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-      print('Returning ${chats.length} processed chats');
       return chats;
     });
   }
 
   Stream<List<ChatMessage>> getChatMessages(String chatId) {
-    // Validate chatId
     if (chatId.isEmpty) {
-      print('Error: chatId is empty in getChatMessages');
       return Stream.value([]);
     }
-
-    print('Getting messages for chatId: $chatId');
 
     try {
       return _db
@@ -100,12 +129,6 @@ class DoctorChatController extends GetxController {
 
       final userId = currentUser.uid;
       print('Current user ID: $userId');
-      print('Current user email: ${currentUser.email}');
-      print('Doctor ID: $doctorId');
-      print('Doctor name: $doctorName');
-
-      print(
-          'Checking for existing chat between user: $userId and doctor: $doctorId');
 
       // Check if chat already exists
       final existingChat = await _db
@@ -116,37 +139,104 @@ class DoctorChatController extends GetxController {
           .get();
 
       if (existingChat.docs.isNotEmpty) {
-        print('Existing chat found: ${existingChat.docs.first.id}');
-        return existingChat.docs.first.id;
+        final chatId = existingChat.docs.first.id;
+
+        // Update the doctor image in existing chat
+        try {
+          final verificationDoc = await _db
+              .collection('doctor_verification_requests')
+              .doc(doctorId)
+              .get();
+
+          if (verificationDoc.exists) {
+            final verificationData = verificationDoc.data();
+            String updatedImage = doctorImage;
+
+            if (verificationData != null &&
+                verificationData.containsKey('documents')) {
+              final documents = verificationData['documents'];
+              if (documents != null && documents is Map) {
+                final profilePic = documents['profilePicture'];
+                if (profilePic != null && profilePic is String && profilePic.isNotEmpty) {
+                  updatedImage = profilePic;
+                }
+              }
+            }
+
+            if (updatedImage == doctorImage &&
+                verificationData != null &&
+                verificationData.containsKey('profilePicture')) {
+              final profilePic = verificationData['profilePicture'];
+              if (profilePic != null && profilePic is String && profilePic.isNotEmpty) {
+                updatedImage = profilePic;
+              }
+            }
+
+            // Update chat with new image
+            await _db.collection('doctor_chats').doc(chatId).update({
+              'doctorImage': updatedImage,
+            });
+          }
+        } catch (e) {
+          // Continue without updating
+        }
+
+        return chatId;
       }
 
-      print('No existing chat found. Creating new chat...');
+      // Fetch doctor's profile picture from doctor_verification_requests
+      String fetchedDoctorImage = doctorImage;
+      try {
+        final verificationDoc = await _db
+            .collection('doctor_verification_requests')
+            .doc(doctorId)
+            .get();
+
+        if (verificationDoc.exists) {
+          final verificationData = verificationDoc.data();
+          if (verificationData != null &&
+              verificationData.containsKey('documents')) {
+            final documents = verificationData['documents'];
+            if (documents != null && documents is Map) {
+              final profilePic = documents['profilePicture'];
+              if (profilePic != null && profilePic is String && profilePic.isNotEmpty) {
+                fetchedDoctorImage = profilePic;
+              }
+            }
+          }
+
+          // Fallback to direct profilePicture field if documents not found
+          if (fetchedDoctorImage == doctorImage &&
+              verificationData != null &&
+              verificationData.containsKey('profilePicture')) {
+            final profilePic = verificationData['profilePicture'];
+            if (profilePic != null && profilePic is String && profilePic.isNotEmpty) {
+              fetchedDoctorImage = profilePic;
+            }
+          }
+        }
+      } catch (e) {
+        // Continue with the provided doctorImage as fallback
+      }
 
       // Create new chat
       final chatId = const Uuid().v4();
-      print('Generated chat ID: $chatId');
 
       final chatData = {
         'userId': userId,
         'doctorId': doctorId,
         'doctorName': doctorName,
-        'doctorImage': doctorImage,
+        'doctorImage': fetchedDoctorImage,
         'lastMessage': '',
         'lastMessageTime': FieldValue.serverTimestamp(),
         'unreadCount': 0,
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-      print('Chat data to be saved: $chatData');
-
       await _db.collection('doctor_chats').doc(chatId).set(chatData);
 
-      print('Chat created successfully with ID: $chatId');
-      print('=== Chat Debug Complete ===');
       return chatId;
     } catch (e, stackTrace) {
-      print('Error in startChatWithDoctor: $e');
-      print('Stack trace: $stackTrace');
       rethrow;
     }
   }

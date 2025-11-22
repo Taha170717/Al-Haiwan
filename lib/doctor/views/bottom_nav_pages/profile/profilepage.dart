@@ -267,14 +267,11 @@ class _DoctorProfileState extends State<DoctorProfile> {
                           ListTile(
                             leading:
                                 Icon(Icons.security, color: Color(0xFF199A8E)),
-                            title: Text("Account Settings",
+                            title: Text("Profile Settings",
                                 style: TextStyle(fontWeight: FontWeight.w500)),
                             trailing: Icon(Icons.arrow_forward_ios, size: 18),
                             onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Account Settings - Coming Soon')));
+                              Get.to(()=> DoctorProfileManagementScreen());
                             },
                           ),
                           Divider(),

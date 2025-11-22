@@ -20,12 +20,8 @@ class DoctorUsersChatController extends GetxController {
 
   void loadUserChats() async {
     final doctorId = _auth.currentUser?.uid;
-    if (doctorId == null) {
-      print('Error: Doctor not authenticated');
-      return;
-    }
+    if (doctorId == null) return;
 
-    print('Loading chats for doctor: $doctorId');
     isLoading.value = true;
 
     try {
@@ -34,8 +30,6 @@ class DoctorUsersChatController extends GetxController {
           .where('doctorId', isEqualTo: doctorId)
           .snapshots()
           .listen((snapshot) async {
-        print('Found ${snapshot.docs.length} chat documents');
-
         final List<UserChatModel> chats = [];
 
         for (var doc in snapshot.docs) {
@@ -43,23 +37,49 @@ class DoctorUsersChatController extends GetxController {
             final chatData = doc.data();
             final userId = chatData['userId'] as String?;
 
-            if (userId == null || userId.isEmpty) {
-              print('Warning: Chat ${doc.id} has no userId');
-              continue;
-            }
-
-            print('Processing chat for user: $userId');
+            if (userId == null || userId.isEmpty) continue;
 
             // Fetch user data from users collection
             final userDoc = await _db.collection('users').doc(userId).get();
 
-            if (!userDoc.exists) {
-              print('Warning: User $userId not found in users collection');
-              continue;
-            }
+            if (!userDoc.exists) continue;
 
             final userData = userDoc.data() ?? {};
-            print('User data: $userData');
+
+            // Fetch profile image from doctor_verification_requests
+            String profileImage = '';
+            try {
+              final verificationDoc = await _db
+                  .collection('doctor_verification_requests')
+                  .doc(userId)
+                  .get();
+
+              if (verificationDoc.exists) {
+                final verificationData = verificationDoc.data();
+                if (verificationData != null &&
+                    verificationData.containsKey('documents')) {
+                  final documents = verificationData['documents'];
+                  if (documents != null && documents is Map) {
+                    profileImage =
+                        documents['profilePicture']?.toString() ?? '';
+                  }
+                }
+                
+                // Fallback to direct profilePicture field if documents not found
+                if (profileImage.isEmpty &&
+                    verificationData != null &&
+                    verificationData.containsKey('profilePicture')) {
+                  profileImage = verificationData['profilePicture']?.toString() ?? '';
+                }
+              }
+            } catch (e) {
+              // Continue with fallback
+            }
+
+            // Fallback to users collection profileImageUrl if verification not found
+            if (profileImage.isEmpty) {
+              profileImage = userData['profileImageUrl'] ?? userData['imageUrl'] ?? '';
+            }
 
             // Create UserChatModel with combined data
             final userChat = UserChatModel(
@@ -67,8 +87,7 @@ class DoctorUsersChatController extends GetxController {
               name:
                   userData['name'] ?? userData['displayName'] ?? 'Unknown User',
               email: userData['email'] ?? '',
-              profileImage:
-                  userData['profileImageUrl'] ?? userData['imageUrl'] ?? '',
+              profileImage: profileImage,
               lastMessage: chatData['lastMessage'] ?? '',
               lastMessageTime:
                   (chatData['lastMessageTime'] as Timestamp?)?.toDate() ??
@@ -77,9 +96,8 @@ class DoctorUsersChatController extends GetxController {
             );
 
             chats.add(userChat);
-            print('Added chat for user: ${userChat.name}');
           } catch (e) {
-            print('Error processing chat document ${doc.id}: $e');
+            // Skip problematic chat documents
           }
         }
 
@@ -87,11 +105,8 @@ class DoctorUsersChatController extends GetxController {
         chats.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
         userChats.value = chats;
         isLoading.value = false;
-
-        print('Loaded ${chats.length} user chats');
       });
     } catch (e) {
-      print('Error loading user chats: $e');
       isLoading.value = false;
     }
   }
@@ -115,8 +130,6 @@ class DoctorUsersChatController extends GetxController {
     final doctorId = _auth.currentUser?.uid;
     if (doctorId == null) throw Exception('Doctor not authenticated');
 
-    print('Getting chat ID for doctor: $doctorId, user: $userId');
-
     final chatDoc = await _db
         .collection('doctor_chats')
         .where('doctorId', isEqualTo: doctorId)
@@ -125,12 +138,9 @@ class DoctorUsersChatController extends GetxController {
         .get();
 
     if (chatDoc.docs.isNotEmpty) {
-      final chatId = chatDoc.docs.first.id;
-      print('Found chat ID: $chatId');
-      return chatId;
+      return chatDoc.docs.first.id;
     }
 
-    print('Chat not found for doctor: $doctorId, user: $userId');
     throw Exception('Chat not found');
   }
 
@@ -139,16 +149,12 @@ class DoctorUsersChatController extends GetxController {
     if (doctorId == null) return;
 
     try {
-      print('Marking messages as read for chat: $chatId');
-
       final messagesSnapshot = await _db
           .collection('doctor_chats')
           .doc(chatId)
           .collection('messages')
           .where('isRead', isEqualTo: false)
           .get();
-
-      print('Found ${messagesSnapshot.docs.length} unread messages');
 
       for (var doc in messagesSnapshot.docs) {
         await doc.reference.update({'isRead': true});
@@ -158,10 +164,8 @@ class DoctorUsersChatController extends GetxController {
       await _db.collection('doctor_chats').doc(chatId).update({
         'unreadCount': 0,
       });
-
-      print('Messages marked as read successfully');
     } catch (e) {
-      print('Error marking messages as read: $e');
+      // Handle error silently
     }
   }
 }

@@ -121,7 +121,6 @@ class MyAppointmentScreen extends StatelessWidget {
           }
 
           final appointments = snapshot.data?.docs.map((doc) {
-                print('Raw appointment data: ${doc.data()}');
                 return Appointment.fromFirestore(
                     doc.data() as Map<String, dynamic>, doc.id);
               }).toList() ??

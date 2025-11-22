@@ -84,7 +84,6 @@ class _DoctorScreenState extends State<DoctorScreen> {
         }
       }
     } catch (e) {
-      print("Error fetching user details: $e");
       setState(() {
         isLoading = false;
         _initializePages();
@@ -131,7 +130,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
         }
       }
     } catch (e) {
-      print("Error fetching doctor profile picture: $e");
+      // Handle error silently
     }
   }
 

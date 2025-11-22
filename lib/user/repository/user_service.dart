@@ -56,7 +56,6 @@ class UserService extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading user profile: $e');
       // Fallback to Firebase Auth email if Firestore fails
       userEmail.value = user.value?.email ?? '';
     } finally {
