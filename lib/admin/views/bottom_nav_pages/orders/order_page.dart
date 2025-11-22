@@ -150,6 +150,7 @@ class _AdminOrderManagementScreenState extends State<AdminOrderManagementScreen>
                         color: const Color(0xFF199A8E),
                         fontSize: isWeb ? 28 : screenWidth * 0.055,
                         fontWeight: FontWeight.bold,
+                        fontFamily: 'bolditalic'
                       ),
                       textAlign: isWeb ? TextAlign.center : TextAlign.start,
                     ),

@@ -68,6 +68,7 @@ class _AdminDoctorVerificationPageState extends State<AdminDoctorVerificationPag
             color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: isDesktop ? 24 : (isTablet ? 22 : 18),
+            fontFamily: 'bolditalic'
           ),
         ),
         elevation: 0,
