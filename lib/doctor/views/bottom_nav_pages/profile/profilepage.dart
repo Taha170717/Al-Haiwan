@@ -109,15 +109,50 @@ class _DoctorProfileState extends State<DoctorProfile> {
                           onTap: _updateProfilePicture,
                           child: Obx(() => Stack(
                                 children: [
-                                  CircleAvatar(
-                                    radius: screen.width * 0.16,
-                                    backgroundImage: profilePicUrl != null &&
-                                            profilePicUrl!.isNotEmpty
-                                        ? NetworkImage(profilePicUrl!)
-                                        : AssetImage(
-                                                'assets/images/default_doctor.png')
-                                            as ImageProvider,
-                                    backgroundColor: Colors.white,
+                                  Container(
+                                    width: screen.width * 0.32,
+                                    height: screen.width * 0.32,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: ClipOval(
+                                      child: profilePicUrl != null &&
+                                              profilePicUrl!.isNotEmpty
+                                          ? Image.network(
+                                              profilePicUrl!,
+                                              fit: BoxFit.fill,
+                                              width: screen.width * 0.32,
+                                              height: screen.width * 0.32,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return Image.asset(
+                                                  'assets/images/default_doctor.png',
+                                                  fit: BoxFit.contain,
+                                                );
+                                              },
+                                              loadingBuilder: (context, child, loadingProgress) {
+                                                if (loadingProgress == null) return child;
+                                                return Center(
+                                                  child: CircularProgressIndicator(
+                                                    color: Color(0xFF199A8E),
+                                                    strokeWidth: 2,
+                                                    value: loadingProgress.expectedTotalBytes != null
+                                                        ? loadingProgress.cumulativeBytesLoaded /
+                                                            loadingProgress.expectedTotalBytes!
+                                                        : null,
+                                                  ),
+                                                );
+                                              },
+                                            )
+                                          : Image.asset(
+                                              'assets/images/default_doctor.png',
+                                              fit: BoxFit.contain,
+                                            ),
+                                    ),
                                   ),
                                   // Loading indicator
                                   if (_verificationController.isLoading.value)

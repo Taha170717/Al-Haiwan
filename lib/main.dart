@@ -25,12 +25,12 @@ Future<void> main() async {
 
   Get.put(AuthController());
   Get.put(UserService());
-
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
 
   @override
   Widget build(BuildContext context) {

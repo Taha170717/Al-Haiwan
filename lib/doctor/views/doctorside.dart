@@ -12,6 +12,7 @@ import 'Doctor_Verification.dart';
 import 'bottom_nav_pages/appointments/appoinmentspage.dart';
 import 'dart:ui';
 
+import 'bottom_nav_pages/earnings/earnings.dart';
 import 'bottom_nav_pages/notifications/doctor_notifications_Screen.dart';
 
 class DoctorScreen extends StatefulWidget {
@@ -29,6 +30,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
   User? user;
   String? username;
   String? email;
+  String? profilePicture;
   bool isDoctor = false;
   bool isVerified = false;
   bool isLoading = true;
@@ -53,6 +55,12 @@ class _DoctorScreenState extends State<DoctorScreen> {
             email = snapshot.data()?['email'] ?? user!.email;
             isDoctor = snapshot.data()?['isDoctor'] ?? false;
             isVerified = snapshot.data()?['isVerified'] ?? false;
+          });
+          
+          // Fetch profile picture from doctor_verification_requests
+          await _fetchDoctorProfilePicture();
+          
+          setState(() {
             isLoading = false;
             _initializePages();
           });
@@ -81,6 +89,49 @@ class _DoctorScreenState extends State<DoctorScreen> {
         isLoading = false;
         _initializePages();
       });
+    }
+  }
+
+  Future<void> _fetchDoctorProfilePicture() async {
+    try {
+      if (user != null) {
+        final verificationSnapshot = await FirebaseFirestore.instance
+            .collection('doctor_verification_requests')
+            .doc(user!.uid)
+            .get();
+        
+        if (verificationSnapshot.exists) {
+          final data = verificationSnapshot.data();
+          
+          // Try to get profilePicture from documents field
+          if (data != null && data.containsKey('documents')) {
+            final documents = data['documents'];
+            if (documents != null && documents is Map) {
+              final profilePic = documents['profilePicture'];
+              
+              if (profilePic != null && profilePic is String && profilePic.isNotEmpty) {
+                setState(() {
+                  profilePicture = profilePic;
+                });
+                return;
+              }
+            }
+          }
+          
+          // Fallback: Try direct profilePicture field
+          if (data != null && data.containsKey('profilePicture')) {
+            final profilePic = data['profilePicture'];
+            
+            if (profilePic != null && profilePic is String && profilePic.isNotEmpty) {
+              setState(() {
+                profilePicture = profilePic;
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print("Error fetching doctor profile picture: $e");
     }
   }
 
@@ -473,24 +524,89 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 ),
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
-              currentAccountPicture: const CircleAvatar(
+              margin: const EdgeInsets.only(bottom: 8),
+              currentAccountPicture: CircleAvatar(
                 radius: 35,
-                backgroundImage: AssetImage("assets/images/user.png"),
+                backgroundColor: Colors.white.withOpacity(0.2),
+                child: profilePicture != null && profilePicture!.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          profilePicture!,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                            child: const Icon(
+                              Icons.person,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            width: 70,
+                            height: 70,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.2),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
-              accountName: Text(
-                isDoctor ? (username ?? "Doctor") : "Not a Doctor",
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              accountName: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  isDoctor ? (username ?? "Doctor") : "Not a Doctor",
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
               ),
               accountEmail: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     isDoctor ? (email ?? "No Email") : "Not Authorized",
                     style: const TextStyle(fontSize: 14),
                   ),
+                  const SizedBox(height: 2),
                   Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: isVerified ? Colors.green : Colors.orange,
                       borderRadius: BorderRadius.circular(8),
@@ -546,6 +662,10 @@ class _DoctorScreenState extends State<DoctorScreen> {
                   Get.back();
                   _showVerificationDialog();
                 }
+                else {
+                  controller.changeIndex(2);
+                  Get.back();
+                }
               },
             ),
             _buildDivider(),
@@ -573,6 +693,11 @@ class _DoctorScreenState extends State<DoctorScreen> {
                   Get.back();
                   _showVerificationDialog();
                 }
+                else {
+                  Get.back();
+                  Get.to(() => DoctorEarningsPage());
+                }
+
               },
             ),
             _buildDivider(),
@@ -584,9 +709,6 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 if (!isVerified) {
                   Get.back();
                   _showVerificationDialog();
-                } else {
-                  controller.changeIndex(2);
-                  Get.back();
                 }
               },
             ),

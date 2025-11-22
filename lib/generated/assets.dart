@@ -61,6 +61,7 @@ class Assets {
   static const String doctorsAppointmentStatusScreen = 'lib/user/repository/bottomNav/bottomNavScreens/doctors/appointment_status_screen.dart';
   static const String doctorsDoctorDetailView = 'lib/user/repository/bottomNav/bottomNavScreens/doctors/DoctorDetailView.dart';
   static const String doctorsDoctorscreen = 'lib/user/repository/bottomNav/bottomNavScreens/doctors/doctorscreen.dart';
+  static const String earningsEarnings = 'lib/doctor/views/bottom_nav_pages/earnings/earnings.dart';
   static const String fontsPoppinsBold = 'assets/fonts/Poppins-Bold.ttf';
   static const String fontsPoppinsBoldItalic = 'assets/fonts/Poppins-BoldItalic.ttf';
   static const String fontsPoppinsExtraBoldItalic = 'assets/fonts/Poppins-ExtraBoldItalic.ttf';
@@ -150,7 +151,7 @@ class Assets {
   static const String myordersMyorders = 'lib/user/repository/bottomNav/bottomNavScreens/myorders/myorders.dart';
   static const String notificationsDoctorNotificationsScreen = 'lib/doctor/views/bottom_nav_pages/notifications/doctor_notifications_Screen.dart';
   static const String ordersOrderPage = 'lib/admin/views/bottom_nav_pages/orders/order_page.dart';
- static const String productProductDetail = 'lib/user/repository/bottomNav/bottomNavScreens/home/product/Product_detail.dart';
+  static const String productProductDetail = 'lib/user/repository/bottomNav/bottomNavScreens/home/product/Product_detail.dart';
   static const String productsAddProducts = 'lib/admin/views/bottom_nav_pages/products/add_products.dart';
   static const String productsProductModel = 'lib/admin/views/bottom_nav_pages/products/product_model.dart';
   static const String productsProductsPage = 'lib/admin/views/bottom_nav_pages/products/products_page.dart';

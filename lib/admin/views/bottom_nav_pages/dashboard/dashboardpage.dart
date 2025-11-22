@@ -25,14 +25,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final w = size.width;
     final h = size.height;
 
-    final horizontalPadding = w * 0.04; // 4% of width
-    final verticalPadding = h * 0.02; // 2% of height
-    final gapBetweenCards = w * 0.03; // 3% of width
+    final horizontalPadding = w * 0.04;
+    final verticalPadding = h * 0.02;
+    final gapBetweenCards = w * 0.03;
     final topSpacing = h * 0.02;
     final bottomSpacing = h * 0.03;
 
-    // Card height responsive with sane min/max to prevent overflow
-    final double cardHeight = (h * 0.25).clamp(140.0, 220.0) as double;
+    final double cardHeight = 160.0;
+
 
     // Queries
     final Query usersQuery = FirebaseFirestore.instance.collection('users');
@@ -203,7 +203,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             icon: Icons.shopping_bag_rounded,
                             gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
                             accent: const Color(0xFF2196F3),
-                            height: 250,
+                            height: 180,
                           );
                         }
                         if (snapshot.hasError) {
@@ -214,7 +214,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             icon: Icons.shopping_bag_rounded,
                             gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
                             accent: const Color(0xFF2196F3),
-                            height: 250,
+                            height: 180,
                           );
                         }
 
@@ -235,7 +235,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           icon: Icons.shopping_bag_rounded,
                           gradient: const [Color(0xFF1E88E5), Color(0xFF42A5F5)],
                           accent: const Color(0xFF2196F3),
-                          height: 250,
+                          height: 180,
                           sub1Label: 'Pending',
                           sub1Value: pending,
                           sub2Label: 'Completed',
@@ -258,7 +258,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             icon: Icons.event_available_rounded,
                             gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
                             accent: const Color(0xFF4CAF50),
-                            height: 250,
+                            height: 180,
                           );
                         }
                         if (snapshot.hasError) {
@@ -269,7 +269,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             icon: Icons.event_available_rounded,
                             gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
                             accent: const Color(0xFF4CAF50),
-                            height: 250,
+                            height: 180,
                           );
                         }
 
@@ -290,7 +290,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           icon: Icons.event_available_rounded,
                           gradient: const [Color(0xFF43A047), Color(0xFF66BB6A)],
                           accent: const Color(0xFF4CAF50),
-                          height: 250,
+                          height: 180,
                           sub1Label: 'Pending',
                           sub1Value: pending,
                           sub2Label: 'Confirmed',
@@ -421,30 +421,7 @@ class _StatCard extends StatelessWidget {
                     letterSpacing: 0.2,
                   ),
                 ),
-                if (sub1Label != null && sub1Value != null && sub2Label != null && sub2Value != null) ...[
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$sub1Value $sub1Label',
-                        style: TextStyle(
-                          color: textColor.withOpacity(0.8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        '$sub2Value $sub2Label',
-                        style: TextStyle(
-                          color: textColor.withOpacity(0.8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const Spacer(),
+
                 Align(
                   alignment: Alignment.bottomLeft,
                   child: loading
@@ -485,34 +462,13 @@ class _StatCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.35),
-                              ),
-                            ),
-                            child: Text(
-                              'Live Update',
-                              style: TextStyle(
-                                color: textColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ),
+
                         ],
                       ),
                       if ((sub1Label != null && sub1Value != null) ||
                           (sub2Label != null && sub2Value != null)) ...[
                         const SizedBox(height: 10),
-                        Column(
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (sub1Label != null && sub1Value != null)
