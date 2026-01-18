@@ -1,0 +1,409 @@
+// Development Firestore rules - permissive (authenticated users can read/write/delete everything)
+// IMPORTANT: These rules are suitable for quick local/dev testing only. Do NOT use in production unless you understand the consequences.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminEmail() {
+      return isSignedIn() && request.auth.token.email == 'tahazafar112@gmail.com';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isVerifiedDoctor() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDoctor == true &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isVerified == true;
+    }
+
+    function validateProductData(data) {
+      return data.keys().hasAll(['name', 'price', 'category']) &&
+        data.name is string &&
+        data.price is number &&
+        data.category is string &&
+        (
+          (data.keys().hasAll(['stockQuantity']) && data.stockQuantity is number)
+          ||
+          (data.keys().hasAll(['stock']) && data.stock is number)
+        );
+    }
+
+    function onlyUpdatingStock(resourceData, requestData) {
+      return (
+        (requestData.keys().hasAll(['stockQuantity']) && requestData.keys().size() == 1 && requestData.stockQuantity is number)
+        ||
+        (requestData.keys().hasAll(['stock']) && requestData.keys().size() == 1 && requestData.stock is number)
+      );
+    }
+
+    function validateReviewData(data) {
+      return data.keys().hasAll(['userId', 'rating', 'comment'])
+        && data.userId is string
+        && data.rating is number
+        && data.comment is string;
+    }
+
+    function validateOrderData(data) {
+      return data.keys().hasAll(['userId', 'userName', 'userPhone', 'userEmail', 'deliveryAddress', 'city', 'state', 'zipCode', 'items', 'subtotal', 'deliveryFee', 'total', 'paymentMethod', 'status', 'createdAt'])
+        && data.userId is string
+        && data.userName is string
+        && data.userPhone is string
+        && data.userEmail is string
+        && data.deliveryAddress is string
+        && data.city is string
+        && data.state is string
+        && data.zipCode is string
+        && data.items is list
+        && data.subtotal is number
+        && data.deliveryFee is number
+        && data.total is number
+        && data.paymentMethod is string
+        && data.status in ['pending', 'accepted', 'preparing', 'in_transit', 'delivered', 'cancelled']
+        && (data.createdAt is string || data.createdAt is timestamp || data.createdAt is number);
+    }
+
+    function validatePrescriptionData(data) {
+      return data.keys().hasAll(['appointmentId', 'doctorId', 'userId', 'prescription', 'createdAt'])
+        && data.appointmentId is string
+        && data.doctorId is string
+        && data.userId is string
+        && data.prescription is string
+        && (data.createdAt is timestamp || data.createdAt is number);
+    }
+
+    // Notification validator used by both user notifications and doctor notifications
+    function validateNotificationData(data) {
+      // createdAt may be omitted when client uses serverTimestamp(); allow missing or timestamp/number
+      return data.keys().hasAll(['title', 'body'])
+        && data.title is string
+        && data.body is string
+        && (!data.keys().hasAny(['createdAt']) || (data.createdAt is timestamp || data.createdAt is number));
+    }
+
+    // --- End helpers ---
+
+    // OTP Verification Collection
+    match /otp_verifications/{email} {
+      allow create, update, delete, get: if true; // Public access for OTP verification
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isAdminEmail() || isOwner(userId) || (isSignedIn() && isVerifiedDoctor());
+      allow update, delete: if isOwner(userId) || isAdminEmail();
+      allow create: if isSignedIn();
+
+      match /fcmTokens/{tokenId} {
+        allow create: if isSignedIn() && request.auth.uid == userId
+                      && request.resource.data.keys().hasAll(['token', 'platform', 'createdAt'])
+                      && (request.resource.data.token is string);
+        allow read, update, delete: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+
+    // Doctors Collection
+    match /doctors/{uid} {
+      allow read: if isAdminEmail() || isOwner(uid) || isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow update, delete: if isOwner(uid) || isAdminEmail();
+
+      match /fcmTokens/{tokenId} {
+        allow create: if isSignedIn() && request.auth.uid == uid
+                      && request.resource.data.keys().hasAll(['token', 'platform', 'createdAt'])
+                      && (request.resource.data.token is string);
+        allow read, update, delete: if isSignedIn() && request.auth.uid == uid;
+      }
+    }
+
+    match /doctor_verification_requests/{userId} {
+      allow read: if isAdminEmail() || isOwner(userId) || (resource.data.isVerified == true && resource.data.verificationStatus == 'approved');
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isAdminEmail() || isOwner(userId);
+      allow delete: if isAdminEmail();
+      allow list: if true;
+    }
+
+    match /doctor_profiles/{doctorId} {
+      allow read: if true;
+      allow create: if isVerifiedDoctor() && isOwner(doctorId);
+      allow update: if isAdminEmail() || (isVerifiedDoctor() && isOwner(doctorId));
+      allow delete: if isAdminEmail();
+      allow list: if true;
+    }
+
+    match /doctor_availability/{doctorId} {
+      allow read: if true;
+      allow create: if isVerifiedDoctor() && isOwner(doctorId);
+      allow update: if isAdminEmail() || (isVerifiedDoctor() && isOwner(doctorId));
+      allow delete: if isAdminEmail();
+      allow list: if true;
+
+      match /time_slots/{slotId} {
+        allow read: if true;
+        allow create, update: if isAdminEmail() || (isVerifiedDoctor() && isOwner(doctorId));
+        allow delete: if isAdminEmail() || (isVerifiedDoctor() && isOwner(doctorId));
+      }
+    }
+
+    match /verification_requests/{requestId} {
+      allow read: if isAdminEmail() || (isSignedIn() && resource.data.doctorId == request.auth.uid);
+      allow create: if isSignedIn() && request.auth.uid != null;
+      allow update: if isAdminEmail() || (isSignedIn() && resource.data.doctorId == request.auth.uid);
+      allow delete: if isAdminEmail();
+    }
+
+    match /verification_requests/{requestId}/documents/{documentId} {
+      allow read, write: if isSignedIn() &&
+        (isAdminEmail() || get(/databases/$(database)/documents/verification_requests/$(requestId)).data.doctorId == request.auth.uid);
+    }
+
+    // APPOINTMENTS
+    match /appointments/{appointmentId} {
+      // read allowed for admin or involved parties
+      allow read: if isAdminEmail() || (isSignedIn() && (request.auth.uid == resource.data.userId || request.auth.uid == resource.data.doctorId));
+
+      // create: user must be signed-in and create their own appointment with required fields
+      allow create: if isSignedIn()
+                       && request.auth.uid == request.resource.data.userId
+                       && request.resource.data.keys().hasAll(['doctorId', 'userId', 'ownerName', 'petName', 'selectedDate', 'selectedTime', 'consultationFee', 'paymentMethod', 'status', 'createdAt'])
+                       && request.resource.data.status == 'pending';
+
+      // update rules: admin OR owner with limited status changes OR the assigned doctor (by uid) with allowed statuses
+      allow update: if isAdminEmail()
+                       ||
+                       (isSignedIn() && request.auth.uid == resource.data.userId &&
+                        request.resource.data.status in ['pending', 'cancelled'])
+                       ||
+                       (isSignedIn() && request.auth.uid == resource.data.doctorId &&
+                        request.resource.data.status in ['pending', 'paymentVerified', 'confirmed', 'completed', 'cancelled', 'rejected'] &&
+                        (request.resource.data.status != 'rejected' ||
+                          (request.resource.data.doctorNotes is string && request.resource.data.rejectedAt is timestamp)));
+
+      allow delete: if isAdminEmail() || (isOwner(resource.data.userId) && resource.data.status == 'pending');
+
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 50) || (isVerifiedDoctor() && request.query.limit <= 50);
+
+      match /messages/{messageId} {
+        allow read: if isAdminEmail() || (isSignedIn() &&
+                   (request.auth.uid == get(/databases/$(database)/documents/appointments/$(appointmentId)).data.userId ||
+                    request.auth.uid == get(/databases/$(database)/documents/appointments/$(appointmentId)).data.doctorId));
+        allow create: if isSignedIn() &&
+                      (request.auth.uid == get(/databases/$(database)/documents/appointments/$(appointmentId)).data.userId ||
+                       request.auth.uid == get(/databases/$(database)/documents/appointments/$(appointmentId)).data.doctorId) &&
+                      request.resource.data.keys().hasAll(['senderId', 'senderName', 'message', 'timestamp']) &&
+                      request.resource.data.senderId == request.auth.uid &&
+                      (request.resource.data.timestamp is timestamp || request.resource.data.timestamp is number);
+        allow update, delete: if isAdminEmail();
+      }
+    }
+
+    // DOCTOR CHATS
+    match /doctor_chats/{chatId} {
+      allow read: if isAdminEmail() || (isSignedIn() && (request.auth.uid == resource.data.userId || request.auth.uid == resource.data.doctorId));
+
+      allow create: if isSignedIn() &&
+                     request.auth.uid == request.resource.data.userId &&
+                     request.resource.data.keys().hasAll(['doctorId', 'userId', 'doctorName', 'createdAt']) &&
+                     (request.resource.data.createdAt is timestamp || request.resource.data.createdAt is number) &&
+                     (!request.resource.data.keys().hasAny(['lastMessageTime']) || (request.resource.data.lastMessageTime is timestamp || request.resource.data.lastMessageTime is number)) &&
+                     (!request.resource.data.keys().hasAny(['unreadCount']) || request.resource.data.unreadCount is number);
+
+      allow update: if isAdminEmail() || (isSignedIn() && (request.auth.uid == resource.data.userId || request.auth.uid == resource.data.doctorId));
+      allow delete: if isAdminEmail();
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 100);
+
+      match /messages/{messageId} {
+        allow read: if isAdminEmail() || (isSignedIn() &&
+                   (request.auth.uid == get(/databases/$(database)/documents/doctor_chats/$(chatId)).data.userId ||
+                    request.auth.uid == get(/databases/$(database)/documents/doctor_chats/$(chatId)).data.doctorId));
+
+        allow create: if isSignedIn() &&
+                      (request.auth.uid == get(/databases/$(database)/documents/doctor_chats/$(chatId)).data.userId ||
+                       request.auth.uid == get(/databases/$(database)/documents/doctor_chats/$(chatId)).data.doctorId) &&
+                      request.resource.data.keys().hasAll(['senderId', 'senderName', 'message', 'timestamp']) &&
+                      request.resource.data.senderId == request.auth.uid &&
+                      (request.resource.data.timestamp is timestamp || request.resource.data.timestamp is number);
+
+        allow update, delete: if isAdminEmail();
+      }
+    }
+
+    // Chatbot sessions
+    match /chatbot_sessions/{sessionId} {
+      allow read: if isAdminEmail() || (isSignedIn() && resource.data.userId == request.auth.uid);
+
+      allow create: if isSignedIn() &&
+                     request.resource.data.keys().hasAll(['userId', 'createdAt']) &&
+                     request.resource.data.userId == request.auth.uid &&
+                     (request.resource.data.createdAt is timestamp || request.resource.data.createdAt is number);
+
+      allow update: if isAdminEmail() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdminEmail() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 50);
+
+      match /messages/{messageId} {
+        allow read: if isAdminEmail() || (isSignedIn() && get(/databases/$(database)/documents/chatbot_sessions/$(sessionId)).data.userId == request.auth.uid);
+        allow create: if isSignedIn() &&
+                      request.resource.data.keys().hasAll(['userId', 'sender', 'text']) &&
+                      request.resource.data.userId == request.auth.uid &&
+                      ((request.resource.data.createdAt is timestamp) || (request.resource.data.timestamp is timestamp) || (request.resource.data.createdAt is number) || (request.resource.data.timestamp is number));
+        allow update, delete: if isAdminEmail();
+        allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 100 && get(/databases/$(database)/documents/chatbot_sessions/$(sessionId)).data.userId == request.auth.uid);
+      }
+    }
+
+    // Notifications Collection (user-facing notifications from doctors/admin)
+    match /notifications/{notificationId} {
+      // allow users to read their notifications and admin to read any
+      allow read: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+
+      // allow creation by:
+      // - admin (system)
+      // - verified doctor (doctors sending notifications to users)
+      // - the owner user (e.g., user creating their own notification record)
+      // The document must include a userId and validated fields.
+      allow create: if isSignedIn() &&
+                    validateNotificationData(request.resource.data) &&
+                    (isAdminEmail() || isVerifiedDoctor() || request.auth.uid == request.resource.data.userId) &&
+                    (request.resource.data.userId is string);
+
+      // updates/deletes only by admin or the user that owns the notification
+      allow update: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      allow delete: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+
+      // listing: allow signed-in users to list (must use client-side filtering by userId) or admin
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 100);
+    }
+
+    // Doctor Notifications Collection (notifications targeted at doctors)
+    match /doctor_notifications/{notificationId} {
+      // doctors can read notifications for themselves; admin can always read
+      allow read: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.doctorId);
+
+      // creation: allow creation by the user who owns the appointment OR by server admin/function
+      // require fields: doctorId, appointmentId, userId, title, body, createdAt
+      allow create: if isSignedIn() &&
+                    validateNotificationData(request.resource.data) &&
+                    request.resource.data.keys().hasAll(['doctorId', 'appointmentId', 'userId']) &&
+                    (request.resource.data.doctorId is string) &&
+                    (request.resource.data.appointmentId is string) &&
+                    (request.resource.data.userId is string) &&
+                    (request.auth.uid == request.resource.data.userId || isAdminEmail());
+
+      // update/delete: doctors (marking read) or admin
+      allow update: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.doctorId);
+      allow delete: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.doctorId);
+
+      // listing: allow signed-in doctors to list (client should filter by doctorId) or admin
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 100);
+    }
+
+    // Prescriptions Collection
+    match /prescriptions/{prescriptionId} {
+      allow read: if isAdminEmail()
+                  || (isSignedIn() && (request.auth.uid == resource.data.userId || request.auth.uid == resource.data.doctorId))
+                  || (isSignedIn() &&
+                      resource.data.appointmentId is string &&
+                      exists(/databases/$(database)/documents/appointments/$(resource.data.appointmentId)) &&
+                      get(/databases/$(database)/documents/appointments/$(resource.data.appointmentId)).data.userId == request.auth.uid);
+
+      allow create: if isSignedIn()
+                    && isVerifiedDoctor()
+                    && request.auth.uid == request.resource.data.doctorId
+                    && validatePrescriptionData(request.resource.data);
+
+      allow update, delete: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.doctorId);
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 100);
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      allow list: if isAdminEmail() || (isSignedIn() && request.query.limit <= 100);
+
+      allow create: if isSignedIn()
+        && request.auth.uid == request.resource.data.userId
+        && validateOrderData(request.resource.data)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.paymentMethod == 'Cash on Delivery';
+
+      allow update: if isAdminEmail()
+        || (isSignedIn() && request.auth.uid == resource.data.userId &&
+             resource.data.status == 'pending' &&
+             request.resource.data.status == 'cancelled')
+        || (isSignedIn() && request.auth.uid == resource.data.userId &&
+            request.resource.data.keys().hasOnly(['stockUpdateStatus','stockUpdateError','stockUpdatedAt']) &&
+            (!request.resource.data.keys().hasAny(['stockUpdateStatus']) || request.resource.data.stockUpdateStatus is string) &&
+            (!request.resource.data.keys().hasAny(['stockUpdateError']) || request.resource.data.stockUpdateError is string) &&
+            (!request.resource.data.keys().hasAny(['stockUpdatedAt']) || (request.resource.data.stockUpdatedAt is timestamp || request.resource.data.stockUpdatedAt is string))
+        );
+
+      allow delete: if isAdminEmail();
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow list: if true;
+      allow create: if isAdminEmail() && validateProductData(request.resource.data);
+
+      allow update: if isAdminEmail()
+        || (isSignedIn() && onlyUpdatingStock(resource.data, request.resource.data))
+        || (isSignedIn()
+            && request.resource.data.keys().hasAll(['stockQuantity','soldCount','orderId','lastUpdatedBy'])
+            && request.resource.data.keys().hasOnly(['stockQuantity','soldCount','orderId','lastUpdatedBy','updatedAt'])
+            && request.resource.data.stockQuantity is number
+            && request.resource.data.soldCount is number
+            && request.resource.data.orderId is string
+            && request.resource.data.lastUpdatedBy is string
+            && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+            && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.userId == request.auth.uid
+        );
+
+      allow delete: if isAdminEmail();
+    }
+
+    match /user_carts/{userId} {
+      allow read, write: if isAdminEmail() || isOwner(userId);
+
+      match /items/{itemId} {
+        allow read, write: if isAdminEmail() || isOwner(userId);
+      }
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow list: if true;
+      allow create, update, delete: if isAdminEmail();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId && validateReviewData(request.resource.data);
+      allow update, delete: if isAdminEmail() || (isSignedIn() && request.auth.uid == resource.data.userId);
+    }
+
+    match /order_analytics/{analyticsId} {
+      allow read, write: if isAdminEmail();
+    }
+
+    match /inventory_logs/{logId} {
+      allow read: if isAdminEmail();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdminEmail();
+    }
+
+    // Catch-all rule for any other collections
+    match /{document=**} {
+      allow read, write: if isAdminEmail();
+    }
+  }
+}
