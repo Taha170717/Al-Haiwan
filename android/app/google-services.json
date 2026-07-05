@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "451198622828",
+    "project_id": "alhewan-e110c",
+    "storage_bucket": "alhewan-e110c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451198622828:android:a43c3f90fa2f32f4664c49",
+        "android_client_info": {
+          "package_name": "com.examplee.al_haiwan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "451198622828-go3lursjtsqaf0f188j5cf5bns947vof.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.examplee.al_haiwan",
+            "certificate_hash": "61a8967edfc6b84bfa109a7d973f618d021b1247"
+          }
+        },
+        {
+          "client_id": "451198622828-u569u63vvjvfi387flg9t9pfur36g96c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDi8sTzHEtcUBe_GDip2tpavl7g-pJmrso"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "451198622828-u569u63vvjvfi387flg9t9pfur36g96c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "451198622828-br71uhbo1erpmg6ur0csbcifn33huhno.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.alHaiwan"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

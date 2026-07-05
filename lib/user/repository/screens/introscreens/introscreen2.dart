@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/services.dart';
 import 'introsreen3.dart';
 import 'loginsignupintro.dart';
+
 //abc
 class Intro2Controller extends GetxController {
   void skip() => Get.off(() => Loginsignupintro());
@@ -16,113 +18,124 @@ class Introscreen2 extends StatelessWidget {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Container(color: Colors.white),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        systemNavigationBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Container(color: Colors.white),
 
-          /// Image
-          Positioned(
-            top: 90,
-            left: 20,
-            right: 20,
-            child: Image.asset(
-              'assets/images/d4.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          /// Skip Button
-          Positioned(
-            top: 40,
-            right: 20,
-            child: GestureDetector(
-              onTap: controller.skip,
-              child: Text(
-                'Skip',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              /// Image
+              Positioned(
+                top: 90,
+                left: 20,
+                right: 20,
+                child: Image.asset(
+                  'assets/images/d4.png',
+                  fit: BoxFit.cover,
                 ),
               ),
-            ),
-          ),
 
-          /// Bottom Content
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: screenHeight * 0.3,
-              width: screenWidth,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Find a lot of specialist doctors in one place',
+              /// Skip Button
+              Positioned(
+                top: 40,
+                right: 20,
+                child: GestureDetector(
+                  onTap: controller.skip,
+                  child: Text(
+                    'Skip',
                     style: TextStyle(
-                      fontSize: 20,
+                      color: Colors.grey,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 15),
+                ),
+              ),
 
-                  /// Page Indicator & Next
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 3,
-                            backgroundColor: Colors.grey.shade300,
-                          ),
-                          SizedBox(width: 5),
-                          Container(
-                            height: 6,
-                            width: 20,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF357964),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          SizedBox(width: 5),
-                          CircleAvatar(
-                            radius: 3,
-                            backgroundColor: Colors.grey.shade300,
-                          ),
-                        ],
-                      ),
-
-                      FloatingActionButton(
-                        onPressed: controller.next,
-                        shape: CircleBorder(),
-                        backgroundColor: Color(0xFF357964),
-                        child: Icon(Icons.arrow_forward, color: Colors.white),
+              /// Bottom Content
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: screenHeight * 0.3,
+                  width: screenWidth,
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
-                ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Find a lot of specialist doctors in one place',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 15),
+
+                      /// Page Indicator & Next
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 3,
+                                backgroundColor: Colors.grey.shade300,
+                              ),
+                              SizedBox(width: 5),
+                              Container(
+                                height: 6,
+                                width: 20,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF357964),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                              SizedBox(width: 5),
+                              CircleAvatar(
+                                radius: 3,
+                                backgroundColor: Colors.grey.shade300,
+                              ),
+                            ],
+                          ),
+
+                          FloatingActionButton(
+                            onPressed: () => controller.next(),
+                            shape: CircleBorder(),
+                            backgroundColor: Color(0xFF357964),
+                            child: Icon(Icons.arrow_forward, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

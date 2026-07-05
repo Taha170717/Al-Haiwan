@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:io' if (dart.library.html) 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -42,6 +43,65 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
     }
   }
 
+  // Root method: decides whether we need reactivity at all.
+  //
+  // BUG THAT WAS HERE:
+  //   final profile = widget.doctorProfile ?? detailVM.doctorProfile.value;
+  // `??` short-circuits: when widget.doctorProfile is non-null (which it is
+  // on this screen), detailVM.doctorProfile.value is NEVER read. That means
+  // the Obx wrapping this widget subscribes to zero observables, which is
+  // exactly what triggers GetX's "improper use of GetX" error.
+  //
+  // FIX: only wrap in Obx when we actually depend on the reactive value
+  // (i.e. when we don't already have a concrete profile passed in).
+  Widget _buildDoctorAccountDetails(Size screen) {
+    if (widget.doctorProfile != null) {
+      // We already have the data - no observable involved, no Obx needed.
+      return _buildAccountDetailsContent(screen, widget.doctorProfile!);
+    }
+
+    // Only this branch actually needs to react to async-fetched data.
+    return Obx(() {
+      final profile = detailVM.doctorProfile.value;
+      if (profile == null) return const SizedBox.shrink();
+      return _buildAccountDetailsContent(screen, profile);
+    });
+  }
+
+  Widget _buildAccountDetailsContent(Size screen, DoctorProfile profile) {
+    final hasAny = profile.easypaisaNumber.isNotEmpty ||
+        profile.jazzcashNumber.isNotEmpty ||
+        profile.bankName.isNotEmpty ||
+        profile.bankAccountNumber.isNotEmpty ||
+        profile.bankHolderName.isNotEmpty;
+
+    if (!hasAny) return const SizedBox.shrink();
+
+    return Container(
+      padding: EdgeInsets.all(screen.width * 0.04),
+      margin: EdgeInsets.only(top: screen.height * 0.02),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(screen.width * 0.03),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Doctor Payment Accounts',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.038)),
+        SizedBox(height: screen.height * 0.01),
+        if (profile.easypaisaNumber.isNotEmpty)
+          _paymentRow('EasyPaisa', profile.easypaisaNumber),
+        if (profile.jazzcashNumber.isNotEmpty)
+          _paymentRow('JazzCash', profile.jazzcashNumber),
+        if (profile.bankName.isNotEmpty || profile.bankAccountNumber.isNotEmpty)
+          _paymentRow('Bank',
+              '${profile.bankName}${profile.bankAccountNumber.isNotEmpty ? ' - ${profile.bankAccountNumber}' : ''}'),
+        if (profile.bankHolderName.isNotEmpty)
+          _paymentRow('Account Holder', profile.bankHolderName),
+      ]),
+    );
+  }
+
   @override
   void dispose() {
     reasonController.dispose();
@@ -49,7 +109,6 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
     petNameController.dispose();
     super.dispose();
   }
-
 
   Widget _paymentRow(String title, String value, {bool isBold = false}) {
     final screen = MediaQuery.of(context).size;
@@ -188,25 +247,86 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
     }
   }
 
-  Widget _buildStripeMethod(Size screen) {
+  Widget _buildPaymentScreenshotMethod(Size screen) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text("Payment Method",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: screen.width * 0.035)),
       SizedBox(height: screen.height * 0.02),
-      Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFF199A8E), width: 2),
-          borderRadius: BorderRadius.circular(screen.width * 0.03),
-        ),
-        child: ListTile(
-          leading: const Icon(Icons.credit_card, color: Color(0xFF199A8E)),
-          title: const Text("Pay with Card (Stripe)"),
-          trailing: const Icon(Icons.lock, color: Color(0xFF199A8E)),
-        ),
-      ),
+      Obx(() {
+        final hasScreenshot = appointmentController.paymentScreenshotPath.value.isNotEmpty ||
+            appointmentController.paymentScreenshotBytes.value != null;
+
+        return Container(
+          padding: EdgeInsets.all(screen.width * 0.03),
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFF199A8E), width: 2),
+            borderRadius: BorderRadius.circular(screen.width * 0.03),
+          ),
+          child: Row(children: [
+            const Icon(Icons.photo, color: Color(0xFF199A8E)),
+            SizedBox(width: screen.width * 0.03),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(hasScreenshot ? "Screenshot uploaded" : "Upload Payment Screenshot",
+                    style: TextStyle(fontSize: screen.width * 0.035)),
+                SizedBox(height: screen.height * 0.005),
+                Text(
+                    hasScreenshot
+                        ? "Tap to change or remove the screenshot"
+                        : "Please upload a payment screenshot (bank transfer / card receipt)",
+                    style: TextStyle(fontSize: screen.width * 0.03, color: Colors.grey[700])),
+              ]),
+            ),
+            const SizedBox(width: 8),
+            hasScreenshot
+                ? Row(children: [
+              IconButton(
+                icon: const Icon(Icons.remove_circle, color: Colors.red),
+                onPressed: () => appointmentController.clearPaymentScreenshot(),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Color(0xFF199A8E)),
+                onPressed: () => appointmentController.pickPaymentScreenshot(),
+              ),
+            ])
+                : ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF199A8E)),
+              onPressed: () => appointmentController.pickPaymentScreenshot(),
+              child: const Text('Upload'),
+            ),
+          ]),
+        );
+      }),
+      SizedBox(height: screen.height * 0.01),
+      // Preview (web uses bytes)
+      Obx(() {
+        final path = appointmentController.paymentScreenshotPath.value;
+        final bytes = appointmentController.paymentScreenshotBytes.value;
+        if (path.isEmpty && bytes == null) return const SizedBox.shrink();
+
+        return Container(
+          margin: EdgeInsets.only(top: screen.height * 0.01),
+          height: screen.height * 0.2,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: path.isNotEmpty
+                ? Image.file(
+              File(path),
+              fit: BoxFit.cover,
+            )
+                : bytes != null
+                ? Image.memory(bytes, fit: BoxFit.cover)
+                : const SizedBox.shrink(),
+          ),
+        );
+      }),
     ]);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -257,8 +377,11 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
           const Divider(),
           _paymentRow("Total", "₨ ${total.toInt()}", isBold: true),
 
+          // Show doctor's account/payment details (EasyPaisa, JazzCash, Bank)
+          _buildDoctorAccountDetails(screen),
+
           SizedBox(height: screen.height * 0.025),
-          _buildStripeMethod(screen),
+          _buildPaymentScreenshotMethod(screen),
 
           SizedBox(height: screen.height * 0.03),
 
@@ -282,11 +405,9 @@ class _AppointmentSummaryViewState extends State<AppointmentSummaryView> {
                 return;
               }
 
-
-
               appointmentController.ownerName.value = ownerNameController.text.trim();
               appointmentController.reason.value = reasonController.text.trim();
-              appointmentController.selectedPaymentMethod.value = 'Stripe';
+              appointmentController.selectedPaymentMethod.value = 'Screenshot';
 
               final success = await appointmentController.bookAppointment(
                 doctorId: widget.doctor.id,

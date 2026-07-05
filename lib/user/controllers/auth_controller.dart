@@ -726,8 +726,31 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
 
-      final googleUser = await GoogleSignIn().signIn();
+      // Initialize GoogleSignIn with scopes
+      final googleSignIn = GoogleSignIn(
+        scopes: [
+          'email',
+          'profile',
+        ],
+      );
+
+      // Sign out first to show account picker dialog
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {
+        // Ignore sign-out errors
+      }
+
+      if (kDebugMode) {
+        print('[GoogleSignIn] Starting Google Sign-In process...');
+      }
+
+      final googleUser = await googleSignIn.signIn();
+
       if (googleUser == null) {
+        if (kDebugMode) {
+          print('[GoogleSignIn] User cancelled the sign-in');
+        }
         showBeautifulSnackBar(
           title: "Sign-in Cancelled",
           message: "Google sign-in was cancelled",
@@ -736,22 +759,61 @@ class AuthController extends GetxController {
         return;
       }
 
+      if (kDebugMode) {
+        print('[GoogleSignIn] User signed in: ${googleUser.email}');
+      }
+
       final googleAuth = await googleUser.authentication;
+
+      if (kDebugMode) {
+        print('[GoogleSignIn] Got authentication tokens');
+      }
+
+      if (googleAuth.accessToken == null || googleAuth.idToken == null) {
+        if (kDebugMode) {
+          print('[GoogleSignIn] Missing tokens - accessToken: ${googleAuth.accessToken}, idToken: ${googleAuth.idToken}');
+        }
+        showBeautifulSnackBar(
+          title: "Authentication Failed",
+          message: "Failed to get authentication tokens. Please try again",
+          type: SnackbarType.error,
+        );
+        return;
+      }
 
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
+      if (kDebugMode) {
+        print('[GoogleSignIn] Created Firebase credential');
+      }
+
       final userCredential = await _auth.signInWithCredential(credential);
 
+      if (kDebugMode) {
+        print('[GoogleSignIn] Firebase sign-in successful: ${userCredential.user?.email}');
+      }
+
       if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+        if (kDebugMode) {
+          print('[GoogleSignIn] New user - creating Firestore document');
+        }
+
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
-          'username': userCredential.user!.displayName ?? '',
+          'uid': userCredential.user!.uid,
+          'username': userCredential.user!.displayName ?? 'Google User',
           'email': userCredential.user!.email ?? '',
           'phone': userCredential.user!.phoneNumber ?? '',
           'isDoctor': false,
+          'role': 'user',
           'createdAt': Timestamp.now(),
+          'updatedAt': Timestamp.now(),
+        }).catchError((e) {
+          if (kDebugMode) {
+            print('[GoogleSignIn] Error creating user doc: $e');
+          }
         });
 
         showBeautifulSnackBar(
@@ -760,6 +822,9 @@ class AuthController extends GetxController {
           type: SnackbarType.success,
         );
       } else {
+        if (kDebugMode) {
+          print('[GoogleSignIn] Existing user logging in');
+        }
         showBeautifulSnackBar(
           title: "Welcome Back",
           message: "Successfully signed in with Google",
@@ -768,10 +833,29 @@ class AuthController extends GetxController {
       }
 
       showLoginSuccessDialog(isDoctor: false, email: '');
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
+      if (kDebugMode) {
+        print('[GoogleSignIn] FirebaseAuthException: ${e.code} - ${e.message}');
+      }
+      String errorMessage = "Google Sign-in failed";
+      if (e.code == 'account-exists-with-different-credential') {
+        errorMessage = "This email is already registered with different credentials";
+      } else if (e.code == 'invalid-credential') {
+        errorMessage = "Invalid credentials. Please try again";
+      }
+
       showBeautifulSnackBar(
         title: "Google Sign-in Failed",
-        message: "Failed to sign in with Google. Please try again",
+        message: errorMessage,
+        type: SnackbarType.error,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('[GoogleSignIn] Exception: $e');
+      }
+      showBeautifulSnackBar(
+        title: "Google Sign-in Failed",
+        message: "Failed to sign in with Google. Please try again: $e",
         type: SnackbarType.error,
       );
     } finally {

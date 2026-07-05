@@ -681,18 +681,18 @@ class _DetailedRecordView extends StatelessWidget {
                         value: appointment.status.toUpperCase(),
                         valueColor: kTeal,
                       ),
-                      if (appointment.consultationFee > 0)
-                        _DetailRow(
-                          label: 'Consultation Fee',
-                          value:
-                              'Rs ${appointment.consultationFee.toStringAsFixed(2)}',
-                          valueColor: Colors.green[700],
-                        ),
-                      if (appointment.paymentMethod.isNotEmpty)
-                        _DetailRow(
-                          label: 'Payment Method',
-                          value: appointment.paymentMethod,
-                        ),
+                      _DetailRow(
+                        label: 'Consultation Fee',
+                        value:
+                            'Rs ${appointment.consultationFee.toStringAsFixed(2)}',
+                        valueColor: Colors.green[700],
+                      ),
+                      _DetailRow(
+                        label: 'Payment Method',
+                        value: appointment.paymentMethod.isNotEmpty
+                            ? appointment.paymentMethod
+                            : 'Screenshot-based payment',
+                      ),
                     ],
                   ),
 

@@ -108,108 +108,109 @@ class BottomNavScreen extends StatelessWidget {
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              Obx(() => UserAccountsDrawerHeader(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              Obx(() {
+                // Refresh profile to get latest data
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  userService.refreshProfile();
+                });
+
+                final profileImageUrl = userService.getUserImage;
+                final userName = userService.getUserName ?? "User";
+                final userEmail = userService.getUserEmail ?? "user@example.com";
+
+                return UserAccountsDrawerHeader(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF199A8E), Color(0xFF17C3B2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(20)),
                   ),
-                  borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(20)),
-                ),
-                currentAccountPicture: CircleAvatar(
-                  radius: 35,
-                  backgroundColor: Color(0xFF199A8E).withOpacity(0.1),
-                  child: Builder(
-                    builder: (context) {
-                      userService.refreshProfile();
-
-                      final profileImageUrl = userService.getUserImage;
-
-                      if (profileImageUrl != null &&
-                          profileImageUrl.isNotEmpty) {
-                        return ClipOval(
-                          child: Image.network(
-                            profileImageUrl,
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              print(
-                                  'Error loading profile image: $error');
-                              return Container(
-                                width: 70,
-                                height: 70,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.grey[200],
-                                ),
-                                child: Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Color(0xFF199A8E),
-                                ),
-                              );
-                            },
-                            loadingBuilder:
-                                (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                width: 70,
-                                height: 70,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor:
-                                    AlwaysStoppedAnimation<Color>(
-                                        Color(0xFF199A8E)),
-                                    value: loadingProgress
-                                        .expectedTotalBytes !=
-                                        null
-                                        ? loadingProgress
-                                        .cumulativeBytesLoaded /
-                                        loadingProgress
-                                            .expectedTotalBytes!
-                                        : null,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      } else {
-                        return Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.2),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 2,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Colors.white,
-                          ),
-                        );
-                      }
+                  currentAccountPicture: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).maybePop().then((_) {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => ProfileScreen()));
+                      });
                     },
+                    child: CircleAvatar(
+                      radius: 35,
+                      backgroundColor: Color(0xFF199A8E).withOpacity(0.1),
+                      child: profileImageUrl != null && profileImageUrl.isNotEmpty
+                          ? ClipOval(
+                              child: Image.network(
+                                profileImageUrl,
+                                width: 70,
+                                height: 70,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  print('Error loading profile image: $error');
+                                  return Container(
+                                    width: 70,
+                                    height: 70,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.grey[200],
+                                    ),
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Color(0xFF199A8E),
+                                    ),
+                                  );
+                                },
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    width: 70,
+                                    height: 70,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                            Color(0xFF199A8E)),
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded /
+                                                loadingProgress.expectedTotalBytes!
+                                            : null,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withOpacity(0.2),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
                   ),
-                ),
-                accountName: Text(
-                  userService.getUserName ?? "User",
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                accountEmail: Text(
-                  userService.getUserEmail ?? "user@example.com",
-                  style: const TextStyle(fontSize: 14),
-                ),
-              )),
+                  accountName: Text(
+                    userName,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  accountEmail: Text(
+                    userEmail,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                );
+              }),
               _buildDrawerTile(
                 icon: "assets/icons/profile.png",
                 label: "Profile",

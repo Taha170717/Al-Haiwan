@@ -4,7 +4,6 @@ import 'package:al_haiwan/user/repository/user_service.dart';
 import 'package:al_haiwan/utils/services/push_notification_service.dart';
 import 'package:al_haiwan/utils/notification_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get_storage/get_storage.dart';
@@ -28,8 +27,9 @@ void main() async {
   );
 
   await GetStorage.init();
-  Stripe.publishableKey = "mk_1SeWnjQ950bGfAC47cGenuqy";
-  await Stripe.instance.applySettings();
+  // flutter_stripe removed: using screenshot-based payment flow handled in the
+  // appointment controller and ImageKit service. If you later re-add
+  // a different payment plugin, initialize it here.
 
   // Initialize Firebase Messaging permissions and handlers
   await _initFirebaseMessaging();

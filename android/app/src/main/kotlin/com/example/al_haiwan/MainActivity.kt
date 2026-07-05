@@ -1,5 +1,4 @@
-package com.example.al_haiwan
+// MainActivity moved to package com.examplee.al_haiwan
+// See: android/app/src/main/kotlin/com/examplee/al_haiwan/MainActivity.kt
 
-import io.flutter.embedding.android.FlutterActivity
-
-class MainActivity : FlutterActivity()
+// This file was left as a placeholder to avoid accidental duplicate classes.

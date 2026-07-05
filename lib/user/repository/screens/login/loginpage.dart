@@ -2,7 +2,6 @@ import 'package:al_haiwan/user/controllers/auth_controller.dart';
 import 'package:al_haiwan/user/repository/screens/signup/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter/foundation.dart';
 
 import '../resetpassword/resetpassword.dart';
 

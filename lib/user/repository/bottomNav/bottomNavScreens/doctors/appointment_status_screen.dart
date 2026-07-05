@@ -203,8 +203,9 @@ class _AppointmentStatusScreenState extends State<AppointmentStatusScreen> {
 
           _buildInfoRow(screen, Icons.calendar_today, 'Date', '${appointment.selectedDay}, ${appointment.selectedDate}'),
           _buildInfoRow(screen, Icons.access_time, 'Time', appointment.selectedTime),
-          _buildInfoRow(screen, Icons.payment, 'Payment', appointment.paymentMethod),
-          _buildInfoRow(screen, Icons.attach_money, 'Fee', '₨ ${appointment.consultationFee.toInt()}'),
+
+          // Payment Details Section with better formatting
+          _buildPaymentDetailsSection(screen, appointment),
 
           if (appointment.status == AppointmentStatus.pending) ...[
             SizedBox(height: screen.height * 0.02),
@@ -288,7 +289,6 @@ class _AppointmentStatusScreenState extends State<AppointmentStatusScreen> {
     }
   }
 
-
   Widget _buildInfoRow(Size screen, IconData icon, String label, String value) {
     return Padding(
       padding: EdgeInsets.only(bottom: screen.height * 0.008),
@@ -367,4 +367,131 @@ class _AppointmentStatusScreenState extends State<AppointmentStatusScreen> {
         return Icons.help_outline;
     }
   }
+
+  Widget _buildPaymentDetailsSection(Size screen, Appointment appointment) {
+    return Container(
+      margin: EdgeInsets.only(top: screen.height * 0.01, bottom: screen.height * 0.01),
+      padding: EdgeInsets.all(screen.width * 0.03),
+      decoration: BoxDecoration(
+        color: Color(0xFF199A8E).withOpacity(0.08),
+        borderRadius: BorderRadius.circular(screen.width * 0.02),
+        border: Border.all(color: Color(0xFF199A8E).withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Payment Details',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: screen.width * 0.036,
+              color: Color(0xFF199A8E),
+            ),
+          ),
+          SizedBox(height: screen.height * 0.008),
+          _buildInfoRow(
+            screen,
+            Icons.payment,
+            'Method',
+            appointment.paymentMethod.isNotEmpty ? appointment.paymentMethod : 'Screenshot-based payment',
+          ),
+          _buildInfoRow(
+            screen,
+            Icons.attach_money,
+            'Fee',
+            '₨ ${appointment.consultationFee.toStringAsFixed(0)}',
+          ),
+          if (appointment.paymentScreenshotUrl != null && appointment.paymentScreenshotUrl!.isNotEmpty) ...[
+            SizedBox(height: screen.height * 0.008),
+            GestureDetector(
+              onTap: () => _showPaymentScreenshot(screen, appointment.paymentScreenshotUrl!),
+              child: Row(
+                children: [
+                  Icon(Icons.image, size: screen.width * 0.04, color: Color(0xFF199A8E)),
+                  SizedBox(width: screen.width * 0.03),
+                  Text(
+                    'Proof: ',
+                    style: TextStyle(
+                      fontSize: screen.width * 0.035,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'View Screenshot',
+                      style: TextStyle(
+                        fontSize: screen.width * 0.035,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF199A8E),
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentScreenshot(Size screen, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppBar(
+                  title: Text('Payment Screenshot'),
+                  automaticallyImplyLeading: true,
+                  backgroundColor: Color(0xFF199A8E),
+                  leading: IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                Expanded(
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.image_not_supported, size: 60, color: Colors.grey),
+                            SizedBox(height: 10),
+                            Text('Failed to load image'),
+                          ],
+                        ),
+                      );
+                    },
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: progress.expectedTotalBytes != null
+                              ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                              : null,
+                          color: Color(0xFF199A8E),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 }
